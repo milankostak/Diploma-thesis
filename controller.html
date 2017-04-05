@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Controller</title>
+<script>
+	var i = 0;
+	if (window.DeviceOrientationEvent) {
+		console.log("DeviceOrientation is supported");
+		window.addEventListener('deviceorientation', deviceOrientationHandler, false);
+	}
+
+	function deviceOrientationHandler(e) {
+		// alpha is the compass direction the device is facing in degrees
+		// var dir = e.alpha
+		// beta is the front-to-back tilt in degrees, where front is positive
+		// var beta = e.beta;
+		// gamma is the left-to-right tilt in degrees, where right is positive
+		// var gamma = e.gamma;
+
+		var request = new XMLHttpRequest();
+		request.open('POST', "/show");
+		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		var obj = {
+			alpha: e.alpha,
+			beta: e.beta,
+			gamma: e.gamma
+		};
+		request.send(JSON.stringify(obj));
+	}
+
+</script>
+</head>
+<body></body>
+</html>

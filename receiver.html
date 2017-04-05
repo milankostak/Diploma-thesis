@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Test</title>
+<script type="text/javascript" src="js/transforms3d.js"></script>
+<script type="text/javascript" src="js/webgl-utils.js"></script>
+<script type="text/javascript" src="js/math-extends.js"></script>
+<script id="shader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+
+	varying vec4 color;
+	
+	void main(void) {
+		gl_FragColor = color;
+	}
+</script>
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	
+	uniform mat4 projection;
+	uniform mat4 modelview;
+		
+	varying vec4 color;
+
+	void main(void) {
+		color = aVertexColor;
+		gl_Position = projection * modelview * vec4(aVertexPosition, 1.0);
+	}
+</script>
+<script type="text/javascript">
+	"use strict";
+
+	// HTMLCanvasElement, WebGLProgram, WebGLRenderingContext
+	var canvas, program, gl;
+	// WebGLBuffer
+	var vertexBuffer, indexBuffer, colorBuffer;
+	// Mat4PerspRH
+	var projection;
+	// Mat4
+	var scale, rotation, translation;
+	//  Camera, number,  number
+	var camera, azimuth, zenith;
+	// boolean,        numbers
+	var mouseDragging, mx, my, mouseButton;
+	// booleans
+	var forward, backward, right, left, up, down;
+
+	/**
+	 * Inicializace scény a bufferů
+	 */	
+	function initBuffers() {
+		var scene = new Utils.Scene();
+		scene.add(new Utils.Block(1, 1, 1, 0, 0, 0));
+
+		vertexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.vertices), gl.STATIC_DRAW);
+		vertexBuffer.itemSize = 3;
+		vertexBuffer.numItems = scene.vertices.length;
+
+		colorBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.colors), gl.STATIC_DRAW);
+		colorBuffer.itemSize = 3;
+		colorBuffer.numItems = scene.colors.length;
+
+		indexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(scene.indices), gl.STATIC_DRAW);
+		indexBuffer.itemSize = 1;
+		indexBuffer.numItems = scene.indices.length;
+	}
+
+	/**
+	 * Hlavní překreslovací metoda
+	 */
+	function repaint() {
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		
+		gl.useProgram(program);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.vertexAttribPointer(program.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+		gl.vertexAttribPointer(program.vertexColor, colorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+		
+		gl.uniformMatrix4fv(program.projection, false, projection);
+
+		var modelView = Utils.convert(
+			scale.mul(rotation).mul(translation).mul(camera.view)
+		);
+		
+		gl.uniformMatrix4fv(program.modelview, false, modelView);
+		
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+
+		Utils.Axis.draw(gl, Utils.convert(camera.view), projection);
+	}
+
+	window.onload = function() {
+		canvas = document.getElementsByTagName("canvas")[0];
+		gl = Utils.initWebGL(canvas);
+
+		gl.clearColor(0, 0, 0, 1);
+		gl.clearDepth(1.0);
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LEQUAL);
+		
+		program = gl.createProgram();
+		Utils.initShaders(gl, program, "shader-vs", "shader-fs");
+		gl.linkProgram(program);
+		gl.useProgram(program);
+		
+		gl.viewport(0, 0, canvas.width, canvas.height);
+		program.vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
+		gl.enableVertexAttribArray(program.vertexPositionAttribute);
+
+		program.vertexColor = gl.getAttribLocation(program, "aVertexColor");
+		gl.enableVertexAttribArray(program.vertexColor);
+
+		program.projection = gl.getUniformLocation(program, "projection");
+		program.modelview = gl.getUniformLocation(program, "modelview");
+
+		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		scale = new Mat4Identity();
+		rotation = new Mat4Identity();
+		translation = new Mat4Identity();
+		camera = new Camera();
+		azimuth = zenith = 0;
+		camera.setAzimuth(Math2.toRadians(azimuth));
+		camera.setZenith(Math2.toRadians(zenith));
+		camera.setPosition(new Vec3D(0, -10, 0));
+		forward = backward = right = left = up = down = false;
+
+		mouseDragging = false;
+		mx = 0;
+		my = 0;
+		mouseButton = -1;
+		initBuffers();
+
+		canvas.onmousedown = function(e){
+			mouseButton = e.which;
+			mouseDragging = true;
+			var point = Utils.getMousePoint(e);
+			mx = point.x;
+			my = point.y;
+		};
+
+		canvas.onmousemove = function(e) {
+			if (mouseDragging) {
+				var point = Utils.getMousePoint(e);
+				var x = point.x - mx; 
+				var y = point.y - my;
+				//levé tlačítko
+				if (mouseButton == 1  && e.ctrlKey) {
+					translate(x, y);
+				} else if (mouseButton == 1) {
+					var step = 270;
+					azimuth -= step * x / canvas.width;
+					azimuth = azimuth % 360;
+					camera.setAzimuth(Math2.toRadians(azimuth));
+					
+					zenith -= step * y / canvas.height;
+					if (Math.abs(zenith) > 90) zenith = 90*Math2.sign(zenith);
+					camera.setZenith(Math2.toRadians(zenith));
+				}
+				//kolečko
+				else if (mouseButton == 2) {
+					scaleF(x, y);
+				}
+				//pravé tlačítko
+				else if (mouseButton == 3) {
+					rotate(x, y);
+				}
+
+				mx = point.x;
+				my = point.y;
+			}
+		};
+
+		document.onmouseup = function() {
+			mouseDragging = false;
+		};
+
+		Utils.addMouseWheelListener(canvas, function(e) {
+				var a = -Math2.sign(Utils.getWheelRotation(e));
+				translation = translation.mul(new Mat4Transl(0, a, 0));
+			}
+		);
+
+		//zrušení kontextového menu na plátnem kvůli rušivosti
+		canvas.oncontextmenu = function() {
+			return false;
+		};
+		
+		document.onkeydown = function(e) {
+			switch(e.which) {
+				case 87: //w
+				case 38: //↑
+					if (backward) backward = false;
+					forward = true;
+					break;
+				case 83: //s
+				case 40: //↓
+					if (forward) forward = false;
+					backward = true;
+					break;
+				case 68: //d
+				case 39: //→
+					if (left) left = false;
+					right = true;
+					break;
+				case 65: //a
+				case 37: //←
+					if (right) right = false;
+					left = true;
+					break;
+				case 82://r
+					if (down) down = false;
+					up = true;
+					break;
+				case 70://f
+					if (up) up = false;
+					down = true;
+					break;
+			}
+		};	
+		
+		document.onkeyup = function(e) {
+			switch(e.which) {
+				case 87: //w
+				case 38: //↑
+					forward = false;
+					break;
+				case 83: //s
+				case 40: //↓
+					backward = false;
+					break;
+				case 68: //d
+				case 39: //→
+					right = false;
+					break;
+				case 65: //a
+				case 37: //←
+					left = false;
+					break;
+				case 82://r
+					up = false;
+					break;
+				case 70://f
+					down = false;
+					break;
+			}
+		};
+		
+		Utils.Axis.init(gl);
+		Utils.initRequestAnimationFrame();
+		animate();
+	};
+
+	/**
+	 * Obsluha rotace
+	 * @param  {number} x změna pozice myši
+	 * @param  {number} y změna pozice myši
+	 */
+	function rotate(x, y) {
+		rotation = rotation.mul(new Mat4RotXYZ(y/50.0, 0, x/50.0));
+	}
+
+	/**
+	 * Obsluha posunutí
+	 * @param  {number} x změna pozice myši
+	 * @param  {number} y změna pozice myši
+	 */
+	function translate(x, y) {
+		translation = translation.mul(new Mat4Transl(x/100.0, 0, -y/100.0));
+	}
+
+	/**
+	 * Obsluha změny měřítka
+	 * @param  {number} x změna pozice myši
+	 * @param  {number} y změna pozice myši
+	 */
+	function scaleF(x, y) {
+		scale = scale.mul(new Mat4Scale(1+Math2.sign(x)*0.02, 1, 1-Math2.sign(y)*0.02));
+	}
+
+	var oldmils = (new Date()).getTime();
+	/**
+	 * Změnit pozici kamery požadovaným směrem vzhledem k rychlosti překreslování
+	 */
+	function manageCameraMoving() {
+		var n = (new Date()).getTime();
+		var x = (n - oldmils);
+		var step = Math.max(x*0.005, 0);
+		oldmils = n;
+
+		if (forward) camera.forward(step);
+		if (backward) camera.backward(step);
+		if (left) camera.left(step);
+		if (right) camera.right(step);
+		if (up) camera.up(step);
+		if (down) camera.down(step);
+	}
+
+	/**
+	 * Hlavní animační metoda
+	 */
+	function animate() {
+		manageCameraMoving();
+		repaint();
+		requestAnimFrame(animate);
+	}
+
+	if ("WebSocket" in window) {
+		console.log("WebSocket: WS is supported by your browser!");
+		var HOST = location.origin.replace(/^http/, 'ws')
+
+		var ws = new WebSocket(HOST);
+
+		ws.onopen = function() {
+			//ws.send("OnOpen called.");
+			console.log("WebSocket: connection is opened.");
+		};
+
+		ws.onmessage = function (evt) {
+			//console.log(evt.data);
+			let data = JSON.parse(evt.data);
+			let radiansA = Math2.toRadians(data.alpha);
+			let radiansB = Math2.toRadians(data.beta);
+			let radiansG = Math2.toRadians(data.gamma);
+			rotation = new Mat4RotXYZ(radiansA, radiansB, radiansG);
+		};
+
+		ws.onclose = function() { 
+			console.log("WebSocket: connection was closed.");
+		};
+	} else {
+		console.log("WebSocket is NOT supported by your Browser!");
+	}
+</script>
+</head>
+<body>
+<canvas width="800" height="600"></canvas>
+
+<p class="clear">
+	<strong>Ovládání</strong><br>
+	<em>Tažení levým tlačítkem myši:</em> rozhlížení kamerou<br>
+	<em>Ctrl + Tažení levým tlačítkem myši:</em> změna pozice krychle (osy x, z)<br>
+	<em>Kolečko myši:</em> změna pozice krychle (osa y)<br>
+	<em>Tažení prostředním tlačítkem (kolečkem) myši:</em> změna měřítka<br>
+	<em>Tažení pravým tlačítkem myši:</em> rotace krychle<br>
+	<em>WASDRF:</em> posun pozorovatele
+</p>
+
+</body>
+</html>
