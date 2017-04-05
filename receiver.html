@@ -157,7 +157,7 @@
 				var x = point.x - mx; 
 				var y = point.y - my;
 				//levé tlačítko
-				if (mouseButton == 1  && e.ctrlKey) {
+				if (mouseButton == 1 && e.ctrlKey) {
 					translate(x, y);
 				} else if (mouseButton == 1) {
 					var step = 270;
@@ -188,10 +188,9 @@
 		};
 
 		Utils.addMouseWheelListener(canvas, function(e) {
-				var a = -Math2.sign(Utils.getWheelRotation(e));
-				translation = translation.mul(new Mat4Transl(0, a, 0));
-			}
-		);
+			var a = -Math2.sign(Utils.getWheelRotation(e));
+			translation = translation.mul(new Mat4Transl(0, a, 0));
+		});
 
 		//zrušení kontextového menu na plátnem kvůli rušivosti
 		canvas.oncontextmenu = function() {
@@ -290,12 +289,12 @@
 		scale = scale.mul(new Mat4Scale(1+Math2.sign(x)*0.02, 1, 1-Math2.sign(y)*0.02));
 	}
 
-	var oldmils = (new Date()).getTime();
+	var oldmils = new Date().getTime();
 	/**
 	 * Změnit pozici kamery požadovaným směrem vzhledem k rychlosti překreslování
 	 */
 	function manageCameraMoving() {
-		var n = (new Date()).getTime();
+		var n = new Date().getTime();
 		var x = (n - oldmils);
 		var step = Math.max(x*0.005, 0);
 		oldmils = n;
@@ -317,32 +316,94 @@
 		requestAnimFrame(animate);
 	}
 
-	if ("WebSocket" in window) {
-		console.log("WebSocket: WS is supported by your browser!");
-		var HOST = location.origin.replace(/^http/, 'ws')
+	function setWebSocket() {
 
+		var HOST = location.origin.replace(/^http/, 'ws');
 		var ws = new WebSocket(HOST);
 
 		ws.onopen = function() {
-			//ws.send("OnOpen called.");
 			console.log("WebSocket: connection is opened.");
 		};
+
+		// refresh connection every 30 seconds
+		setInterval(function() {
+			ws.send("Refresh");
+			console.log("WebSocket: refreshing connection");
+		}, 30000);
 
 		ws.onmessage = function (evt) {
 			//console.log(evt.data);
 			let data = JSON.parse(evt.data);
-			let radiansA = Math2.toRadians(data.alpha);
-			let radiansB = Math2.toRadians(data.beta);
-			let radiansG = Math2.toRadians(data.gamma);
-			rotation = new Mat4RotXYZ(radiansA, radiansB, radiansG);
+
+			//showTime(data);
+
+			if (data.sequence > lastReceivedSocketSequence) {
+				lastReceivedSocketSequence = data.sequence;
+				let radiansA = Math2.toRadians(data.alpha);
+				let radiansB = Math2.toRadians(data.beta);
+				let radiansG = Math2.toRadians(data.gamma);
+				rotation = new Mat4RotXYZ(radiansB, radiansG, radiansA);
+			} else {
+				//console.log("skipping " + data.sequence);
+			}
 		};
 
-		ws.onclose = function() { 
+		ws.onclose = function() {
 			console.log("WebSocket: connection was closed.");
+			console.log("WebSocket: trying to restore the connection...");
+			setWebSocket();
 		};
-	} else {
-		console.log("WebSocket is NOT supported by your Browser!");
 	}
+
+	if ("WebSocket" in window) {
+		console.log("WebSocket: WS is supported by your browser!");
+		setWebSocket();
+	} else {
+		console.log("WebSocket is NOT supported by your browser!");
+	}
+
+
+	var lastReceivedSocketSequence = -1;
+	var times = [];
+	var synchronizing = true;
+	var basicTime = 0;
+	var runningTime = false;
+
+	function showTime(data) {
+		if (!runningTime) {
+			runningTime = true;
+			if (synchronizing) {
+				if (times.length == 0) {
+					console.log("Time between devices is being synchronized. Wait please.");
+				}
+				if (times.length < 20) {
+					times.push(new Date().getTime() - data.time);
+				} else {
+					synchronizing = false;
+					let min = times[0];
+					for (let i = 1; i < times.length; i++) {
+						if (min > times[i]) {
+							min = times[i];
+						}
+					}
+					basicTime = min;
+					times = [];
+				}
+
+			} else {
+				let tt = new Date().getTime();
+				if (tt - data.time < basicTime) {
+					let diff = tt - data.time - basicTime;
+					console.log("Change of basic time for synchronization ("+diff+")");
+					basicTime = tt - data.time;
+				}
+				console.log(tt - data.time - basicTime);
+				console.log("SEQ: " + data.sequence);
+			}
+			runningTime = false;
+		}
+	}
+
 </script>
 </head>
 <body>
