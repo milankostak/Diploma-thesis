@@ -33,6 +33,7 @@
 			request.open('POST', "/show");
 			request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 			var obj = {
+				type: "rotation",
 				time: new Date().getTime(),
 				sequence: i,
 				alpha: alphaToSend,

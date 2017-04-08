@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="cs-cz" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Capture video</title>
+
+<script type="text/javascript">
+	"use strict";
+
+	var video, img;
+
+	window.onload = function() {
+
+		// sjednocení prefixovaných verzí
+		// Edge bez prefixu, FF i Chromium mají prefix (4/2017) 
+		navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+		if (!navigator.getUserMedia) {
+			console.log("You are using a browser that does not support the Media Capture API");
+			return;
+		}
+
+		video = document.getElementsByTagName("video")[0];
+		img = document.getElementsByTagName("img")[0];
+		navigator.getUserMedia({video: true, audio: false},
+			function(stream) {
+				if (navigator.mozGetUserMedia) {
+					video.mozSrcObject = stream;
+				} else {
+					var url = window.URL || window.webkitURL;
+					video.src = url ? url.createObjectURL(stream) : stream;
+				}
+				video.play();
+			},
+			function(error) {
+				console.log("ERROR: " + error);
+			}
+		);
+
+		document.querySelector("#capture").addEventListener("click", captureSend, false);
+	};
+
+	function captureSend() {
+		// capture
+		var canvas = document.createElement("canvas");
+		canvas.width = video.videoWidth;
+		canvas.height = video.videoHeight;
+		canvas.getContext('2d')
+			  .drawImage(video, 0, 0, canvas.width, canvas.height);
+		var imgDataUrl = canvas.toDataURL("image/png");
+		img.src = imgDataUrl;
+
+		// send
+		var request = new XMLHttpRequest();
+		request.open('POST', "/picture");
+		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		var obj = {
+			type: "image",
+			dataUrl: imgDataUrl
+		};
+		request.send(JSON.stringify(obj));
+	}
+
+</script>
+
+</head>
+<body>
+<img src="">
+<button id="capture">Capture</button>
+<video src="" autoplay muted></video>
+</body>
+</html>

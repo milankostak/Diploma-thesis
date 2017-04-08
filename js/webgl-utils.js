@@ -19,7 +19,7 @@ var Utils = {};
 /**
  * Inicializace WebGL
  * @param  {HTMLCanvasElement} canvas
- * @param  {Array} args volitelný argument obsahující argumenty pro inicializaci WebGL
+ * @param  {Object} args volitelný argument obsahující argumenty pro inicializaci WebGL
  * @return {WebGLRenderingContext}
  */
 Utils.initWebGL = function(canvas, args) {
@@ -67,7 +67,7 @@ Utils.initRequestAnimationFrame = function(fps) {
  * @throws {SyntaxError} If kompilace neproběhla správně nebo shadery nebyly nalezeny
  */
 Utils.initShaders = function(gl, program, vsId, fsId) {
-	function initShader(id, type){
+	var initShader = function(id, type) {
 		var shader = gl.createShader(type);
 		var value;
 		try {

@@ -335,17 +335,24 @@
 			//console.log(evt.data);
 			let data = JSON.parse(evt.data);
 
-			//showTime(data);
+			if (data.type === "rotation") {
+				//showTime(data);
 
-			if (data.sequence > lastReceivedSocketSequence) {
-				lastReceivedSocketSequence = data.sequence;
-				let radiansA = Math2.toRadians(data.alpha);
-				let radiansB = Math2.toRadians(data.beta);
-				let radiansG = Math2.toRadians(data.gamma);
-				rotation = new Mat4RotXYZ(radiansB, radiansG, radiansA);
-			} else {
-				//console.log("skipping " + data.sequence);
+				if (data.sequence > lastReceivedSocketSequence) {
+					lastReceivedSocketSequence = data.sequence;
+					let radiansA = Math2.toRadians(data.alpha);
+					let radiansB = Math2.toRadians(data.beta);
+					let radiansG = Math2.toRadians(data.gamma);
+					rotation = new Mat4RotXYZ(radiansB, radiansG, radiansA);
+				} else {
+					//console.log("skipping " + data.sequence);
+				}
+			} else if (data.type === "image") {
+				var img = document.getElementsByTagName("img")[0];
+				img.src = data.dataUrl;
+				console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
 			}
+
 		};
 
 		ws.onclose = function() {
@@ -407,6 +414,7 @@
 </script>
 </head>
 <body>
+<img src="">
 <canvas width="800" height="600"></canvas>
 
 <p class="clear">
