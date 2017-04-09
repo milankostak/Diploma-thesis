@@ -2,29 +2,40 @@
 <html lang="en-GB" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<title>Test</title>
+<title>Receiver</title>
 <script type="text/javascript" src="js/transforms3d.js"></script>
 <script type="text/javascript" src="js/webgl-utils.js"></script>
 <script type="text/javascript" src="js/math-extends.js"></script>
 <script id="shader-fs" type="x-shader/x-fragment">
 	precision mediump float;
 
+	uniform sampler2D texture;
+	uniform int useCameraTexture;
+
 	varying vec4 color;
+	varying vec2 textureCoord;
 	
 	void main(void) {
-		gl_FragColor = color;
+		vec4 finalColor = color;
+		if (useCameraTexture == 1) {
+			finalColor = texture2D(texture, textureCoord);
+		}
+		gl_FragColor = finalColor;
 	}
 </script>
 <script id="shader-vs" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec4 aVertexColor;
+	attribute vec2 aTextureCoord;
 	
 	uniform mat4 projection;
 	uniform mat4 modelview;
 		
 	varying vec4 color;
+	varying vec2 textureCoord;
 
 	void main(void) {
+		textureCoord = aTextureCoord;
 		color = aVertexColor;
 		gl_Position = projection * modelview * vec4(aVertexPosition, 1.0);
 	}
@@ -47,12 +58,18 @@
 	// booleans
 	var forward, backward, right, left, up, down;
 
+	var cameraTexture, textureBuffer;
+
+	var blockIndices, loadedCameraPicture = false;
+
 	/**
 	 * Inicializace scény a bufferů
 	 */	
 	function initBuffers() {
-		var scene = new Utils.Scene();
-		scene.add(new Utils.Block(1, 1, 1, 0, 0, 0));
+		let scene = new Utils.Scene();
+		scene.add(new Utils.Block(1.5, 0.3, 3, 0, 0, 0, {sharedVertices: false/*, color: [0.2, 0.5, 0.9]*/}));
+		blockIndices = scene.indices.length;
+		scene.add(new Utils.Face(4, 3, -6, 0, 0, {strip: false}));
 
 		vertexBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -71,6 +88,12 @@
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(scene.indices), gl.STATIC_DRAW);
 		indexBuffer.itemSize = 1;
 		indexBuffer.numItems = scene.indices.length;
+
+		textureBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.textureCoords), gl.STATIC_DRAW);
+		textureBuffer.itemSize = 2;
+		textureBuffer.numItems = scene.textureCoords.length;
 	}
 
 	/**
@@ -87,17 +110,33 @@
 		gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 		gl.vertexAttribPointer(program.vertexColor, colorBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.vertexAttribPointer(program.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+		gl.uniform1i(program.texture, 0);
+		gl.uniform1i(program.useCameraTexture, 0);
 		
 		gl.uniformMatrix4fv(program.projection, false, projection);
 
-		var modelView = Utils.convert(
+		let modelView = Utils.convert(
 			scale.mul(rotation).mul(translation).mul(camera.view)
 		);
-		
 		gl.uniformMatrix4fv(program.modelview, false, modelView);
-		
-		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+		gl.drawElements(gl.TRIANGLES, blockIndices, gl.UNSIGNED_SHORT, 0);
+
+		if (loadedCameraPicture) {
+			gl.uniform1i(program.useCameraTexture, 1);
+			modelView = Utils.convert(
+				new Mat4RotX(-Math.PI / 2).mul(translation).mul(camera.view)
+			);
+			gl.uniformMatrix4fv(program.modelview, false, modelView);
+			gl.drawElements(gl.TRIANGLES, indexBuffer.numItems - blockIndices, gl.UNSIGNED_SHORT, blockIndices * 2);
+
+	}
 
 		Utils.Axis.draw(gl, Utils.convert(camera.view), projection);
 	}
@@ -123,8 +162,13 @@
 		program.vertexColor = gl.getAttribLocation(program, "aVertexColor");
 		gl.enableVertexAttribArray(program.vertexColor);
 
+		program.vertexTexCoordAttribute = gl.getAttribLocation(program, "aTextureCoord");
+		gl.enableVertexAttribArray(program.vertexTexCoordAttribute);
+
 		program.projection = gl.getUniformLocation(program, "projection");
 		program.modelview = gl.getUniformLocation(program, "modelview");
+		program.texure = gl.getUniformLocation(program, "texture");
+		program.useCameraTexture = gl.getUniformLocation(program, "useCameraTexture");
 
 		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
 		scale = new Mat4Identity();
@@ -134,7 +178,7 @@
 		azimuth = zenith = 0;
 		camera.setAzimuth(Math2.toRadians(azimuth));
 		camera.setZenith(Math2.toRadians(zenith));
-		camera.setPosition(new Vec3D(0, -10, 0));
+		camera.setPosition(new Vec3D(-3, -10, 0));
 		forward = backward = right = left = up = down = false;
 
 		mouseDragging = false;
@@ -146,21 +190,21 @@
 		canvas.onmousedown = function(e){
 			mouseButton = e.which;
 			mouseDragging = true;
-			var point = Utils.getMousePoint(e);
+			let point = Utils.getMousePoint(e);
 			mx = point.x;
 			my = point.y;
 		};
 
 		canvas.onmousemove = function(e) {
 			if (mouseDragging) {
-				var point = Utils.getMousePoint(e);
-				var x = point.x - mx; 
-				var y = point.y - my;
+				let point = Utils.getMousePoint(e);
+				let x = point.x - mx;
+				let y = point.y - my;
 				//levé tlačítko
 				if (mouseButton == 1 && e.ctrlKey) {
 					translate(x, y);
 				} else if (mouseButton == 1) {
-					var step = 270;
+					let step = 270;
 					azimuth -= step * x / canvas.width;
 					azimuth = azimuth % 360;
 					camera.setAzimuth(Math2.toRadians(azimuth));
@@ -188,7 +232,7 @@
 		};
 
 		Utils.addMouseWheelListener(canvas, function(e) {
-			var a = -Math2.sign(Utils.getWheelRotation(e));
+			let a = -Math2.sign(Utils.getWheelRotation(e));
 			translation = translation.mul(new Mat4Transl(0, a, 0));
 		});
 
@@ -256,7 +300,7 @@
 					break;
 			}
 		};
-		
+
 		Utils.Axis.init(gl);
 		Utils.initRequestAnimationFrame();
 		animate();
@@ -294,9 +338,9 @@
 	 * Změnit pozici kamery požadovaným směrem vzhledem k rychlosti překreslování
 	 */
 	function manageCameraMoving() {
-		var n = new Date().getTime();
-		var x = (n - oldmils);
-		var step = Math.max(x*0.005, 0);
+		let n = new Date().getTime();
+		let x = (n - oldmils);
+		let step = Math.max(x*0.005, 0);
 		oldmils = n;
 
 		if (forward) camera.forward(step);
@@ -348,9 +392,23 @@
 					//console.log("skipping " + data.sequence);
 				}
 			} else if (data.type === "image") {
-				var img = document.getElementsByTagName("img")[0];
+				let img = document.getElementsByTagName("img")[0];
 				img.src = data.dataUrl;
-				console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
+				img.style.display = "none";
+				img.onload = function() {
+					cameraTexture = gl.createTexture();
+
+					gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);// vyhazuje DOMException
+
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+					loadedCameraPicture = true;
+					console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
+				};
 			}
 
 		};
