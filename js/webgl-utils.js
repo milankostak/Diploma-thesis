@@ -243,30 +243,19 @@ Utils.Scene.prototype.add = function(a) {
  *                       color - Array - barva jako třísložkové pole, pokud undefined, tak rgb krychle (kvádr)
  *                       sharedVertices - boolean - zda mají být pro každou stěnu vygenerovány vlastní vrcholy (false),
  *                       							nebo zda je možné vrcholy sdílet (true, výchozí hodnota)
- *                       							pokud jsou vrcholy sdílené, tak není nejsou vygenerovány normály a souřadnice do textury
+ *                       							pokud jsou vrcholy sdílené, tak nejsou vygenerovány normály a souřadnice do textury
  */
 Utils.Block = function(a, b, c, posx, posy, posz, args) {
 	if (args === undefined) args = {};
 	if (args.sharedVertices === undefined) args.sharedVertices = true;
 
 	this.vertices = this.createVertices(a, b, c, posx, posy, posz, args.sharedVertices);
-	this.colors = this.createColors(args.color);
-	this.textureCoords = [];
-	this.normals = [];
-	this.indices = [
-		//front
-		0, 1, 2,	1, 3, 2,
-		//right
-		1, 4, 3,  4, 5, 3,
-		//left
-		6, 0, 7,  0, 2, 7,
-		//top
-		2, 3, 7,  3, 5, 7,
-		//bottom
-		6, 4, 0,  4, 1, 0,
-		//back
-		4, 6, 5,  6, 7, 5
-	];
+	this.colors = this.createColors(args.color, args.sharedVertices);
+	if (!args.sharedVertices) {
+		this.textureCoords = this.createTextureCoords();
+		this.normals = [];
+	}
+	this.indices = this.createIndices(args.sharedVertices);
 };
 
 /**
@@ -281,7 +270,7 @@ Utils.Block = function(a, b, c, posx, posy, posz, args) {
  * @return {Array}    pole s vrcholy
  */
 Utils.Block.prototype.createVertices = function(a, b, c, x, y, z, shared) {
-	var vertices = [];
+	let vertices = [];
 	if (shared) {
 		//front face
 		//bottom, left
@@ -303,89 +292,192 @@ Utils.Block.prototype.createVertices = function(a, b, c, x, y, z, shared) {
 		//top, left
 		vertices.push(-a+x, b+y, -c+z);
 	} else {
-		//front face
-		//bottom, left
+		//front
+		vertices.push(-a+x, -b+y, -c+z);
+		vertices.push(a+x, -b+y, -c+z);
 		vertices.push(-a+x, -b+y, c+z);
-		//bottom, right
 		vertices.push(a+x, -b+y, c+z);
-		//top, left
+
+		// right face
+		vertices.push(a+x, -b+y, -c+z);
+		vertices.push(a+x, -b+y, c+z);
+		vertices.push(a+x, b+y, -c+z);
+		vertices.push(a+x, b+y, c+z);
+
+		// left face
+		vertices.push(-a+x, -b+y, -c+z);
+		vertices.push(-a+x, -b+y, c+z);
+		vertices.push(-a+x, b+y, -c+z);
 		vertices.push(-a+x, b+y, c+z);
-		//top right
+
+		// top face
+		vertices.push(-a+x, -b+y, c+z);
+		vertices.push(a+x, -b+y, c+z);
+		vertices.push(-a+x, b+y, c+z);
 		vertices.push(a+x, b+y, c+z);
 
-		//right face
-		vertices.push(a+x, b+y, c+z);
-		vertices.push(a+x, b+y, c+z);
-		vertices.push(a+x, b+y, c+z);
-		vertices.push(a+x, b+y, c+z);
-			-1.0, -1.0, -1.0,
-			-1.0,  1.0, -1.0,
-			 1.0,  1.0, -1.0,
-			 1.0, -1.0, -1.0,
+		// bottom face
+		vertices.push(-a+x, -b+y, -c+z);
+		vertices.push(a+x, -b+y, -c+z);
+		vertices.push(-a+x, b+y, -c+z);
+		vertices.push(a+x, b+y, -c+z);
 
-			-1.0,  1.0, -1.0,
-			-1.0,  1.0,  1.0,
-			 1.0,  1.0,  1.0,
-			 1.0,  1.0, -1.0,
-			-1.0, -1.0, -1.0,
-
-			 1.0, -1.0, -1.0,
-			 1.0, -1.0,	 1.0,
-			-1.0, -1.0,	 1.0,
-			 1.0, -1.0, -1.0,
-			 1.0,  1.0, -1.0,
-			 1.0,  1.0,  1.0,
-			 1.0, -1.0,  1.0,
-			-1.0, -1.0, -1.0,
-			-1.0, -1.0,  1.0,
-			-1.0,  1.0,  1.0,
-			-1.0,  1.0, -1.0
+		// back face
+		vertices.push(-a+x, b+y, -c+z);
+		vertices.push(a+x, b+y, -c+z);
+		vertices.push(-a+x, b+y, c+z);
+		vertices.push(a+x, b+y, c+z);
 	}
 	return vertices;
 };
 
 /**
  * Vygenerování barev pro kvádr
- * @param  {Array} color barva jako libovolně velké pole,
- *                       pokud je undefined, tak bude vygenerována rgb krychle (kvádr)
- * @return {Array}       pole s barvami
+ * @param  {Array} color            barva jako libovolně velké pole,
+ *                                  pokud je undefined, tak bude vygenerována rgb krychle (kvádr)
+ * @param  {boolean} sharedVertices zda generovat barvy pro kvádr se sdílenými vrcholy
+ * @return {Array}                  pole s barvami
  */
-Utils.Block.prototype.createColors = function(color) {
-	var colors = [];
+Utils.Block.prototype.createColors = function(color, sharedVertices) {
+	let colors = [];
 	if (color !== undefined) {
-		if (color.length == 3) {
-			var r = color[0], g = color[1], b = color[2];
+		if (color.length == 3 && sharedVertices) {
+			let r = color[0], g = color[1], b = color[2];
 			colors.push(r, g, b, r, g, b, r, g, b, r, g, b, r, g, b, r, g, b, r, g, b, r, g, b);
 		} else {
-			for (var i = 0; i < 8; i++) {
-				for (var j = 0; j < color.length; j++) {
+			//rozkopíruj jednu barvu na všechny vrcholy
+			let max = (sharedVertices) ? 8 : 24;
+			for (let i = 0; i < max; i++) {
+				for (let j = 0; j < color.length; j++) {
 					colors.push(color[j]);
 				}
 			}
 		}
 	} else {
-		//front face
-		//bottom, left
-		colors.push(0.0, 0.0, 1.0);
-		//bottom, right
-		colors.push(1.0, 0.0, 1.0);
-		//top, left
-		colors.push(0.0, 1.0, 1.0);
-		//top, right
-		colors.push(1.0, 1.0, 1.0);
-		//right face
-		//bottom, right
-		colors.push(1.0, 0.0, 0.0);
-		//top, right
-		colors.push(1.0, 1.0, 0.0);
-		//left face
-		//bottom, left
-		colors.push(0.0, 0.0, 0.0);
-		//top, left
-		colors.push(0.0, 1.0, 0.0);
+		if (sharedVertices) {
+			//front face
+			//bottom, left
+			colors.push(0.0, 0.0, 1.0);
+			//bottom, right
+			colors.push(1.0, 0.0, 1.0);
+			//top, left
+			colors.push(0.0, 1.0, 1.0);
+			//top, right
+			colors.push(1.0, 1.0, 1.0);
+			//right face
+			//bottom, right
+			colors.push(1.0, 0.0, 0.0);
+			//top, right
+			colors.push(1.0, 1.0, 0.0);
+			//left face
+			//bottom, left
+			colors.push(0.0, 0.0, 0.0);
+			//top, left
+			colors.push(0.0, 1.0, 0.0);
+		} else {
+			// front
+			colors.push(0.0, 0.0, 1.0);
+			colors.push(0.0, 0.0, 1.0);
+			colors.push(0.0, 0.0, 1.0);
+			colors.push(0.0, 0.0, 1.0);
+			// right
+			colors.push(0.0, 1.0, 1.0);
+			colors.push(0.0, 1.0, 1.0);
+			colors.push(0.0, 1.0, 1.0);
+			colors.push(0.0, 1.0, 1.0);
+			// left
+			colors.push(1.0, 0.0, 1.0);
+			colors.push(1.0, 0.0, 1.0);
+			colors.push(1.0, 0.0, 1.0);
+			colors.push(1.0, 0.0, 1.0);
+			// top
+			colors.push(1.0, 1.0, 0.0);
+			colors.push(1.0, 1.0, 0.0);
+			colors.push(1.0, 1.0, 0.0);
+			colors.push(1.0, 1.0, 0.0);
+			// bottom
+			colors.push(0.2, 0.2, 0.2);
+			colors.push(0.2, 0.2, 0.2);
+			colors.push(0.2, 0.2, 0.2);
+			colors.push(0.2, 0.2, 0.2);
+			// back
+			colors.push(1.0, 1.0, 1.0);
+			colors.push(1.0, 1.0, 1.0);
+			colors.push(1.0, 1.0, 1.0);
+			colors.push(1.0, 1.0, 1.0);
+		}
 	}
 	return colors;
 };
+
+
+Utils.Block.prototype.createTextureCoords = function() {
+	return [
+		0, 0,
+		1, 0,
+		0, 1,
+		1, 1,
+
+		0, 0,
+		1, 0,
+		0, 1,
+		1, 1,
+
+		0, 0,
+		1, 0,
+		0, 1,
+		1, 1,
+
+		0, 0,
+		1, 0,
+		0, 1,
+		1, 1,
+
+		0, 0,
+		1, 0,
+		0, 1,
+		1, 1,
+
+		0, 0,
+		1, 0,
+		0, 1,
+		1, 1
+	];
+};
+
+Utils.Block.prototype.createIndices = function(sharedVertices) {
+	if (sharedVertices) {
+		return [
+			//front
+			0, 1, 2,  1, 3, 2,
+			//right
+			1, 4, 3,  4, 5, 3,
+			//left
+			6, 0, 7,  0, 2, 7,
+			//top
+			2, 3, 7,  3, 5, 7,
+			//bottom
+			6, 4, 0,  4, 1, 0,
+			//back
+			4, 6, 5,  6, 7, 5
+		];
+	} else {
+		return [
+			//front
+			0, 1, 2,  1, 3, 2,
+			//right
+			4, 5, 6,  5, 7, 6,
+			//left
+			8, 9, 10,  9, 11, 10,
+			//top
+			12, 13, 14,  13, 15, 14,
+			//bottom
+			16, 17, 18,  17, 19, 18,
+			//back
+			20, 21, 22,  21, 23, 22
+		];
+	}
+}
 
 /**
  * Vyvtoření stěny
@@ -395,8 +487,8 @@ Utils.Block.prototype.createColors = function(color) {
  * @param {number} y     souřadnice středu
  * @param {number} z     souřadnice středu
  * @param {Object} args  dodatečné argumenty
- *                       color - Array - barva, pokud undefined, tak bílá barva
- *                       strip - boolean - zda má být index buffer pro triangle strip
+ *                       color - Array - barva (výchozí bílá)
+ *                       strip - boolean - zda má být index buffer pro triangle strip (výchozí true)
  */
 Utils.Face = function(a, b, x, y, z, args) {
 	if (args === undefined) args = {};
@@ -405,7 +497,7 @@ Utils.Face = function(a, b, x, y, z, args) {
 
 	this.vertices = this.createVertices(a, b, x, y, z);
 	this.colors = this.createColors(args.color);
-	this.textureCoords = [];
+	this.textureCoords = this.createTextureCoords();
 	this.normals = this.createNormals(new Vec3D(x, y, z), this.vertices);
 	this.indices = this.createIndices(args.strip);
 };
@@ -420,7 +512,7 @@ Utils.Face = function(a, b, x, y, z, args) {
  * @return {Array}   pole s vrcholy
  */
 Utils.Face.prototype.createVertices = function(a, b, x, y, z) {
-	var vertices = [];
+	let vertices = [];
 	//bottom, left
 	vertices.push(-a+x, -b+y, z);
 	//bottom, right
@@ -438,14 +530,14 @@ Utils.Face.prototype.createVertices = function(a, b, x, y, z) {
  * @return {Array}        pole s barvami
  */
 Utils.Face.prototype.createColors = function(color) {
-	var colors = [];
+	let colors = [];
 	if (color !== undefined) {
 		if (color.length == 3) {
-			var r = color[0], g = color[1], b = color[2];
+			let r = color[0], g = color[1], b = color[2];
 			colors.push(r, g, b, r, g, b, r, g, b, r, g, b);
 		} else {
-			for (var i = 0; i < 8; i++) {
-				for (var j = 0; j < color.length; j++) {
+			for (let i = 0; i < 8; i++) {
+				for (let j = 0; j < color.length; j++) {
 					colors.push(color[j]);
 				}
 			}
@@ -463,6 +555,15 @@ Utils.Face.prototype.createColors = function(color) {
 	return colors;
 };
 
+Utils.Face.prototype.createTextureCoords = function() {
+	return [
+		0, 0,
+		1, 0,
+		0, 1,
+		1, 1
+	];
+};
+
 /**
  * Vygenerování normál pro stěnu
  * @param  {Vec3D} pos      pozice středu
@@ -470,9 +571,9 @@ Utils.Face.prototype.createColors = function(color) {
  * @return {Array}          pole s normálami
  */
 Utils.Face.prototype.createNormals = function(pos, vertices) {
-	var normals = [];
-	var pom = [];
-	for (var i = 0; i < vertices.length; i+=3) {
+	let normals = [];
+	let pom = [];
+	for (let i = 0; i < vertices.length; i+=3) {
 		pom = Utils.convert( new Vec3D(vertices[i]-pos.x,vertices[i+1]-pos.y,vertices[i+2]-pos.z).normalized() );
 		normals.push(pom[0], pom[1], pom[2]);
 	}
@@ -488,7 +589,7 @@ Utils.Face.prototype.createIndices = function(strip) {
 	if (strip) {
 		return [0, 0, 1, 2, 3, 3];
 	} else {
-		return [0, 1, 2,	1, 3, 2];
+		return [0, 1, 2, 1, 3, 2];
 	}
 
 };
