@@ -1,99 +1,91 @@
 "use strict";
-/**
- * Zkrácení pro document.getElementById
- * @param  {string} id
- * @return {HTMLElement}
- */
-function $(id) {
-	return document.getElementById(id);
-}
 
 /**
- * Utils je soubor často použivaných funkcí pro využití ve WebGL
+ * Utils object contains some useful functions for use with WebGL
  * @type {Object}
  * @author Milan Košťák
- * @requires pro svou práci vyžaduje soubor transforms3d.js
+ * @version 1.1
+ * @requires transforms3d.js
  */
 var Utils = {};
 
 /**
- * Inicializace WebGL
- * @param  {HTMLCanvasElement} canvas
- * @param  {Object} args volitelný argument obsahující argumenty pro inicializaci WebGL
- * @return {WebGLRenderingContext}
+ * Initialization of WebGL
+ * @param  {HTMLCanvasElement} canvas to draw on
+ * @param  {Object} args optinal parameter containing arguments for WebGL initialization
+ * @return {WebGLRenderingContext} WebGL context
  */
 Utils.initWebGL = function(canvas, args) {
-	var gl;
+	let gl;
 	try {
 		gl = canvas.getContext("experimental-webgl", args);
 	}
 	catch(e) {}
 	if (!gl) {
-		alert("Nepodařilo se inicializovat WebGL. Váš prohlížeč ho pravděpodobně nepodporuje.");
+		window.alert("Initialization of WebGL was not successful. Your browser probably doesn't support it.");
 		return false;
 	}
 	return gl;
 };
 
 /**
- * Inicializace překreslovací smyčky
- * @param  {number} fps počet snímků za vteřinu, pokud není vyplněno,
- *                      tak se uskuteční pokus o inicializaci requestAnimationFrame
+ * Initialization of repainting loop. Uses window.requestAnimationFrame where available. window.setTimeout is used as fallback for older browsers.
+ * @param  {number} fps number of frames per sesond to draw, if set then window.setTimeout is used
  */
 Utils.initRequestAnimationFrame = function(fps) {
-	if (typeof fps == "number") {
+	if (typeof fps === "number") {
 		window.requestAnimFrame = function(callback) {
 			window.setTimeout(callback, 1000/fps);
 		};
 	} else {
 		window.requestAnimFrame = (function(callback) {
-			return window.requestAnimationFrame || //plné implementace; Chrome 24+, FF 23+, Opera 15+, IE 10+
-				window.webkitRequestAnimationFrame || //Chrome 10-23
-				window.mozRequestAnimationFrame || // FF 4-22
+			return window.requestAnimationFrame || // full implementations: Chromium 24+, FF 23+, Opera 15+, IE 10+, Edge
+				// window.webkitRequestAnimationFrame || // Chromium 10-23
+				// window.mozRequestAnimationFrame || // FF 4-22
 				function(callback) {
-					window.setTimeout(callback, 1000/60); //zbytek
+					window.setTimeout(callback, 1000/60); // rest
 				};
 		})();
 	}
 };
 
 /**
- * Funkce pro inicializaci shaderů
- * @param  {WebGLRenderingContext} gl
- * @param  {WebGLProgram} program
- * @param  {string} vsId id elementu s vertex shaderem
- * @param  {string} fsId id elementu s fragment shaderem
- * @return {boolean} vrací true, pokud kompilace proběhla úspěšně, jinak vyhazuje výjimku
- * @throws {SyntaxError} If kompilace neproběhla správně nebo shadery nebyly nalezeny
+ * Function for initialization of shaders
+ * @param  {WebGLRenderingContext} gl WebGL context
+ * @param  {WebGLProgram} program     WebGL program
+ * @param  {string} vsId              id of element which is containing vertex shader
+ * @param  {string} fsId              id of element which is containing fragment shader
+ * @return {boolean}                  true if compilation was successful else it throws exception
+ * @throws {SyntaxError}              If compilation of shaders failed or shaders were not found
  */
 Utils.initShaders = function(gl, program, vsId, fsId) {
-	var initShader = function(id, type) {
-		var shader = gl.createShader(type);
-		var value;
+	let initShader = function(id, type) {
+		let shader = gl.createShader(type);
+		let value;
 		try {
 			value = document.getElementById(id).firstChild.nodeValue;
 		} catch (e) {
-			var x = "Utils.initShaders: ";
-			x += (type == gl.VERTEX_SHADER) ? "Vertex" : "Fragment";
-			x += " shader nebyl nalezen!";
-			alert(x);
+			let x = "Utils.initShaders: ";
+			x += (type === gl.VERTEX_SHADER) ? "Vertex" : "Fragment";
+			x += " shader was not found!";
+			window.alert(x);
 			throw new Error(x);
 		}
 		gl.shaderSource(shader, value);
 		gl.compileShader(shader);
 		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-			var x = (type == gl.VERTEX_SHADER) ? "Vertex shader error\n" : "Fragment shader error\n";
+			let x = (type === gl.VERTEX_SHADER) ? "Vertex shader error\n" : "Fragment shader error\n";
 			x += gl.getShaderInfoLog(shader);
-			alert(x);
-			console.log(x);
+			window.alert(x);
+			window.console.log(x);
 			return false;
 		} else {
 			gl.attachShader(program, shader);
 			return true;
 		}
-	}
-	//zkontrolovat fs, i kdyby vs nebyl v pořádku
-	var result = (initShader(vsId, gl.VERTEX_SHADER)) & (initShader(fsId, gl.FRAGMENT_SHADER));
+	};
+	// check FS even if VS compilation failed (so it shows errors for both at once)
+	let result = (initShader(vsId, gl.VERTEX_SHADER)) & (initShader(fsId, gl.FRAGMENT_SHADER));
 	if (!result) {
 		throw new SyntaxError("Shader syntax error.");
 	} else {
@@ -102,52 +94,51 @@ Utils.initShaders = function(gl, program, vsId, fsId) {
 };
 
 /**
- * Vrací počet pixelů posunu myši
+ * Returns number of pixels mouse has moved
  * @param  {MouseEvent} e
- * @return {Object} objekt s vlastnostmi x a y vyjadřujících posun myši
+ * @return {Object} object with "x" and "y" properties holding values
  */
 Utils.getMousePoint = function(e) {
 	e = e || window.event;
-	var point = {};
-	//Opera 12 neumí e.layerX
-	//FF neumí e.offsetX
-	//Opera 15+ (asi chrome) umí špatně e.layerX
-	//IE 11 umí všechny a dobře
+	let point = {};
+	// Opera 12 doesn't know e.layerX
+	// FF doesn't know e.offsetX
+	// Chromium has wrong e.layerX
+	// IE 11 knows all and correct
 	point.x = e.offsetX || e.clientX - e.target.offsetLeft || 0;
 	point.y = e.offsetY || e.clientY - e.target.offsetTop || 0;
 	return point;
 };
 
 /**
- * Vrací počet pixelů posunu myši
- * Využití při pointer lock
+ * Returns number of virtual pixels mouse has moved when the pointer is locked
  * @param  {MouseEvent} e
- * @return {Object} objekt s vlastnostmi x a y vyjadřujících posun myši
+ * @return {Object} object with "x" and "y" properties holding values
  */
 Utils.getLockedMousePoint = function(e) {
-	var point = {};
+	let point = {};
 	point.x = e.movementX || e.mozMovementX || e.webkitMovementX || 0;
 	point.y = e.movementY || e.mozMovementY || e.webkitMovementY || 0;
 	return point;
 };
 
 /**
- * Vrací počet kroků provedných kolečkem myši
+ * Returns number of steps done by mouse wheel
  * @param  {MouseEvent} e
- * @return {number}
+ * @return {number} number of steps
  */
 Utils.getWheelRotation = function(e) {
-	//FF neumí e.wheelDelta
+	// FF doesn't know e.wheelDelta
 	return e.wheelDelta || e.detail;
 };
 
 /**
- * Zapouzdření metody pro přidání listeneru pro kolečko myši
- * @param {HTMLElement} element
- * @param {Function} callback
+ * Encapsulation of assigning listener for mouse wheel
+ * @param {HTMLElement} element to which assign the listener
+ * @param {Function} callback with actual listener
  */
 Utils.addMouseWheelListener = function(element, callback) {
-	//FF neumí onmousewheel
+	// FF doesn't know onmousewheel
 	if ("onmousewheel" in document) {
 		element.onmousewheel = callback;
 	} else {
@@ -156,24 +147,25 @@ Utils.addMouseWheelListener = function(element, callback) {
 };
 
 /**
- * Výpočet vzdálenosti dvou bodů v rovině
- * @param  {number} x
- * @param  {number} y
- * @param  {number} x2
- * @param  {number} y2
- * @return {number} vzdálenost
+ * Calculates distance of two points in 2D plane
+ * @param  {number} x  1st point
+ * @param  {number} y  1st point
+ * @param  {number} x2 2nd point
+ * @param  {number} y2 2nd point
+ * @return {number}    distance
  */
-Utils.distance = function(x, y, x2, y2){
-	return Math.sqrt(Math.pow((y2-y),2) + Math.pow((x2-x),2));
+Utils.distance = function(x, y, x2, y2) {
+	return Math.sqrt(
+		Math.pow((y2-y), 2) + Math.pow((x2-x), 2)
+	);
 };
 
 /**
- * Funkce pro převedení matic a vektorů na Float32Array
- * @param  {various} a
- * @return {Float32Array}
+ * Function for converting matrix or vector into Float32Array
+ * @param  {various} a    Vec1D / Vec2D / Vec3D / Point3D / Mat3 / Mat4
+ * @return {Float32Array} flat array with values from parameter
  */
 Utils.convert = function(a) {
-	var i, j, temp;
 	if (a instanceof Vec1D) {
 		return new Float32Array([a.x]);
 	} else if (a instanceof Vec2D) {
@@ -183,17 +175,17 @@ Utils.convert = function(a) {
 	} else if (a instanceof Point3D) {
 		return new Float32Array([a.x, a.y, a.z, a.w]);
 	} else if (a instanceof Mat3) {
-		temp = new Float32Array(9);
-		for (i = 0; i < 3; i++) {
-			for (j = 0; j < 3; j++) {
+		let temp = new Float32Array(9);
+		for (let i = 0; i < 3; i++) {
+			for (let j = 0; j < 3; j++) {
 				temp[i*3+j] = a.mat[i][j];
 			}
 		}
 		return temp;
 	} else if (a instanceof Mat4) {
-		temp = new Float32Array(16);
-		for (i = 0; i < 4; i++) {
-			for (j = 0; j < 4; j++) {
+		let temp = new Float32Array(16);
+		for (let i = 0; i < 4; i++) {
+			for (let j = 0; j < 4; j++) {
 				temp[i*4+j] = a.mat[i][j];
 			}
 		}
@@ -202,8 +194,9 @@ Utils.convert = function(a) {
 };
 
 /**
- * Objekt pro práci se scénou
- * Umožňuje vygenerovat vrcholy, normály, barvy a indexy některých základních těles
+ * Object for working with objects in the scene
+ * Allows generating of vertices, normals, colors, texture coordinates and indices for a few basic objects (currently Block, Face, Sphere)
+ * @constructor
  */
 Utils.Scene = function() {
 	this.vertices = [];
@@ -214,36 +207,37 @@ Utils.Scene = function() {
 };
 
 /**
- * Přidání bloku do scény
- * @param {various} a objekt pro přidání - Block, Face, Sphere
+ * Adding an object to the scene
+ * @param {various} obj an object to add (Block, Face, Sphere)
  */
-Utils.Scene.prototype.add = function(a) {
-	var length = this.vertices.length/3;
-	this.vertices = this.vertices.concat(a.vertices);
-	this.colors = this.colors.concat(a.colors);
-	this.textureCoords = this.textureCoords.concat(a.textureCoords);
-	this.normals = this.normals.concat(a.normals);
-	var b = a.indices;
+Utils.Scene.prototype.add = function(obj) {
+	let length = this.vertices.length/3;
+	this.vertices = this.vertices.concat(obj.vertices);
+	this.colors = this.colors.concat(obj.colors);
+	this.textureCoords = this.textureCoords.concat(obj.textureCoords);
+	this.normals = this.normals.concat(obj.normals);
+	let b = obj.indices;
 
-	for (var i = 0; i < b.length; i++) {
+	for (let i = 0; i < b.length; i++) {
 		b[i] = b[i]+length;
 	}
 	this.indices = this.indices.concat(b);
 };
 
 /**
- * Vytvoření kvádru
- * @param {number} a     délky strany a
- * @param {number} b     délky strany b
- * @param {number} c     délky strany c
- * @param {number} posx  pozice středu
- * @param {number} posy  pozice středu
- * @param {number} posz  pozice středu
- * @param {Object} args  dodatečné argumenty
- *                       color - Array - barva jako třísložkové pole, pokud undefined, tak rgb krychle (kvádr)
- *                       sharedVertices - boolean - zda mají být pro každou stěnu vygenerovány vlastní vrcholy (false),
- *                       							nebo zda je možné vrcholy sdílet (true, výchozí hodnota)
- *                       							pokud jsou vrcholy sdílené, tak nejsou vygenerovány normály a souřadnice do textury
+ * Create a block
+ * @param {number} a     side length a
+ * @param {number} b     side length b
+ * @param {number} c     side length c
+ * @param {number} posx  position of the center of the block
+ * @param {number} posy  position of the center of the block
+ * @param {number} posz  position of the center of the block
+ * @param {Object} args  additional arguments
+ *                       - color {Array} color as array (of usually three items); if undefined then RGB block
+ *                       - sharedVertices {boolean} if there should be separate vertices for every face (false),
+ *                                                  or if faces can share them (true, default value)
+ *                                                  if vertices are shared, then normals and texture coordinates are not generated
+ * @constructor
  */
 Utils.Block = function(a, b, c, posx, posy, posz, args) {
 	if (args === undefined) args = {};
@@ -253,25 +247,26 @@ Utils.Block = function(a, b, c, posx, posy, posz, args) {
 	this.colors = this.createColors(args.color, args.sharedVertices);
 	if (!args.sharedVertices) {
 		this.textureCoords = this.createTextureCoords();
-		this.normals = [];
+		this.normals = [];// TODO not implemented yet
 	}
 	this.indices = this.createIndices(args.sharedVertices);
 };
 
 /**
- * Vygenerování vrcholů pro kvádr
- * @param  {number} a délka strany
- * @param  {number} b délka strany
- * @param  {number} c délka strany
- * @param  {number} x souřadnice středu
- * @param  {number} y souřadnice středu
- * @param  {number} z souřadnice středu
- * @param  {boolean} shared zda mají být sdílené vektory, více info v konstruktoru objektu
- * @return {Array}    pole s vrcholy
+ * Generate vertices for block
+ * @param  {number} a               side length a
+ * @param  {number} b               side length b
+ * @param  {number} c               side length c
+ * @param  {number} x               position of the center of the block
+ * @param  {number} y               position of the center of the block
+ * @param  {number} z               position of the center of the block
+ * @param  {boolean} sharedVertices if faces are sharing vertices (more info in constructor)
+ * @return {Array}                  array with vertices
  */
-Utils.Block.prototype.createVertices = function(a, b, c, x, y, z, shared) {
+Utils.Block.prototype.createVertices = function(a, b, c, x, y, z, sharedVertices) {
 	let vertices = [];
-	if (shared) {
+	// if shared then 8 vertices
+	if (sharedVertices) {
 		//front face
 		//bottom, left
 		vertices.push(-a+x, -b+y, c+z);
@@ -291,7 +286,9 @@ Utils.Block.prototype.createVertices = function(a, b, c, x, y, z, shared) {
 		vertices.push(-a+x, -b+y, -c+z);
 		//top, left
 		vertices.push(-a+x, b+y, -c+z);
-	} else {
+	}
+	// if not shared then 24 vertices
+	else {
 		//front
 		vertices.push(-a+x, -b+y, -c+z);
 		vertices.push(a+x, -b+y, -c+z);
@@ -332,25 +329,20 @@ Utils.Block.prototype.createVertices = function(a, b, c, x, y, z, shared) {
 };
 
 /**
- * Vygenerování barev pro kvádr
- * @param  {Array} color            barva jako libovolně velké pole,
- *                                  pokud je undefined, tak bude vygenerována rgb krychle (kvádr)
- * @param  {boolean} sharedVertices zda generovat barvy pro kvádr se sdílenými vrcholy
- * @return {Array}                  pole s barvami
+ * Generate colors for block
+ * @param  {Array} color            color as array; if undefined then RGB block
+ * @param  {boolean} sharedVertices if colors should be generated for block with shared vertices (more info in constructor)
+ * @return {Array}                  array with colors
  */
 Utils.Block.prototype.createColors = function(color, sharedVertices) {
 	let colors = [];
+	// if color was set then copy it to every vertice
 	if (color !== undefined) {
-		if (color.length == 3 && sharedVertices) {
-			let r = color[0], g = color[1], b = color[2];
-			colors.push(r, g, b, r, g, b, r, g, b, r, g, b, r, g, b, r, g, b, r, g, b, r, g, b);
-		} else {
-			//rozkopíruj jednu barvu na všechny vrcholy
-			let max = (sharedVertices) ? 8 : 24;
-			for (let i = 0; i < max; i++) {
-				for (let j = 0; j < color.length; j++) {
-					colors.push(color[j]);
-				}
+		// copy one colors to all vertices
+		let max = (sharedVertices) ? 8 : 24;
+		for (let i = 0; i < max; i++) {
+			for (let j = 0; j < color.length; j++) {
+				colors.push(color[j]);
 			}
 		}
 	} else {
@@ -410,7 +402,10 @@ Utils.Block.prototype.createColors = function(color, sharedVertices) {
 	return colors;
 };
 
-
+/**
+ * Generate texture coordinates for block, called only when block does not have shared vertices
+ * @return {Array} array with texture coords, always the same array
+ */
 Utils.Block.prototype.createTextureCoords = function() {
 	return [
 		0, 0,
@@ -445,6 +440,11 @@ Utils.Block.prototype.createTextureCoords = function() {
 	];
 };
 
+/**
+ * Generate indices for block
+ * @param  {boolean} sharedVertices if block has shared vertices (more info in constructor)
+ * @return {Array}                  array with indices, always the same regarding the sharedVertices parameter
+ */
 Utils.Block.prototype.createIndices = function(sharedVertices) {
 	if (sharedVertices) {
 		return [
@@ -477,22 +477,23 @@ Utils.Block.prototype.createIndices = function(sharedVertices) {
 			20, 21, 22,  21, 23, 22
 		];
 	}
-}
+};
 
 /**
- * Vyvtoření stěny
- * @param {number} a     délky strany
- * @param {number} b     délky strany
- * @param {number} x     souřadnice středu
- * @param {number} y     souřadnice středu
- * @param {number} z     souřadnice středu
- * @param {Object} args  dodatečné argumenty
- *                       color - Array - barva (výchozí bílá)
- *                       strip - boolean - zda má být index buffer pro triangle strip (výchozí true)
+ * Create a face
+ * @param {number} a     side length a
+ * @param {number} b     side length b
+ * @param {number} x     position of the center of the face
+ * @param {number} y     position of the center of the face
+ * @param {number} z     position of the center of the face
+ * @param {Object} args  additional arguments
+ *                       - color {Array}  color as array; if undefined then RGB
+ *                       - strip {boolean} if indices should be generated for drawing as a triangle strip (true is default)
+ * @constructor
  */
 Utils.Face = function(a, b, x, y, z, args) {
+	// TODO orientation support
 	if (args === undefined) args = {};
-	if (args.color === undefined) args.color = [1, 1, 1];
 	if (args.strip === undefined) args.strip = true;
 
 	this.vertices = this.createVertices(a, b, x, y, z);
@@ -503,13 +504,13 @@ Utils.Face = function(a, b, x, y, z, args) {
 };
 
 /**
- * Vygenerování vrcholů pro stěnu
- * @param  {number} a délka strany
- * @param  {number} b délka strany
- * @param  {number} x souřadnice středu
- * @param  {number} y souřadnice středu
- * @param  {number} z souřadnice středu
- * @return {Array}   pole s vrcholy
+ * Generate vertices for face
+ * @param  {number} a side length
+ * @param  {number} b side length
+ * @param  {number} x position of the center of the face
+ * @param  {number} y position of the center of the face
+ * @param  {number} z position of the center of the face
+ * @return {Array}    array with vertices
  */
 Utils.Face.prototype.createVertices = function(a, b, x, y, z) {
 	let vertices = [];
@@ -525,21 +526,16 @@ Utils.Face.prototype.createVertices = function(a, b, x, y, z) {
 };
 
 /**
- * Vygenerování barev
- * @param  {number} color barva jako libovolně velké pole, může být undefined
- * @return {Array}        pole s barvami
+ * Generate colors for face
+ * @param  {number} color color as an array; if undefined then RGB
+ * @return {Array}        array with colors
  */
 Utils.Face.prototype.createColors = function(color) {
 	let colors = [];
 	if (color !== undefined) {
-		if (color.length == 3) {
-			let r = color[0], g = color[1], b = color[2];
-			colors.push(r, g, b, r, g, b, r, g, b, r, g, b);
-		} else {
-			for (let i = 0; i < 8; i++) {
-				for (let j = 0; j < color.length; j++) {
-					colors.push(color[j]);
-				}
+		for (let i = 0; i < 4; i++) {
+			for (let j = 0; j < color.length; j++) {
+				colors.push(color[j]);
 			}
 		}
 	} else {
@@ -555,6 +551,10 @@ Utils.Face.prototype.createColors = function(color) {
 	return colors;
 };
 
+/**
+ * Generate texture coordinates for face
+ * @return {Array} array with texture coords, always the same array
+ */
 Utils.Face.prototype.createTextureCoords = function() {
 	return [
 		0, 0,
@@ -565,25 +565,27 @@ Utils.Face.prototype.createTextureCoords = function() {
 };
 
 /**
- * Vygenerování normál pro stěnu
- * @param  {Vec3D} pos      pozice středu
- * @param  {Array} vertices vertex buffer
- * @return {Array}          pole s normálami
+ * Generate normals for face
+ * @param  {Vec3D} pos      position of the center
+ * @param  {Array} vertices vertices array
+ * @return {Array}          array with normals
  */
 Utils.Face.prototype.createNormals = function(pos, vertices) {
 	let normals = [];
 	let pom = [];
 	for (let i = 0; i < vertices.length; i+=3) {
-		pom = Utils.convert( new Vec3D(vertices[i]-pos.x,vertices[i+1]-pos.y,vertices[i+2]-pos.z).normalized() );
+		pom = Utils.convert(
+			new Vec3D(vertices[i]-pos.x, vertices[i+1]-pos.y, vertices[i+2]-pos.z).normalized()
+		);
 		normals.push(pom[0], pom[1], pom[2]);
 	}
 	return normals;
 };
 
 /**
- * Vytvoření index bufferu pro stěnu
- * @param  {boolean} strip
- * @return {Array}         index buffer
+ * Generate indices for face
+ * @param  {boolean} strip if face is going to be drawn with triangle strip
+ * @return {Array}         array with indices
  */
 Utils.Face.prototype.createIndices = function(strip) {
 	if (strip) {
@@ -591,22 +593,24 @@ Utils.Face.prototype.createIndices = function(strip) {
 	} else {
 		return [0, 1, 2, 1, 3, 2];
 	}
-
 };
 
 /**
- * Vytvoření koule
- * @param {number} posx      souřadnice středu
- * @param {number} posy      souřadnice středu
- * @param {number} posz      souřadnice středu
- * @param {number} radius    poloměr
- * @param {number} precision počet kroků přes rovník a poledník, nemůže být rozdílné, výrazně ovlivňuje výsledný počet vrcholů
- *                           funguje pouze pro sudé hodnoty
- *                           pokud rovno 2, tak vznikne pravidelný osmistěn
- * @param {Object} args      dodatečné argumenty
- *                          color - Array - barva, pokud undefined, tak bílá barva
- *                          strip - boolean - zda má být index buffer pro triangle strip
- *                          randomColor - boolean - pokud true, tak vygeneruje barvy náhodně
+ * Create a sphere
+ * @param {number} posx      position of the center of the sphere
+ * @param {number} posy      position of the center of the sphere
+ * @param {number} posz      position of the center of the sphere
+ * @param {number} radius    radious of the sphere
+ * @param {number} precision number of steps over the equator and the meridian, must be the same value
+ *                           has big impact on resulting number of vertices
+ *                           works only for even numbers
+ *                           the higher the number is the more the "sphere" looks like an actual sphere
+ *                           if equals 2 then it creates regular octahedron
+ * @param {Object} args      additional arguments
+ *                           - color {Array} color of sphere (default white [1, 1, 1])
+ *                           - strip {boolean} if indices should be generated for triangle strip (default true)
+ *                           - randomColor {boolean} if true then colors are going to be random for every vertice (default false)
+ * @constructor
  */
 Utils.Sphere = function(posx, posy, posz, radius, precision, args) {
 	if (args === undefined) args = {};
@@ -614,7 +618,7 @@ Utils.Sphere = function(posx, posy, posz, radius, precision, args) {
 	if (args.strip === undefined) args.strip = true;
 	if (args.randomColor === undefined) args.randomColor = false;
 
-	var pos = new Vec3D(posx, posy, posz);
+	let pos = new Vec3D(posx, posy, posz);
 	this.vertices = this.createVertices(pos, radius, precision);
 	this.colors = this.createColors(this.vertices.length/3, args.color, args.randomColor);
 	this.normals = this.createNormals(pos, this.vertices);
@@ -623,27 +627,25 @@ Utils.Sphere = function(posx, posy, posz, radius, precision, args) {
 };
 
 /**
- * Vygenerování vrcholů pro kouli
- * @param  {Vec3D} pos        pozice středu
- * @param  {number} radius    poloměr
- * @param  {number} precision úroveň přesnosti
- * @return {Array}            pole s vrcholy
+ * Generate vertices for sphere
+ * @param  {Vec3D} pos        position of the center
+ * @param  {number} radius    radius of sphere
+ * @param  {number} precision number of steps
+ * @return {Array}            array with vertices
  */
 Utils.Sphere.prototype.createVertices = function(pos, radius, precision) {
-	//var PI2 = 2*Math.PI;
-	//var PI = Math.PI;
-	var step = Math.PI/precision;
-	var vertices = [];
-	var x, y, z;
-	for (var fi = 0, round1 = 0; round1 <= precision; fi+=step, round1++) {
-		x = pos.x+radius*Math.cos(fi);//Math.cos(0) == 1
-		y = pos.y+radius*Math.sin(fi);//Math.cos(0) == 1
-		z = pos.z;//+radius*Math.sin(0) -> +0
+	let step = Math.PI/precision;
+	let vertices = [];
+	let x, y, z;
+	for (let fi = 0, round1 = 0; round1 <= precision; fi+=step, round1++) {
+		x = pos.x + radius * Math.cos(fi);// * Math.cos(0) == 1
+		y = pos.y + radius * Math.sin(fi);// * Math.cos(0) == 1
+		z = pos.z;// + radius * Math.sin(0) -> +0
 		vertices.push(x, y, z);
-		for (var psi = step, round2 = 1; round2 < 2*precision; psi+=step, round2++) {
-			x = pos.x+radius*Math.cos(fi)*Math.cos(psi);
-			y = pos.y+radius*Math.sin(fi)*Math.cos(psi);
-			z = pos.z+radius*Math.sin(psi);
+		for (let psi = step, round2 = 1; round2 < 2*precision; psi+=step, round2++) {
+			x = pos.x + radius * Math.cos(fi) * Math.cos(psi);
+			y = pos.y + radius * Math.sin(fi) * Math.cos(psi);
+			z = pos.z + radius * Math.sin(psi);
 			vertices.push(x, y, z);
 		}
 	}
@@ -651,69 +653,63 @@ Utils.Sphere.prototype.createVertices = function(pos, radius, precision) {
 };
 
 /**
- * Vygenerování barev
- * @param  {number} count   počet, vychází z počtu vrcholů
- * @param  {Array} color    pole s barvou; ignorováno pokud (random == true)
- * @param  {boolean} random zda mají být vygenerovány náhodné barvy
- * @return {Array}          pole s barvami
+ * Generate colors for sphere
+ * @param  {number} count   number of vertices the sphere has
+ * @param  {Array} color    array with colors; ignored if (random === true)
+ * @param  {boolean} random if color should be random for every vertice
+ * @return {Array}          array with colors
  */
 Utils.Sphere.prototype.createColors = function(count, color, random) {
-	var colors = [];
-	var i;
+	let colors = [];
 	if (random) {
-		for (i = 0; i < count; i++) {
+		for (let i = 0; i < count; i++) {
 			colors.push(Math.random(), Math.random(), Math.random());
 		}
-	} else if (color.length == 3) {
-		var r = color[0], g = color[1], b = color[2];
-		for (i = 0; i < count; i++) {
-			colors.push(r, g, b);
-		}
 	} else {
-		for (i = 0; i < count; i++) {
-			for (var j = 0; j < color.length; j++) {
+		for (let i = 0; i < count; i++) {
+			for (let j = 0; j < color.length; j++) {
 				colors.push(color[j]);
 			}
 		}
 	}
-
 	return colors;
 };
 
 /**
- * Vygenerování normál pro kouli
- * @param  {Vec3D} pos      pozice středu
- * @param  {Array} vertices vertex buffer
- * @return {Array}          pole s normálami
+ * Generate normals for sphere
+ * @param  {Vec3D} pos      position of the center
+ * @param  {Array} vertices array of vertices
+ * @return {Array}          array with normals
  */
 Utils.Sphere.prototype.createNormals = function(pos, vertices) {
-	var normals = [];
-	var pom = [];
-	for (var i = 0; i < vertices.length; i+=3) {
-		pom = Utils.convert( new Vec3D(vertices[i]-pos.x,vertices[i+1]-pos.y,vertices[i+2]-pos.z).normalized() );
+	let normals = [];
+	let pom = [];
+	for (let i = 0; i < vertices.length; i+=3) {
+		pom = Utils.convert(
+			new Vec3D(vertices[i]-pos.x, vertices[i+1]-pos.y, vertices[i+2]-pos.z).normalized()
+		);
 		normals.push(pom[0], pom[1], pom[2]);
 	}
 	return normals;
 };
 
 /**
- * Vygenerování souřadnic do textury pro kouli
- * @param  {number} precision
- * @return {Array}         	  pole se souřadnicemi
+ * Generate texture coordinates for sphere
+ * @param  {number} precision number of steps
+ * @return {Array}         	  array with texture coordinates
  */
 Utils.Sphere.prototype.createTextureCoords = function(precision) {
-	var texCoords = [];
+	let texCoords = [];
 	//precision == 4
-	var n = 1/(precision*2);//0.125
-	var n2 = n*2;//0.25
-	for (var i = 0; i <= precision; i++) {
-		var j;
+	let n = 1/(precision*2);//0.125
+	let n2 = n*2;//0.25
+	for (let i = 0; i <= precision; i++) {
 		//0, 0.5, 0, 0.25, 0, 0,
 		//0.125, 0.5, 0.125, 0.25, 0.125, 0,
 		//0.25, 0.5, 0.25, 0.25, 0.25, 0,
 		//0.375, 0.5, 0.375, 0.25, 0.375, 0,
 		//0.5, 0.5, 0.5, 0.25, 0.5, 0,
-		for (j = 0; j < precision/2+1; j++) {
+		for (let j = 0; j < precision/2+1; j++) {
 			texCoords.push(n*i, 0.5-j*n2);
 		}
 		//0.5, 0.25, 0.5, 0.5, 0.5, 0.75, 0.5, 1,
@@ -721,15 +717,15 @@ Utils.Sphere.prototype.createTextureCoords = function(precision) {
 		//0.75, 0.25, 0.75, 0.5, 0.75, 0.75, 0.75, 1,
 		//0.875, 0.25, 0.875, 0.5, 0.875, 0.75, 0.875, 1,
 		//1, 0.25, 1, 0.5, 1, 0.75, 1, 1,
-		for (j = 0; j < precision; j++) {
+		for (let j = 0; j < precision; j++) {
 			texCoords.push(0.5+n*i, (j+1)*n2);
 		}
-		//0, 0.75,    
+		//0, 0.75,
 		//0.125, 0.75,
-		//0.25, 0.75, 
+		//0.25, 0.75,
 		//0.375, 0.75,
-		//0.5, 0.75   
-		for (j = 0; j < precision/2-1; j++) {
+		//0.5, 0.75
+		for (let j = 0; j < precision/2-1; j++) {
 			texCoords.push(n*i, 1-(j+1)*n2);
 		}
 	}
@@ -737,16 +733,16 @@ Utils.Sphere.prototype.createTextureCoords = function(precision) {
 };
 
 /**
- * Vytvoření indexů pro kouli
- * @param  {number} precision
- * @param  {boolean} strip    pokud true, tak triangle strip, jinak obyčejný triangle
- * @return {Array}            pole s indexy
+ * Generate indices for sphere
+ * @param  {number} precision number of steps
+ * @param  {boolean} strip    if true then triangle strip, regular triangle otehrwise
+ * @return {Array}            array with indices
  */
 Utils.Sphere.prototype.createIndices = function(precision, strip) {
-	var n = precision*2;
-	var n2 = precision;
-	var indices = [];
-	var i, j, p, b;
+	let n = precision*2;
+	let n2 = precision;
+	let indices = [];
+	let i, j, p, b;
 	if (strip) {
 		indices.push(n);
 		for (i = 0; i < n2; i++) {
@@ -754,50 +750,50 @@ Utils.Sphere.prototype.createIndices = function(precision, strip) {
 			if (i !== 0) {
 				indices.push(p, p);
 			}
-			//od počátku nahoru
+			// from start to top
 			for (j = 0; j < n/4; j++) {
 				indices.push(j+n+p, j+p);
 			}
-			//od shora dolu
+			// from top down
 			for (j = n/4; j <= 3*n/4; j++) {
 				indices.push(j+p, j+n+p);
 			}
-			//od zdola do nuly
+			// from down to zero
 			for (j = 3*n/4; j < n; j++) {
 				indices.push(j+n+p, j+p);
 			}
-			//uzavřít do nuly
+			// close to zero
 			indices.push(n+p, p);
 		}
-		 
+
 		b = n*(n2-1);
-		indices.push(b,b);//příprava na pokračování stripu
+		indices.push(b,b);// preparation for strip continuation
 	}
-	//obyčejné trojúhelníky, ne strip
+	// regular triangles not strip
 	else {
-		//příklady pro 
+		// examples for
 			// n == 12
 			// precision == n2 == 6
 			// b == 60
 		for (i = 0; i < n/2; i++) {
-			//od počátku nahoru
+			// from start to top
 			//0, 12, 1, 1, 12, 13, /**/ 1, 13, 2, 2, 13, 14, /**/ 2, 14, 3, (3, 14, 15) /**/
 			p = i*n;
 			for (j = 0; j < n/4; j++) {
 				indices.push(j+p, j+n+p, j+1+p, j+1+p, j+n+p, j+n+1+p);
 			}
-			//od shora dolu
+			// from top down
 			//4, 16, 3, (3, 16, 15) /**/ 5, 17, 4, 4, 17, 16, /**/ 6, 18, 5, 5, 18, 17 ...
 			for (j = n/4; j < 3*n/4; j++) {
 				//indices.push(j+p, j+1+p, j+n+p, j+n+p, j+1+p);
 				indices.push(j+1+p, j+n+1+p, j+p, j+p, j+n+1+p, j+n+p);
 			}
-			//od zdola do nuly
-			//(9, 21, 10,) 10, 21, 22, /**/ 10, 22, 11, 11, 22, 23 
+			// from down to zero
+			//(9, 21, 10,) 10, 21, 22, /**/ 10, 22, 11, 11, 22, 23
 			for (j = 3*n/4; j < n-1; j++) {
 				indices.push(j+p, j+n+p, j+1+p, j+1+p, j+n+p, j+n+1+p);
 			}
-			//uzavřít do nuly
+			// close to zero
 			//11, 23, 0, 0, 23, 12
 			indices.push(n-1+p, n*2-1+p, p, p, n*2-1+p, n+p);
 		}
@@ -806,31 +802,30 @@ Utils.Sphere.prototype.createIndices = function(precision, strip) {
 };
 
 /**
- * Funkce pro načtení dat z JSON souboru
- * @param  {string}   url      adresa souboru
- * @param  {Function} callback funkce pro spuštění po načtení,
- *                             zavolá se s parametrem obsahujícím přijatá data
+ * Function for loading data from JSON file with AJAX
+ * @param  {string}   url      address of file
+ * @param  {Function} callback function to call after loading is complete; called with received data
  */
 Utils.getDataFromJSON = function(url, callback) {
-	var _404 = false;
-	var unknown_error = false;
-	var http_request = new XMLHttpRequest();
+	var _404 = false,
+		unknown_error = false,
+		http_request = new XMLHttpRequest();
 	http_request.open("GET", url, true);
 	http_request.onreadystatechange = function () {
-		//http_request.readyState
-		//https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
-			//0	UNSENT	open() has not been called yet.
-			//1	OPENED	send() has not been called yet.
-			//2	HEADERS_RECEIVED	send() has been called, and headers and status are available.
-			//3	LOADING	Downloading; responseText holds partial data.
-			//4	DONE	The operation is complete.
-		if (http_request.readyState == 4 && http_request.status == 200) {
+		// http_request.readyState
+		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+			// 0	UNSENT open() has not been called yet.
+			// 1	OPENED send() has not been called yet.
+			// 2	HEADERS_RECEIVED send() has been called, and headers and status are available.
+			// 3	LOADING Downloading; responseText holds partial data.
+			// 4	DONE The operation is complete.
+		if (http_request.readyState === 4 && http_request.status === 200) {
 			callback(JSON.parse(http_request.responseText));
-		} else if (http_request.status == 404) {
-			if (!_404) alert("Soubor \""+url+"\" nebyl nalezen!");
+		} else if (http_request.status === 404) {
+			if (!_404) window.alert("File \""+url+"\" was not found (404)!");
 			_404 = true;
-		} else if (http_request.status != 200 && http_request.status != 404) {
-			if (!unknown_error) alert("Při načítání souboru \""+url+"\" se vyskytla neznámá chyba!");
+		} else if (http_request.status !== 200 && http_request.status !== 404) {
+			if (!unknown_error) window.alert("An error occured when laoding file \""+url+"\"!");
 			unknown_error = true;
 		}
 	};
@@ -838,39 +833,41 @@ Utils.getDataFromJSON = function(url, callback) {
 };
 
 /**
- * Nahrazení české destinné čárky desetinnou tečkou
- * @param  {String} number vstup z formuláře
- * @return {number}        číslo
+ * Replacing czech decimal comma with decimal point making it a number
+ * @param  {String} number input from a form
+ * @return {number}        number
  */
 Utils.replaceComma = function(number) {
-	return number.replace(",", ".")*1;
+	return number.replace(",", ".") * 1;
 };
 
 /**
- * Načtení textur
- * @param  {WebGLRenderingContext}   gl
- * @param  {Array}   url       seznam url
- * @param  {Function} callback funkce pro spuštění po dokončení načtení všech obrázků,
- *                             jako parametr je předáno pole s texturami
+ * Helper function for loading textures
+ * @param  {WebGLRenderingContext} gl WebGL context
+ * @param  {Array} url                array with URLs of textures to load
+ * @param  {Function} callback        function to call after loading of all textures is complete, gets array with textures
  */
 Utils.loadTexture = function(gl, url, callback) {
-	var result = [];
-	var total = url.length;
-	var loaded = 0;
-	for (var i = 0; i < url.length; i++) {
+	let result = [];
+	let total = url.length;
+	let loaded = 0;
+
+	var onload = function(e) {
+		window.console.log("Texture \""+this.src+"\" loaded.");
+		loaded++;
+	};
+
+	for (let i = 0; i < url.length; i++) {
 
 		result[i] = gl.createTexture();
 		result[i].image = new Image();
 		//result[i].image.crossOrigin = "anonymouse";
 
-		result[i].image.onload = function (e) {
-			console.log("Texture \""+this.src+"\" loaded.");
-			loaded++;
-		};
+		result[i].image.onload = onload;
 		result[i].image.src = url[i];
 	}
 
-	var interval = function() {
+	let interval = function() {
 		if (loaded < total) {
 			setTimeout(interval, 50);
 		} else {
@@ -878,21 +875,20 @@ Utils.loadTexture = function(gl, url, callback) {
 		}
 	};
 	setTimeout(interval, 1);
-
 };
 
 /**
- * Příprava pro přepnutí do režimu celé obrazovky
- * @see Více info ve specifikaci: {@link https://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html} 
- * @param  {HTMLElement} element      element, kde se přepne na celou obrazovku
- * @param  {Function} startFullscreen funkce pro spuštění při úspěšném přepnutí do celé obrazovky
- * @param  {Function} exitFullscreen  funkce pro spuštění při opuštení celé obrazovky
+ * Preparation for switching to full screen
+ * @see More info in specification: {@link https://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html}
+ * @param  {HTMLElement} element      element which is going to be on full screen
+ * @param  {Function} startFullscreen function to call when full screen entered
+ * @param  {Function} exitFullscreen  function to call when full screen exited
  */
 Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
 	var oldW = element.width;
 	var oldH = element.height;
-	
-	//co udělat při změně
+
+	// what to do when something's changed
 	function fullscreenChange() {
 		if (document.fullscreenElement === element || document.webkitFullscreenElement === element ||
 				document.mozFullscreenElement === element || document.mozFullScreenElement === element ||
@@ -924,32 +920,30 @@ Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
 };
 
 /**
- * Příprava pro uzamknutí kurzoru nad elementem
- * @see {@link https://developer.mozilla.org/en-US/docs/WebAPI/Pointer_Lock} 
- * @param  {HTMLElement} element      element, který "pohltí" kurzor
- * @param  {Function} startFullscreen funkce pro spuštění při úspěšném uzamknutí kurzoru
- * @param  {Function} exitFullscreen  funkce pro spuštění při odemknutí kurzoru
+ * Preparation curosr locking on given element
+ * @see {@link https://developer.mozilla.org/en-US/docs/WebAPI/Pointer_Lock}
+ * @param  {HTMLElement} element      element, which is going to have locked cursor
+ * @param  {Function} startFullscreen function to call on successful locking cursor
+ * @param  {Function} exitFullscreen  function to call when cursor has been unlocked
  */
 Utils.initPointerLock = function(element, startPointerLock, exitPointerLock) {
 
 	function pointerLockChange() {
-		if (document.pointerLockElement === element ||
-					document.mozPointerLockElement === element ||
-					document.webkitPointerLockElement === element) {
-				startPointerLock();
+		if (document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element) {
+			startPointerLock();
 		} else {
-				exitPointerLock();
+			exitPointerLock();
 		}
 	}
 
 	document.addEventListener("pointerlockchange", pointerLockChange, false);
 	document.addEventListener("mozpointerlockchange", pointerLockChange, false);
 	document.addEventListener("webkitpointerlockchange", pointerLockChange, false);
-	
+
 	function pointerLockError() {
-		console.log("Uzamčení kurzoru se nezdařilo.");
+		window.console.log("Pointer lock failed.");
 	}
-	
+
 	document.addEventListener("pointerlockerror", pointerLockError, false);
 	document.addEventListener("mozpointerlockerror", pointerLockError, false);
 	document.addEventListener("webkitpointerlockerror", pointerLockError, false);
@@ -960,20 +954,20 @@ Utils.initPointerLock = function(element, startPointerLock, exitPointerLock) {
 };
 
 /**
- * Objekt pro práci s osami
+ * Object for drawing axis
  * @type {Object}
  */
 Utils.Axis = {};
 
 /**
- * Inicializace os
- * @param  {WebGLRenderingContext} gl
+ * Initialization of program, shaders and buffers
+ * @param  {WebGLRenderingContext} gl WebGL context
  */
 Utils.Axis.init = function(gl) {
 	this.axisProgram = gl.createProgram();
-	
-	var vs = gl.createShader(gl.VERTEX_SHADER);
-	var v = "attribute vec3 axisPosition;"+
+
+	let vs = gl.createShader(gl.VERTEX_SHADER);
+	let v = "attribute vec3 axisPosition;"+
 		"attribute vec3 axisColor;"+
 		""+
 		"uniform mat4 axisProjection;"+
@@ -988,9 +982,9 @@ Utils.Axis.init = function(gl) {
 	gl.shaderSource(vs, v);
 	gl.compileShader(vs);
 	gl.attachShader(this.axisProgram, vs);
-	
-	var fs = gl.createShader(gl.FRAGMENT_SHADER);
-	var f = "precision mediump float;"+
+
+	let fs = gl.createShader(gl.FRAGMENT_SHADER);
+	let f = "precision mediump float;"+
 		""+
 		"varying vec4 vColor;"+
 		""+
@@ -1000,13 +994,13 @@ Utils.Axis.init = function(gl) {
 	gl.shaderSource(fs, f);
 	gl.compileShader(fs);
 	gl.attachShader(this.axisProgram, fs);
-	
+
 	gl.linkProgram(this.axisProgram);
 	gl.useProgram(this.axisProgram);
-	
+
 	this.axisProgram.axisPosition = gl.getAttribLocation(this.axisProgram, "axisPosition");
 	gl.enableVertexAttribArray(this.axisProgram.axisPosition);
-		
+
 	this.axisProgram.axisColor = gl.getAttribLocation(this.axisProgram, "axisColor");
 	gl.enableVertexAttribArray(this.axisProgram.axisColor);
 
@@ -1014,7 +1008,7 @@ Utils.Axis.init = function(gl) {
 	this.axisProgram.axisModelView = gl.getUniformLocation(this.axisProgram, "axisModelView");
 
 	this.dataBuffer = gl.createBuffer();
-	var data = [
+	let data = [
 		0, 0, 0,  1, 0, 0,
 		4, 0, 0,  1, 0, 0,
 		0, 0, 0,  0, 1, 0,
@@ -1025,16 +1019,16 @@ Utils.Axis.init = function(gl) {
 	gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
 	this.dataBuffer.itemSize = 6;
-	
+
 	this.step = Float32Array.BYTES_PER_ELEMENT;//4
-	this.stride = this.dataBuffer.itemSize*this.step;//(3+3)*step 
+	this.stride = this.dataBuffer.itemSize*this.step;//(3+3)*step
 };
 
 /**
- * Vykreslení os, nutné volat až po inicializaci
- * @param  {WebGLRenderingContext} gl
- * @param  {Float32Array} modelview  pole 16 prvků (původně 4x4 matice)
- * @param  {Float32Array} projection pole 16 prvků (původně 4x4 matice)
+ * Draw axis, has to be called after initialization
+ * @param  {WebGLRenderingContext} gl WebGL context
+ * @param  {Float32Array} modelview   array of 16 items (originally 4x4 matrix)
+ * @param  {Float32Array} projection  array of 16 items (originally 4x4 matrix)
  */
 Utils.Axis.draw = function(gl, modelview, projection) {
 	gl.useProgram(this.axisProgram);
@@ -1045,6 +1039,6 @@ Utils.Axis.draw = function(gl, modelview, projection) {
 
 	gl.uniformMatrix4fv(this.axisProgram.axisProjection, false, projection);
 	gl.uniformMatrix4fv(this.axisProgram.axisModelView, false, modelview);
-	
+
 	gl.drawArrays(gl.LINES, 0, 6);
 };
