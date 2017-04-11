@@ -138,12 +138,8 @@ Utils.getWheelRotation = function(e) {
  * @param {Function} callback with actual listener
  */
 Utils.addMouseWheelListener = function(element, callback) {
-	// FF doesn't know onmousewheel
-	if ("onmousewheel" in document) {
-		element.onmousewheel = callback;
-	} else {
-		element.addEventListener("DOMMouseScroll", callback, false);
-	}
+	// https://developer.mozilla.org/en-US/docs/Web/Events/wheel#Browser_compatibility
+	element.addEventListener("wheel", callback, false);
 };
 
 /**
