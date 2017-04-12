@@ -290,8 +290,8 @@ Utils.Block.prototype.createVertices = function(a, b, c, x, y, z, sharedVertices
 
 		// right face
 		vertices.push(a+x, -b+y, -c+z);
-		vertices.push(a+x, -b+y, c+z);
 		vertices.push(a+x, b+y, -c+z);
+		vertices.push(a+x, -b+y, c+z);
 		vertices.push(a+x, b+y, c+z);
 
 		// left face
@@ -308,14 +308,14 @@ Utils.Block.prototype.createVertices = function(a, b, c, x, y, z, sharedVertices
 
 		// bottom face
 		vertices.push(-a+x, -b+y, -c+z);
-		vertices.push(a+x, -b+y, -c+z);
 		vertices.push(-a+x, b+y, -c+z);
+		vertices.push(a+x, -b+y, -c+z);
 		vertices.push(a+x, b+y, -c+z);
 
 		// back face
 		vertices.push(-a+x, b+y, -c+z);
-		vertices.push(a+x, b+y, -c+z);
 		vertices.push(-a+x, b+y, c+z);
+		vertices.push(a+x, b+y, -c+z);
 		vertices.push(a+x, b+y, c+z);
 	}
 	return vertices;
