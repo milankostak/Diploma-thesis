@@ -302,11 +302,11 @@
 		Utils.initRequestAnimationFrame();
 
 		let img = new Image();
-		img.src = "aa.png";
-		img.onload = function (argument) {
+		img.src = "waiting.png";
+		img.onload = function () {
 			refreshTexture(img);
 			animate();
-		}
+		};
 
 	};
 
