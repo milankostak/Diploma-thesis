@@ -845,7 +845,7 @@ Utils.loadTexture = function(gl, url, callback) {
 	let total = url.length;
 	let loaded = 0;
 
-	var onload = function(e) {
+	let onload = function(e) {
 		window.console.log("Texture \""+this.src+"\" loaded.");
 		loaded++;
 	};
@@ -878,8 +878,8 @@ Utils.loadTexture = function(gl, url, callback) {
  * @param  {Function} exitFullscreen  function to call when full screen exited
  */
 Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
-	var oldW = element.width;
-	var oldH = element.height;
+	let oldW = element.width;
+	let oldH = element.height;
 
 	// what to do when something's changed
 	function fullscreenChange() {
