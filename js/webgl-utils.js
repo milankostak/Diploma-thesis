@@ -206,14 +206,15 @@ Utils.Scene.prototype.add = function(obj) {
 	let length = this.vertices.length/3;
 	this.vertices = this.vertices.concat(obj.vertices);
 	this.colors = this.colors.concat(obj.colors);
-	this.textureCoords = this.textureCoords.concat(obj.textureCoords);
-	this.normals = this.normals.concat(obj.normals);
+	this.textureCoords = this.textureCoords.concat(obj.textureCoords).filter(n => n !== undefined);
+	this.normals = this.normals.concat(obj.normals).filter(n => n !== undefined);
 	let b = obj.indices;
 
 	for (let i = 0; i < b.length; i++) {
 		b[i] = b[i]+length;
 	}
 	this.indices = this.indices.concat(b);
+	return this;
 };
 
 /**
