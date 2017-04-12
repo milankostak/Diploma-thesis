@@ -1,7 +1,9 @@
 "use strict";
 
 /**
- * Utils object contains some useful functions for use with WebGL
+ * Utils object contains some useful functions for use with WebGL.
+ * Minimum browser support (syntax-wise, not function-wise): Edge 12+, Chrome 45+, FF 22+, Opera 32+
+ * It intentionally doesn't support anything that wouldn't work with used syntax.
  * @type {Object}
  * @author Milan Košťák
  * @version 1.1
@@ -38,14 +40,8 @@ Utils.initRequestAnimationFrame = function(fps) {
 			window.setTimeout(callback, 1000/fps);
 		};
 	} else {
-		window.requestAnimFrame = (function(callback) {
-			return window.requestAnimationFrame || // full implementations: Chromium 24+, FF 23+, Opera 15+, IE 10+, Edge
-				// window.webkitRequestAnimationFrame || // Chromium 10-23
-				// window.mozRequestAnimationFrame || // FF 4-22
-				function(callback) {
-					window.setTimeout(callback, 1000/60); // rest
-				};
-		})();
+		// Edge 12+, FF 23+, Chrome 24+, Opera 15+
+		window.requestAnimFrame = window.requestAnimationFrame;
 	}
 };
 
@@ -117,8 +113,8 @@ Utils.getMousePoint = function(e) {
  */
 Utils.getLockedMousePoint = function(e) {
 	let point = {};
-	point.x = e.movementX || e.mozMovementX || e.webkitMovementX || 0;
-	point.y = e.movementY || e.mozMovementY || e.webkitMovementY || 0;
+	point.x = e.movementX;
+	point.y = e.movementY;
 	return point;
 };
 
@@ -886,9 +882,7 @@ Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
 
 	// what to do when something's changed
 	function fullscreenChange() {
-		if (document.fullscreenElement === element || document.webkitFullscreenElement === element ||
-				document.mozFullscreenElement === element || document.mozFullScreenElement === element ||
-				document.msFullscreenElement === element) {
+		if (document.fullscreenElement === element || document.webkitFullscreenElement === element || document.mozFullscreenElement === element) {
 
 			element.width = screen.width;
 			element.height = screen.height;
@@ -905,14 +899,9 @@ Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
 	document.addEventListener("fullscreenchange", fullscreenChange, false);
 	document.addEventListener("mozfullscreenchange", fullscreenChange, false);
 	document.addEventListener("webkitfullscreenchange", fullscreenChange, false);
-	document.addEventListener("MSFullscreenChange", fullscreenChange, false);
 	//http://msdn.microsoft.com/en-us/library/ie/dn265028(v=vs.85).aspx
 
-	element.requestFullscreen = element.requestFullscreen ||
-								element.mozRequestFullscreen ||
-								element.mozRequestFullScreen ||
-								element.webkitRequestFullscreen ||
-								element.msRequestFullscreen;
+	element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.webkitRequestFullscreen
 };
 
 /**
@@ -923,9 +912,10 @@ Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
  * @param  {Function} exitFullscreen  function to call when cursor has been unlocked
  */
 Utils.initPointerLock = function(element, startPointerLock, exitPointerLock) {
+	// Edge 13+, FF 41+, Chrome 37+, Opera 24+
 
 	function pointerLockChange() {
-		if (document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element) {
+		if (document.pointerLockElement === element) {
 			startPointerLock();
 		} else {
 			exitPointerLock();
@@ -933,20 +923,12 @@ Utils.initPointerLock = function(element, startPointerLock, exitPointerLock) {
 	}
 
 	document.addEventListener("pointerlockchange", pointerLockChange, false);
-	document.addEventListener("mozpointerlockchange", pointerLockChange, false);
-	document.addEventListener("webkitpointerlockchange", pointerLockChange, false);
 
 	function pointerLockError() {
 		window.console.log("Pointer lock failed.");
 	}
 
 	document.addEventListener("pointerlockerror", pointerLockError, false);
-	document.addEventListener("mozpointerlockerror", pointerLockError, false);
-	document.addEventListener("webkitpointerlockerror", pointerLockError, false);
-
-	element.requestPointerLock = element.requestPointerLock	||
-				element.mozRequestPointerLock ||
-				element.webkitRequestPointerLock;
 };
 
 /**
