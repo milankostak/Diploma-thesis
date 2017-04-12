@@ -60,7 +60,7 @@
 
 	var cameraTexture, textureBuffer;
 
-	var blockIndices, loadedCameraPicture = false;
+	var blockIndices;
 
 	/**
 	 * Inicializace scény a bufferů
@@ -69,7 +69,8 @@
 		let scene = new Utils.Scene();
 		scene.add(new Utils.Block(1.5, 0.3, 3, 0, 0, 0, {sharedVertices: false/*, color: [0.2, 0.5, 0.9]*/}));
 		blockIndices = scene.indices.length;
-		scene.add(new Utils.Face(4, 3, -6, 0, 0, {strip: false}));
+		let or = new Mat3RotX(Math.PI / 2);
+		scene.add(new Utils.Face(4, 3, -6, 0, 0, {strip: false, orientation: or}));
 
 		vertexBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -115,11 +116,9 @@
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-		gl.uniform1i(program.texture, 0);
 		gl.uniform1i(program.useCameraTexture, 0);
 		
+		// draw cube
 		gl.uniformMatrix4fv(program.projection, false, projection);
 
 		let modelView = Utils.convert(
@@ -128,15 +127,13 @@
 		gl.uniformMatrix4fv(program.modelview, false, modelView);
 		gl.drawElements(gl.TRIANGLES, blockIndices, gl.UNSIGNED_SHORT, 0);
 
-		if (loadedCameraPicture) {
-			gl.uniform1i(program.useCameraTexture, 1);
-			modelView = Utils.convert(
-				new Mat4RotX(-Math.PI / 2).mul(translation).mul(camera.view)
-			);
-			gl.uniformMatrix4fv(program.modelview, false, modelView);
-			gl.drawElements(gl.TRIANGLES, indexBuffer.numItems - blockIndices, gl.UNSIGNED_SHORT, blockIndices * 2);
-
-	}
+		// draw textured face
+		gl.uniform1i(program.useCameraTexture, 1);
+		modelView = Utils.convert(
+			translation.mul(camera.view)
+		);
+		gl.uniformMatrix4fv(program.modelview, false, modelView);
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems - blockIndices, gl.UNSIGNED_SHORT, blockIndices * 2);
 
 		Utils.Axis.draw(gl, Utils.convert(camera.view), projection);
 	}
@@ -303,40 +300,29 @@
 
 		Utils.Axis.init(gl);
 		Utils.initRequestAnimationFrame();
-		animate();
+
+		let img = new Image();
+		img.src = "aa.png";
+		img.onload = function (argument) {
+			refreshTexture(img);
+			animate();
+		}
+
 	};
 
-	/**
-	 * Obsluha rotace
-	 * @param  {number} x změna pozice myši
-	 * @param  {number} y změna pozice myši
-	 */
 	function rotate(x, y) {
 		rotation = rotation.mul(new Mat4RotXYZ(y/50.0, 0, x/50.0));
 	}
 
-	/**
-	 * Obsluha posunutí
-	 * @param  {number} x změna pozice myši
-	 * @param  {number} y změna pozice myši
-	 */
 	function translate(x, y) {
 		translation = translation.mul(new Mat4Transl(x/100.0, 0, -y/100.0));
 	}
 
-	/**
-	 * Obsluha změny měřítka
-	 * @param  {number} x změna pozice myši
-	 * @param  {number} y změna pozice myši
-	 */
 	function scaleF(x, y) {
 		scale = scale.mul(new Mat4Scale(1+Math2.sign(x)*0.02, 1, 1-Math2.sign(y)*0.02));
 	}
 
 	var oldmils = new Date().getTime();
-	/**
-	 * Změnit pozici kamery požadovaným směrem vzhledem k rychlosti překreslování
-	 */
 	function manageCameraMoving() {
 		let n = new Date().getTime();
 		let x = (n - oldmils);
@@ -351,9 +337,6 @@
 		if (down) camera.down(step);
 	}
 
-	/**
-	 * Hlavní animační metoda
-	 */
 	function animate() {
 		manageCameraMoving();
 		repaint();
@@ -362,7 +345,7 @@
 
 	function setWebSocket() {
 
-		var HOST = location.origin.replace(/^http/, 'ws');
+		var HOST = location.origin.replace(/^https?/, 'ws');
 		var ws = new WebSocket(HOST);
 
 		ws.onopen = function() {
@@ -396,17 +379,7 @@
 				img.src = data.dataUrl;
 				img.style.display = "none";
 				img.onload = function() {
-					cameraTexture = gl.createTexture();
-
-					gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);// vyhazuje DOMException
-
-					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-					loadedCameraPicture = true;
+					refreshTexture(img);
 					console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
 				};
 			}
@@ -425,6 +398,22 @@
 		setWebSocket();
 	} else {
 		console.log("WebSocket is NOT supported by your browser!");
+	}
+
+	function refreshTexture(img) {
+		cameraTexture = gl.createTexture();
+
+		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);// vyhazuje DOMException
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+		gl.uniform1i(program.texture, 0);
 	}
 
 
