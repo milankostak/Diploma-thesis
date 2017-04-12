@@ -397,6 +397,7 @@ Utils.Block.prototype.createColors = function(color, sharedVertices) {
 
 /**
  * Generate texture coordinates for block, called only when block does not have shared vertices
+ * @since 2.0
  * @return {Array} array with texture coords, always the same array
  */
 Utils.Block.prototype.createTextureCoords = function() {
@@ -482,14 +483,16 @@ Utils.Block.prototype.createIndices = function(sharedVertices) {
  * @param {Object} args  additional arguments
  *                       - color {Array}  color as array; if undefined then RGB
  *                       - strip {boolean} if indices should be generated for drawing as a triangle strip (true is default)
+ *                       - orientation {Mat3} rotation matrix describing rotation over face center (default Mat3Identity)
  * @constructor
  */
 Utils.Face = function(a, b, x, y, z, args) {
 	// TODO orientation support
 	if (args === undefined) args = {};
 	if (args.strip === undefined) args.strip = true;
+	if (args.orientation === undefined) args.orientation = new Mat3Identity();
 
-	this.vertices = this.createVertices(a, b, x, y, z);
+	this.vertices = this.createVertices(a, b, x, y, z, args.orientation);
 	this.colors = this.createColors(args.color);
 	this.textureCoords = this.createTextureCoords();
 	this.normals = this.createNormals(new Vec3D(x, y, z), this.vertices);
@@ -503,18 +506,26 @@ Utils.Face = function(a, b, x, y, z, args) {
  * @param  {number} x position of the center of the face
  * @param  {number} y position of the center of the face
  * @param  {number} z position of the center of the face
+ * @param  {Mat3} or  rotation matrix describing rotation over face center (default Mat3Identity)
  * @return {Array}    array with vertices
  */
-Utils.Face.prototype.createVertices = function(a, b, x, y, z) {
-	let vertices = [];
+Utils.Face.prototype.createVertices = function(a, b, x, y, z, or) {
+
 	//bottom, left
-	vertices.push(-a+x, -b+y, z);
+	let point1 = new Vec3D(-a, -b, 0).mul(or);
 	//bottom, right
-	vertices.push(a+x, -b+y, z);
+	let point2 = new Vec3D(a, -b, 0).mul(or);
 	//top, left
-	vertices.push(-a+x, b+y, z);
+	let point3 = new Vec3D(-a, b, 0).mul(or);
 	//top, right
-	vertices.push(a+x, b+y, z);
+	let point4 = new Vec3D(a, b, 0).mul(or);
+
+	let vertices = [];
+	vertices.push(point1.x + x, point1.y + y, point1.z + z);
+	vertices.push(point2.x + x, point2.y + y, point2.z + z);
+	vertices.push(point3.x + x, point3.y + y, point3.z + z);
+	vertices.push(point4.x + x, point4.y + y, point4.z + z);
+
 	return vertices;
 };
 
@@ -546,14 +557,15 @@ Utils.Face.prototype.createColors = function(color) {
 
 /**
  * Generate texture coordinates for face
+ * @since 2.0
  * @return {Array} array with texture coords, always the same array
  */
 Utils.Face.prototype.createTextureCoords = function() {
 	return [
-		0, 0,
-		1, 0,
 		0, 1,
-		1, 1
+		1, 1,
+		0, 0,
+		1, 0
 	];
 };
 
