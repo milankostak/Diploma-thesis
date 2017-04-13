@@ -6,7 +6,7 @@
  * It intentionally doesn't support anything that wouldn't work with used syntax.
  * @type {Object}
  * @author Milan Košťák
- * @version 1.1
+ * @version 2.0
  * @requires transforms3d.js
  */
 var Utils = {};
@@ -487,7 +487,6 @@ Utils.Block.prototype.createIndices = function(sharedVertices) {
  * @constructor
  */
 Utils.Face = function(a, b, x, y, z, args) {
-	// TODO orientation support
 	if (args === undefined) args = {};
 	if (args.strip === undefined) args.strip = true;
 	if (args.orientation === undefined) args.orientation = new Mat3Identity();
