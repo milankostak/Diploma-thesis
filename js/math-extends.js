@@ -44,7 +44,11 @@ Math2.sign = Math.sign || function(x) {
  * @return {number}        clamped number
  */
 Math2.clamp = function(number, min, max) {
-	return Math.min(Math.max(number, min), max);
+	if (min < 0 && max < 0) {
+		return Math.max(Math.min(number, min), max);
+	} else {
+		return Math.min(Math.max(number, min), max);
+	}
 };
 
 /**
@@ -52,6 +56,6 @@ Math2.clamp = function(number, min, max) {
  * @param  {number} x input number
  * @return {number}   fraction part of input
  */
-Math2.fpart = Math2.fract = function(x) {
+Math2.fract = function(x) {
 	return x % 1;
 };
