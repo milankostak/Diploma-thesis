@@ -95,14 +95,9 @@ Utils.initShaders = function(gl, program, vsId, fsId) {
  * @return {Object} object with "x" and "y" properties holding values
  */
 Utils.getMousePoint = function(e) {
-	e = e || window.event;
 	let point = {};
-	// Opera 12 doesn't know e.layerX
-	// FF doesn't know e.offsetX
-	// Chromium has wrong e.layerX
-	// IE 11 knows all and correct
-	point.x = e.offsetX || e.clientX - e.target.offsetLeft || 0;
-	point.y = e.offsetY || e.clientY - e.target.offsetTop || 0;
+	point.x = e.offsetX || 0;
+	point.y = e.offsetY || 0;
 	return point;
 };
 
@@ -113,8 +108,8 @@ Utils.getMousePoint = function(e) {
  */
 Utils.getLockedMousePoint = function(e) {
 	let point = {};
-	point.x = e.movementX;
-	point.y = e.movementY;
+	point.x = e.movementX || 0;
+	point.y = e.movementY || 0;
 	return point;
 };
 
@@ -856,7 +851,7 @@ Utils.loadTexture = function(gl, url, callback) {
 	let total = url.length;
 	let loaded = 0;
 
-	let onload = function(e) {
+	let onload = function() {
 		window.console.log("Texture \""+this.src+"\" loaded.");
 		loaded++;
 	};
@@ -913,7 +908,7 @@ Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
 	document.addEventListener("webkitfullscreenchange", fullscreenChange, false);
 	//http://msdn.microsoft.com/en-us/library/ie/dn265028(v=vs.85).aspx
 
-	element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.webkitRequestFullscreen
+	element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.webkitRequestFullscreen;
 };
 
 /**
