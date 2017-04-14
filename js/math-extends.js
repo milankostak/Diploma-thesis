@@ -1,6 +1,7 @@
 "use strict";
 /**
  * Object implements mathematical functions that are not implemented by classic Math object
+ * @version 1.1
  * @type {Object}
  * @author Milan Košťák
  */
@@ -31,8 +32,8 @@ Math2.toDegrees = function(radians) {
  * @param  {number} x number to get the sign of
  * @return {number}   NaN, 1, 0, -0, or -1
  */
-Math2.sign = function(x) {
-	return x > 0 ? 1 : (x < 0 ? -1 : 0);
+Math2.sign = Math.sign || function(x) {
+	return isNaN(x) ? NaN : (x > 0 ? 1 : (x < 0 ? -1 : (1/x === -Infinity ? -0 : 0)));
 };
 
 /**
