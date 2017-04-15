@@ -4,26 +4,29 @@
 <meta charset="UTF-8">
 <title>Controller</title>
 <script>
+	"use strict";
 	var i = 0,
 		tmpAlpha = 0,
 		tmpBeta = 0,
-		tmpGamma = 0;
+		tmpGamma = 0,
+		errorShown = false;
 	if (window.DeviceOrientationEvent) {
-		console.log("DeviceOrientation is supported");
+		console.log("DeviceOrientation is supported.");
 		window.addEventListener('deviceorientation', deviceOrientationHandler, false);
+	} else {
+		console.log("%cDeviceOrientation is not supported.", 'color: red');
+		window.alert("This device doesn't have all necessary sensors to determine its rotation.");
 	}
 
 	function deviceOrientationHandler(e) {
 		// alpha is the compass direction the device is facing in degrees
-		// var dir = e.alpha
 		// beta is the front-to-back tilt in degrees, where front is positive
-		// var beta = e.beta;
 		// gamma is the left-to-right tilt in degrees, where right is positive
-		// var gamma = e.gamma;
-		if (i++ % 2 == 0) {
+		if (i++ % 2 === 0) {
 			tmpAlpha = e.alpha;
 			tmpBeta = e.beta;
 			tmpGamma = e.gamma;
+			checkError(e);
 		} else {
 			let alphaToSend = (tmpAlpha + e.alpha) / 2.0;
 			let betaToSend = (tmpBeta + e.beta) / 2.0;
@@ -42,7 +45,16 @@
 			};
 			request.send(JSON.stringify(obj));
 		}
+	}
 
+	function checkError(e) {
+		if ((e.alpha === null || e.beta === null || e.gamma === null) && !errorShown) {
+			let msg = "This device doesn't have all necessary sensors to determine its rotation.";
+			console.log("%c" + msg, 'color: red');
+			window.alert(msg);
+			window.removeEventListener('deviceorientation', deviceOrientationHandler, false);
+			errorShown = true;
+		}
 	}
 
 </script>

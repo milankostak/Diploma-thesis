@@ -31,7 +31,8 @@ Utils.initWebGL = function(canvas, args) {
 };
 
 /**
- * Initialization of repainting loop. Uses window.requestAnimationFrame where available. window.setTimeout is used as fallback for older browsers.
+ * Initialization of repainting loop. Uses window.requestAnimationFrame where available.
+ * If fps param is set then uses window.setTimeout function.
  * @param  {number} fps number of frames per sesond to draw, if set then window.setTimeout is used
  */
 Utils.initRequestAnimationFrame = function(fps) {

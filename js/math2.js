@@ -1,6 +1,6 @@
 "use strict";
 /**
- * Object implements mathematical functions that are not implemented by classic Math object
+ * Object implements mathematical functions that are not implemented in classic Math object
  * @version 1.1
  * @type {Object}
  * @author Milan Košťák
