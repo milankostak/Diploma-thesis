@@ -139,10 +139,10 @@
 	}
 
 	window.onload = function() {
-		canvas = document.getElementsByTagName("canvas")[0];
+		canvas = document.querySelector("canvas");
 		gl = Utils.initWebGL(canvas);
 
-		gl.clearColor(0, 0, 0, 1);
+		gl.clearColor(0.1, 0.1, 0.1, 1);
 		gl.clearDepth(1.0);
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LEQUAL);
@@ -168,7 +168,7 @@
 
 		program.projection = gl.getUniformLocation(program, "projection");
 		program.modelview = gl.getUniformLocation(program, "modelview");
-		program.texure = gl.getUniformLocation(program, "texture");
+		program.texture = gl.getUniformLocation(program, "texture");
 		program.useCameraTexture = gl.getUniformLocation(program, "useCameraTexture");
 
 		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
@@ -379,7 +379,7 @@
 					//console.log("skipping " + data.sequence);
 				}
 			} else if (data.type === "image") {
-				let img = document.getElementsByTagName("img")[0];
+				let img = document.querySelector("img");
 				img.src = data.dataUrl;
 				img.style.display = "none";
 				img.onload = function() {
