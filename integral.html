@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Integral image</title>
+<script type="text/javascript" src="js/transforms3d.js"></script>
+<script type="text/javascript" src="js/webgl-utils.js"></script>
+<script type="text/javascript" src="js/math2.js"></script>
+<script id="shader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+
+	uniform sampler2D texture;
+	uniform float offset;
+	uniform float width;
+	uniform float height;
+	uniform int horizontal;
+
+	varying vec2 textureCoord;
+
+	vec4 prefixsum_scan(float diff) {
+		float index = (horizontal == 1) ? textureCoord.x - diff : textureCoord.y - diff;
+		if (index < 0.0) {
+			return vec4(texture2D(texture, textureCoord).r, 0, 0, 1);
+		} else {
+			vec2 pos = (horizontal == 1) ? vec2(index, textureCoord.y) : vec2(textureCoord.x, index);
+			return texture2D(texture, textureCoord) + vec4(texture2D(texture, pos).r, 0, 0, 0);
+		}
+	}
+
+	void main(void) {
+		float diff = (horizontal == 1) ? offset/width : offset/height;
+		vec4 finalColor = prefixsum_scan(diff);
+
+		//float greyColor = finalColor.r * 0.21 + finalColor.g * 0.72 + finalColor.b * 0.07;
+		//float greyColor = finalColor.r * 0.33 + finalColor.g * 0.33 + finalColor.b * 0.33;
+		//gl_FragColor = vec4(0.7, 0.8, 10000.0, 1);
+		//gl_FragColor = texture2D(texture, textureCoord) + vec4(1.0, 0, 0, 0);
+		gl_FragColor = finalColor;
+	}
+
+	/*void prefixsum_scan(float input[][], out float output<>, float2 twoDoffset) {
+		float i = indexof(output);
+		vec2 index = i + twoDoffset;
+		if (index.x < 0.0 || index.y < 0.0){
+			output = input[i];
+		} else {
+			output = input[i] + input[index];
+		}
+	}*/
+
+</script>
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec2 aTextureCoord;
+
+	uniform mat4 rotation;
+
+	varying vec2 textureCoord;
+
+	void main(void) {
+		textureCoord = aTextureCoord;
+		gl_Position = rotation * vec4(aVertexPosition, 1.0);
+	}
+</script>
+<script type="text/javascript">
+	"use strict";
+
+	// HTMLCanvasElement, WebGLProgram, WebGLRenderingContext
+	var canvas, program, gl;
+	// WebGLBuffer
+	var vertexBuffer, indexBuffer;
+
+	var cameraTexture, textureBuffer;
+
+	var IIfbo, IItexture1, IItexture2;
+
+
+	function initBuffers() {
+		let scene = new Utils.Scene();
+		scene.add(new Utils.Face(1, 1, 0, 0, 0, {strip: false}));
+
+		vertexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.vertices), gl.STATIC_DRAW);
+		vertexBuffer.itemSize = 3;
+		vertexBuffer.numItems = scene.vertices.length;
+
+		indexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(scene.indices), gl.STATIC_DRAW);
+		indexBuffer.itemSize = 1;
+		indexBuffer.numItems = scene.indices.length;
+
+		textureBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.textureCoords), gl.STATIC_DRAW);
+		textureBuffer.itemSize = 2;
+		textureBuffer.numItems = scene.textureCoords.length;
+	}
+
+	let countn = 0;
+
+	function loop(outputTexture, inputTexture) {
+		// bind output texture ...
+		gl.bindTexture(gl.TEXTURE_2D, outputTexture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.FLOAT, null);
+
+		// ... and draw to it
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTexture, 0);
+
+		// bind input texture
+		gl.bindTexture(gl.TEXTURE_2D, inputTexture);
+
+		// draw
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+	}
+
+	var firstRun = true;
+	function read() {
+		//if (countn++ < 8) {
+		if (firstRun) {
+			let arraySize = canvas.width * canvas.height * 4;
+			let buf = new Float32Array(arraySize);
+			gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.FLOAT, buf);
+			console.log(buf);
+
+			// remove alpha
+			/*let buf2 = new Float32Array(canvas.width * canvas.height * 3);
+			for (let i = 0, j = 0; i < arraySize; i++) {
+				if ((i+1) % 4 != 0) {
+					buf2[j++] = buf[i];
+				}
+			}*/
+
+			// keep only red
+			//let buf2 = new Float32Array(canvas.width * canvas.height);
+			let ss = "";
+			let lineBreak = canvas.width * 4;
+			for (let i = 0; i < arraySize; i++) {
+				if (i % 4 === 0) {
+					ss += buf[i]+", ";
+				}
+				if ((i+1) % lineBreak === 0) {
+					ss += "\n";
+				}
+			}
+			console.log(ss);
+		}
+	}
+
+	function repaint() {
+		// use program
+		gl.useProgram(program);
+
+		// bind vertex data
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.vertexAttribPointer(program.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.vertexAttribPointer(program.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+		// bind framebuffer
+		gl.bindFramebuffer(gl.FRAMEBUFFER, IIfbo);
+
+		// first runs separated because of different rotation and input texture
+		gl.uniformMatrix4fv(program.rotation, false, Utils.convert(new Mat4Identity()));
+		gl.uniform1i(program.horizontal, 1);
+		gl.uniform1f(program.offset, 1.0);
+		loop(IItexture1, cameraTexture);
+		read();
+		gl.uniformMatrix4fv(program.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+
+/*
+		8 width => 4 offset - 2 cycles (2^2 = 4)
+		9 width => 8 offset - 3 cycles (2^3 = 8)
+		16 width => 8 offset
+		17 width => 16 offset - 4 cycles (2^4 = 16)
+		32 width => 16 offset
+		33 width => 32 offset - 5 cycles (2^5 = 32)
+*/
+		let cyclesHorizontal = Math.floor(Math.log2(canvas.width - 1));
+		let cyclesVertical = Math.floor(Math.log2(canvas.height - 1));
+
+		let lastOutputTextureIItexture1 = true;
+		// start on second (1) because first one is already done
+		for (let i = 1; i <= cyclesHorizontal; i++) {
+			let offset = Math.pow(2, i);
+			gl.uniform1f(program.offset, offset);
+			if (i % 2 !== 0) {
+				loop(IItexture2, IItexture1);
+				lastOutputTextureIItexture1 = false;
+			} else {
+				loop(IItexture1, IItexture2);
+				lastOutputTextureIItexture1 = true;
+			}
+			read();
+		}
+
+		// swap textures if needed
+		if (lastOutputTextureIItexture1) {
+			let tempTexture = IItexture1;
+			IItexture1 = IItexture2;
+			IItexture2 = tempTexture;
+		}
+
+		gl.uniform1i(program.horizontal, 0);
+		for (let i = 0; i <= cyclesVertical; i++) {
+			let offset = Math.pow(2, i);
+			gl.uniform1f(program.offset, offset);
+			if (i % 2 !== 0) {
+				loop(IItexture2, IItexture1);
+			} else {
+				loop(IItexture1, IItexture2);
+			}
+			read();
+		}
+		/*gl.uniform1f(program.offset, 2.0);
+		loop(IItexture2, IItexture1);
+		gl.uniform1f(program.offset, 4.0);
+		loop(IItexture1, IItexture2);
+		read();
+		gl.uniform1f(program.offset, 8.0);
+		loop(IItexture2, IItexture1);
+		read();
+		gl.uniform1f(program.offset, 16.0);
+		loop(IItexture1, IItexture2);
+		read();*/
+		firstRun = false;
+
+
+/*
+		// bind first texture...
+		gl.bindTexture(gl.TEXTURE_2D, IItexture1);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.FLOAT, null);
+
+		// ... and draw to it
+		gl.bindFramebuffer(gl.FRAMEBUFFER, IIfbo);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, IItexture1, 0);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+
+		// bind vertex data
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.vertexAttribPointer(program.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.vertexAttribPointer(program.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+		gl.uniformMatrix4fv(program.rotation, false, Utils.convert(new Mat4Identity()));
+
+		// bind input texture
+		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+
+		// draw
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+
+		if (countn++ < 1) {
+			let arraySize = canvas.width * canvas.height * 4;
+			let buf = new Float32Array(arraySize);
+			gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.FLOAT, buf);
+			console.log(buf);
+		}
+*/
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+	}
+
+	window.onload = function() {
+		canvas = document.querySelector("canvas");
+		gl = Utils.initWebGL(canvas);
+
+		gl.clearColor(0.1, 0.1, 0.1, 1);
+		gl.clearDepth(1.0);
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LEQUAL);
+
+		gl.getExtension("OES_texture_float");
+
+		program = gl.createProgram();
+		Utils.initShaders(gl, program, "shader-vs", "shader-fs");
+		gl.linkProgram(program);
+		gl.useProgram(program);
+
+		program.vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
+		gl.enableVertexAttribArray(program.vertexPositionAttribute);
+
+		program.vertexTexCoordAttribute = gl.getAttribLocation(program, "aTextureCoord");
+		gl.enableVertexAttribArray(program.vertexTexCoordAttribute);
+
+		program.texture = gl.getUniformLocation(program, "texture");
+		program.rotation = gl.getUniformLocation(program, "rotation");
+		program.offset = gl.getUniformLocation(program, "offset");
+		program.width = gl.getUniformLocation(program, "width");
+		program.height = gl.getUniformLocation(program, "height");
+		program.horizontal = gl.getUniformLocation(program, "horizontal");
+
+		IIfbo = gl.createFramebuffer();
+		IItexture1 = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, IItexture1);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		IItexture2 = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, IItexture2);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		initBuffers();
+
+		Utils.Axis.init(gl);
+		Utils.initRequestAnimationFrame();
+
+		let img = new Image();
+		img.src = "33.png";
+		img.onload = function () {
+			setupAfterLoad(img);
+			refreshTexture(img);
+			animate();
+		};
+	};
+
+	function setupAfterLoad(img) {
+		canvas.width = img.width;
+		canvas.height = img.height;
+
+		gl.useProgram(program);
+		gl.viewport(0, 0, canvas.width, canvas.height);
+		gl.uniform1f(program.width, canvas.width);
+		gl.uniform1f(program.height, canvas.height);
+	}
+
+	function animate() {
+		repaint();
+		requestAnimFrame(animate);
+	}
+
+	function refreshTexture(img) {
+		cameraTexture = gl.createTexture();
+
+		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);// vyhazuje DOMException
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		//gl.activeTexture(gl.TEXTURE0);
+		//gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+	}
+
+</script>
+<style type="text/css">
+	body {
+		text-align: center;
+	}
+	div {
+		height: 20px;
+		width: 20px;
+		background-color: #00FF00;
+		position: fixed;
+	}
+	div.topleft {
+		top: 10px;
+		left: 10px;
+	}
+	div.topright {
+		top: 10px;
+		right: 10px;
+	}
+	div.bottomleft {
+		bottom: 10px;
+		left: 10px;
+	}
+	div.bottomright {
+		bottom: 10px;
+		right: 10px;
+	}
+</style>
+</head>
+<body>
+<div class="topleft"></div>
+<div class="topright"></div>
+<div class="bottomleft"></div>
+<div class="bottomright"></div>
+
+<img src="">
+<canvas></canvas>
+</body>
+</html>
