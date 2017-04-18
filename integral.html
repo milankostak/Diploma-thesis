@@ -38,16 +38,6 @@
 		gl_FragColor = finalColor;
 	}
 
-	/*void prefixsum_scan(float input[][], out float output<>, float2 twoDoffset) {
-		float i = indexof(output);
-		vec2 index = i + twoDoffset;
-		if (index.x < 0.0 || index.y < 0.0){
-			output = input[i];
-		} else {
-			output = input[i] + input[index];
-		}
-	}*/
-
 </script>
 <script id="shader-vs" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
@@ -74,6 +64,8 @@
 
 	var IIfbo, IItexture1, IItexture2;
 
+	var texturePrecision;
+
 
 	function initBuffers() {
 		let scene = new Utils.Scene();
@@ -98,12 +90,10 @@
 		textureBuffer.numItems = scene.textureCoords.length;
 	}
 
-	let countn = 0;
-
 	function loop(outputTexture, inputTexture) {
 		// bind output texture ...
 		gl.bindTexture(gl.TEXTURE_2D, outputTexture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.FLOAT, null);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, texturePrecision, null);
 
 		// ... and draw to it
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outputTexture, 0);
@@ -117,8 +107,7 @@
 	}
 
 	var firstRun = true;
-	function read() {
-		//if (countn++ < 8) {
+	function read(showAlert) {
 		if (firstRun) {
 			let arraySize = canvas.width * canvas.height * 4;
 			let buf = new Float32Array(arraySize);
@@ -144,6 +133,9 @@
 				if ((i+1) % lineBreak === 0) {
 					ss += "\n";
 				}
+			}
+			if (showAlert) {
+				alert(ss);
 			}
 			console.log(ss);
 		}
@@ -182,23 +174,23 @@
 		let cyclesHorizontal = Math.floor(Math.log2(canvas.width - 1));
 		let cyclesVertical = Math.floor(Math.log2(canvas.height - 1));
 
-		let lastOutputTextureIItexture1 = true;
+		let lastOutputTextureIsIItexture1 = true;
 		// start on second (1) because first one is already done
 		for (let i = 1; i <= cyclesHorizontal; i++) {
 			let offset = Math.pow(2, i);
 			gl.uniform1f(program.offset, offset);
 			if (i % 2 !== 0) {
 				loop(IItexture2, IItexture1);
-				lastOutputTextureIItexture1 = false;
+				lastOutputTextureIsIItexture1 = false;
 			} else {
 				loop(IItexture1, IItexture2);
-				lastOutputTextureIItexture1 = true;
+				lastOutputTextureIsIItexture1 = true;
 			}
 			read();
 		}
 
 		// swap textures if needed
-		if (lastOutputTextureIItexture1) {
+		if (lastOutputTextureIsIItexture1) {
 			let tempTexture = IItexture1;
 			IItexture1 = IItexture2;
 			IItexture2 = tempTexture;
@@ -215,57 +207,10 @@
 			}
 			read();
 		}
-		/*gl.uniform1f(program.offset, 2.0);
-		loop(IItexture2, IItexture1);
-		gl.uniform1f(program.offset, 4.0);
-		loop(IItexture1, IItexture2);
-		read();
-		gl.uniform1f(program.offset, 8.0);
-		loop(IItexture2, IItexture1);
-		read();
-		gl.uniform1f(program.offset, 16.0);
-		loop(IItexture1, IItexture2);
-		read();*/
+		//read(true);
 		firstRun = false;
 
-
-/*
-		// bind first texture...
-		gl.bindTexture(gl.TEXTURE_2D, IItexture1);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.FLOAT, null);
-
-		// ... and draw to it
-		gl.bindFramebuffer(gl.FRAMEBUFFER, IIfbo);
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, IItexture1, 0);
-		gl.bindTexture(gl.TEXTURE_2D, null);
-
-		// bind vertex data
-		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-		gl.vertexAttribPointer(program.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
-		gl.vertexAttribPointer(program.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-		gl.uniformMatrix4fv(program.rotation, false, Utils.convert(new Mat4Identity()));
-
-		// bind input texture
-		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-
-		// draw
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-
-		if (countn++ < 1) {
-			let arraySize = canvas.width * canvas.height * 4;
-			let buf = new Float32Array(arraySize);
-			gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.FLOAT, buf);
-			console.log(buf);
-		}
-*/
-
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-
+		// draw the result into canvas (just to image what happened)
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -280,7 +225,17 @@
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LEQUAL);
 
-		gl.getExtension("OES_texture_float");
+		let floatExtension = gl.getExtension("OES_texture_float");
+		if (!floatExtension) {
+			floatExtension = gl.getExtension('OES_texture_half_float');
+			texturePrecision = floatExtension.HALF_FLOAT_OES;
+			console.log("Using OES_texture_half_float");
+			//alert("Using OES_texture_half_float");
+		} else {
+			texturePrecision = gl.FLOAT;
+			console.log("Using OES_texture_float");
+			//alert("Using OES_texture_float");
+		}
 
 		program = gl.createProgram();
 		Utils.initShaders(gl, program, "shader-vs", "shader-fs");
