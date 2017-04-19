@@ -15,29 +15,47 @@
 		navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
 		if (!navigator.getUserMedia) {
-			console.log("You are using a browser that does not support the Media Capture API");
+			console.log("%cYour browser does not support the Media Capture API. It is not possible to access camera on this device.", 'color: red');
 			return;
 		}
 
 		video = document.querySelector("video");
 		img = document.querySelector("img");
-		navigator.getUserMedia({video: true, audio: false},
-			function(stream) {
-				if (navigator.mozGetUserMedia) {
-					video.mozSrcObject = stream;
-				} else {
-					var url = window.URL || window.webkitURL;
-					video.src = url ? url.createObjectURL(stream) : stream;
-				}
-				video.play();
-			},
-			function(error) {
-				console.log("ERROR: " + error);
-			}
-		);
 
-		document.querySelector("#capture").addEventListener("click", captureSend, false);
+		video.addEventListener("canplaythrough", manageVideoSize, false);
+		window.addEventListener("resize", manageVideoSize, true);
+
+		navigator.getUserMedia({video: true, audio: false}, setupStream, streamError);
 	};
+
+	function setupStream(stream) {
+		if (navigator.mozGetUserMedia) {
+			video.mozSrcObject = stream;
+		} else {
+			let url = window.URL || window.webkitURL;
+			video.src = url ? url.createObjectURL(stream) : stream;
+		}
+		document.querySelector("#capture").addEventListener("click", captureSend, false);
+		video.play();
+	}
+
+	function streamError(error) {
+		console.log("%cVideo Error: " + error, 'color: red');
+	}
+
+	function manageVideoSize() {
+		let margin = 5;
+		let ratio = video.videoWidth / video.videoHeight;
+		let wh = window.innerHeight;
+		let ww = window.innerWidth;
+		if ((wh - margin) * ratio < ww) {
+			video.width = (wh - margin) * ratio;
+			video.height = wh - margin;
+		} else {
+			video.width = ww - margin;
+			video.height = (ww - margin) / ratio;
+		}
+	}
 
 	function captureSend() {
 		// capture
@@ -62,6 +80,27 @@
 	}
 
 </script>
+<style type="text/css">
+* {
+	margin: 0;
+	padding: 0;
+}
+body {
+	text-align: center;
+}
+video {
+
+}
+button {
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	font-size: 24px;
+	z-index: 10;
+	padding: 4px 8px;
+	font-family: Calibri, Arial, sans-serif;
+}
+</style>
 
 </head>
 <body>
