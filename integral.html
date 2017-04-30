@@ -160,7 +160,7 @@
 		gl.uniform1i(program.horizontal, 1);
 		gl.uniform1f(program.offset, 1.0);
 		loop(IItexture1, cameraTexture);
-		read();
+		//read();
 		gl.uniformMatrix4fv(program.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
 
 /*
@@ -186,7 +186,7 @@
 				loop(IItexture1, IItexture2);
 				lastOutputTextureIsIItexture1 = true;
 			}
-			read();
+			//read();
 		}
 
 		// swap textures if needed
@@ -205,12 +205,12 @@
 			} else {
 				loop(IItexture1, IItexture2);
 			}
-			read();
+			//read();
 		}
-		//read(true);
+		read(true);
 		firstRun = false;
 
-		// draw the result into canvas (just to image what happened)
+		// draw the result into canvas (just to imagine what happened)
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -275,7 +275,7 @@
 		Utils.initRequestAnimationFrame();
 
 		let img = new Image();
-		img.src = "33.png";
+		img.src = "integral1.png";
 		img.onload = function () {
 			setupAfterLoad(img);
 			refreshTexture(img);
@@ -293,7 +293,15 @@
 		gl.uniform1f(program.height, canvas.height);
 	}
 
+	//var oldMils = new Date().getTime();
+	//var count = 0;
 	function animate() {
+		/*if (count++ < 20) {
+			let n = new Date().getTime();
+			console.log(1/(n - oldMils)*1000);
+			oldMils = n;
+		}*/
+
 		repaint();
 		requestAnimFrame(animate);
 	}
