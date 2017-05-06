@@ -6,7 +6,7 @@
 <script type="text/javascript" src="js/transforms3d.js"></script>
 <script type="text/javascript" src="js/webgl-utils.js"></script>
 <script type="text/javascript" src="js/math2.js"></script>
-<script id="shader-fs" type="x-shader/x-fragment">
+<script id="shader-fs1" type="x-shader/x-fragment">
 	precision mediump float;
 
 	uniform sampler2D texture;
@@ -25,75 +25,89 @@
 		bool leftDiff = abs(current.g - left.g) < threshold;
 		vec4 right = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y));
 		bool rightDiff = abs(current.g - right.g) < threshold;
-		vec4 top = texture2D(texture, vec2(textureCoord.x, textureCoord.y - diffW));
+		vec4 top = texture2D(texture, vec2(textureCoord.x, textureCoord.y - diffH));
 		bool topDiff = abs(current.g - top.g) < threshold;
-		vec4 bottom = texture2D(texture, vec2(textureCoord.x, textureCoord.y + diffW));
+		vec4 bottom = texture2D(texture, vec2(textureCoord.x, textureCoord.y + diffH));
 		bool bottomDiff = abs(current.g - bottom.g) < threshold;
 
-		vec4 leftTop = texture2D(texture, vec2(textureCoord.x - diffW, textureCoord.y - diffW));
+		vec4 leftTop = texture2D(texture, vec2(textureCoord.x - diffW, textureCoord.y - diffH));
 		bool leftTopDiff = abs(current.g - leftTop.g) < threshold;
-		vec4 rightTop = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y - diffW));
+		vec4 rightTop = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y - diffH));
 		bool rightTopDiff = abs(current.g - rightTop.g) < threshold;
-		vec4 leftBottom = texture2D(texture, vec2(textureCoord.x - diffW, textureCoord.y + diffW));
+		vec4 leftBottom = texture2D(texture, vec2(textureCoord.x - diffW, textureCoord.y + diffH));
 		bool leftBottomDiff = abs(current.g - leftBottom.g) < threshold;
-		vec4 rightBottom = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y + diffW));
+		vec4 rightBottom = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y + diffH));
 		bool rightBottomDiff = abs(current.g - rightBottom.g) < threshold;
-/*
-		float diffW3 = 2.0/width;
-		float diffH3 = 2.0/height;
-		vec4 left3 = texture2D(texture, vec2(textureCoord.x - diffW3, textureCoord.y));
-		bool left3Diff = abs(current.g - left3.g) < threshold;
-		vec4 right3 = texture2D(texture, vec2(textureCoord.x + diffW3, textureCoord.y));
-		bool right3Diff = abs(current.g - right3.g) < threshold;
-		vec4 top3 = texture2D(texture, vec2(textureCoord.x, textureCoord.y - diffH3));
-		bool top3Diff = abs(current.g - top3.g) < threshold;
-		vec4 bottom3 = texture2D(texture, vec2(textureCoord.x, textureCoord.y + diffH3));
-		bool bottom3Diff = abs(current.g - bottom3.g) < threshold;
-*/
-		vec4 final;
+
 		if (current.r < 0.4 && current.b < 0.4 && current.g > 0.6 &&
 			leftDiff && rightDiff && topDiff && bottomDiff &&
-			leftTopDiff && rightTopDiff && leftBottomDiff && rightBottomDiff/* &&
-			left3Diff && right3Diff && top3Diff && bottom3Diff*/) {
+			leftTopDiff && rightTopDiff && leftBottomDiff && rightBottomDiff) {
 			gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 		} else {
 			gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
 			//discard;
 		}
 
-		//float greyColor = finalColor.r * 0.21 + finalColor.g * 0.72 + finalColor.b * 0.07;
-		//float greyColor = finalColor.r * 0.33 + finalColor.g * 0.33 + finalColor.b * 0.33;
-		//gl_FragColor = vec4(0.7, 0.8, 10000.0, 1);
-		//gl_FragColor = texture2D(texture, textureCoord) + vec4(1.0, 0, 0, 0);
-		//gl_FragColor = vec4(greyColor, greyColor, greyColor, 1.0);
-		//gl_FragColor = final;
 	}
+</script>
+<script id="shader-fs2" type="x-shader/x-fragment">
+	precision mediump float;
 
+	uniform sampler2D texture;
+
+	varying vec2 textureCoord;
+
+	void main(void) {
+		vec4 current = texture2D(texture, textureCoord);
+
+		if (current.r > 0.8 && current.b > 0.8 && current.g > 0.8) {
+			gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+		} else {
+			discard;
+		}
+	}
+</script>
+<script id="shader-fs-draw" type="x-shader/x-fragment">
+	precision mediump float;
+
+	uniform sampler2D texture;
+
+	varying vec2 textureCoord;
+
+	void main(void) {
+		gl_FragColor = texture2D(texture, textureCoord);
+	}
 </script>
 <script id="shader-vs" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec2 aTextureCoord;
 
+	uniform mat4 rotation;
+
 	varying vec2 textureCoord;
 
 	void main(void) {
 		textureCoord = aTextureCoord;
-		gl_Position = vec4(aVertexPosition, 1.0);
+		gl_Position = rotation * vec4(aVertexPosition, 1.0);
 	}
 </script>
 <script type="text/javascript">
 	"use strict";
 
-	// HTMLCanvasElement, WebGLProgram, WebGLRenderingContext
-	var canvas, program, gl;
+	// HTMLCanvasElement, WebGLRenderingContext
+	var canvas, gl;
+	// WebGLProgram
+	var program1, program2, programDraw;
 	// WebGLBuffer
-	var vertexBuffer, indexBuffer;
-
-	var cameraTexture, textureBuffer;
-
-	var IIfbo, IItexture1, IItexture2;
+	var vertexBuffer, indexBuffer, textureBuffer;
+	// WebGLTexture
+	var cameraTexture, texture1, texture2;
+	// WebGLFramebuffer
+	var fbo;
 
 	var texturePrecision;
+	// number
+	var width, height;
 
 
 	function initBuffers() {
@@ -122,13 +136,13 @@
 	var firstRun = true;
 	function read(showAlert) {
 		if (firstRun) {
-			let arraySize = canvas.width * canvas.height * 4;
+			let arraySize = width * height * 4;
 			let buf = new Float32Array(arraySize);
-			gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.FLOAT, buf);
+			gl.readPixels(0, 0, width, height, gl.RGBA, gl.FLOAT, buf);
 			console.log(buf);
 
 			// remove alpha
-			/*let buf2 = new Float32Array(canvas.width * canvas.height * 3);
+			/*let buf2 = new Float32Array(width * height * 3);
 			for (let i = 0, j = 0; i < arraySize; i++) {
 				if ((i+1) % 4 != 0) {
 					buf2[j++] = buf[i];
@@ -136,9 +150,9 @@
 			}*/
 
 			// keep only red
-			//let buf2 = new Float32Array(canvas.width * canvas.height);
+			//let buf2 = new Float32Array(width * height);
 			let ss = "";
-			let lineBreak = canvas.width * 4;
+			let lineBreak = width * 4;
 			for (let i = 0; i < arraySize; i++) {
 				if (i % 4 === 0) {
 					ss += buf[i]+", ";
@@ -155,24 +169,30 @@
 	}
 
 	function repaint() {
-		// use program
-		gl.useProgram(program);
 
 		// bind vertex data
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-		gl.vertexAttribPointer(program.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(program1.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
-		gl.vertexAttribPointer(program.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(program1.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
 		// bind framebuffer
-		gl.bindFramebuffer(gl.FRAMEBUFFER, IIfbo);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
 
-		gl.bindTexture(gl.TEXTURE_2D, IItexture1);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, texturePrecision, null);
+//**********************************************************
+		gl.useProgram(program1);
+
+		gl.uniformMatrix4fv(program1.rotation, false, Utils.convert(new Mat4Identity()));
+		gl.uniform1f(program1.width, width);
+		gl.uniform1f(program1.height, height);
+
+		gl.bindTexture(gl.TEXTURE_2D, texture1);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, texturePrecision, null);
+		gl.viewport(0, 0, width, height);
 
 		// ... and draw to it
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, IItexture1, 0);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture1, 0);
 
 		// bind input texture
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
@@ -181,23 +201,46 @@
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
-		/*let time = new Date().getTime();
-		let arraySize = canvas.width * canvas.height * 4;
+//**********************************************************
+		gl.useProgram(program2);
+		gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+
+		gl.bindTexture(gl.TEXTURE_2D, texture2);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, texturePrecision, null);
+		gl.viewport(0, 0, width, height);
+
+		// ... and draw to it
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2, 0);
+
+		// bind input texture
+		gl.bindTexture(gl.TEXTURE_2D, texture1);
+
+		// draw
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+/*
+		//let time = new Date().getTime();
+		let arraySize = width/4 * height/4 * 4;
 		let buf = new Float32Array(arraySize);
-		gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.FLOAT, buf);
-		let tt = (new Date().getTime() - time);
-		let time2 = new Date().getTime();
+		gl.readPixels(0, 0, width/4, height/4, gl.RGBA, gl.FLOAT, buf);
+		//let tt = (new Date().getTime() - time);
+		//let time2 = new Date().getTime();
 		let count = 0;
 		for (let i = 0; i < buf.length; i+=4) {
 			if (buf[i] == 1) count++;
 		}
-		alert(tt+" @ "+(new Date().getTime() - time2));
-		alert(count);
-*/
+		//alert(tt+" @ "+(new Date().getTime() - time2));
+		//alert(count);
+
 		//read(true);
 		firstRun = false;
+*/
 
-		// draw the result into canvas (just to imagine what happened)
+		// draw the output into canvas
+		gl.useProgram(programDraw);
+		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4Identity()));
+		gl.bindTexture(gl.TEXTURE_2D, texture2);
+		gl.viewport(0, 0, width, height);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
@@ -224,42 +267,76 @@
 			//alert("Using OES_texture_float");
 		}
 
-		program = gl.createProgram();
-		Utils.initShaders(gl, program, "shader-vs", "shader-fs");
-		gl.linkProgram(program);
-		gl.useProgram(program);
 
-		program.vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
-		gl.enableVertexAttribArray(program.vertexPositionAttribute);
+		// first step program - finds points of interest
+		program1 = gl.createProgram();
+		Utils.initShaders(gl, program1, "shader-vs", "shader-fs1");
+		gl.linkProgram(program1);
+		gl.useProgram(program1);
 
-		program.vertexTexCoordAttribute = gl.getAttribLocation(program, "aTextureCoord");
-		gl.enableVertexAttribArray(program.vertexTexCoordAttribute);
+		program1.vertexPositionAttribute = gl.getAttribLocation(program1, "aVertexPosition");
+		gl.enableVertexAttribArray(program1.vertexPositionAttribute);
 
-		program.texture = gl.getUniformLocation(program, "texture");
-		program.width = gl.getUniformLocation(program, "width");
-		program.height = gl.getUniformLocation(program, "height");
+		program1.vertexTexCoordAttribute = gl.getAttribLocation(program1, "aTextureCoord");
+		gl.enableVertexAttribArray(program1.vertexTexCoordAttribute);
 
-		IIfbo = gl.createFramebuffer();
-		IItexture1 = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, IItexture1);
+		program1.rotation = gl.getUniformLocation(program1, "rotation");
+		program1.texture = gl.getUniformLocation(program1, "texture");
+		program1.width = gl.getUniformLocation(program1, "width");
+		program1.height = gl.getUniformLocation(program1, "height");
+
+		// second step program - finds points of interest
+		program2 = gl.createProgram();
+		Utils.initShaders(gl, program2, "shader-vs", "shader-fs2");
+		gl.linkProgram(program2);
+		gl.useProgram(program2);
+
+		program2.vertexPositionAttribute = gl.getAttribLocation(program2, "aVertexPosition");
+		gl.enableVertexAttribArray(program2.vertexPositionAttribute);
+
+		program2.vertexTexCoordAttribute = gl.getAttribLocation(program2, "aTextureCoord");
+		gl.enableVertexAttribArray(program2.vertexTexCoordAttribute);
+
+		program2.rotation = gl.getUniformLocation(program2, "rotation");
+		program2.texture = gl.getUniformLocation(program2, "texture");
+
+		// basic draw program, doesn't do anything special in shaders
+		programDraw = gl.createProgram();
+		Utils.initShaders(gl, programDraw, "shader-vs", "shader-fs-draw");
+		gl.linkProgram(programDraw);
+		gl.useProgram(programDraw);
+
+		programDraw.vertexPositionAttribute = gl.getAttribLocation(programDraw, "aVertexPosition");
+		gl.enableVertexAttribArray(programDraw.vertexPositionAttribute);
+
+		programDraw.vertexTexCoordAttribute = gl.getAttribLocation(programDraw, "aTextureCoord");
+		gl.enableVertexAttribArray(programDraw.vertexTexCoordAttribute);
+
+		programDraw.rotation = gl.getUniformLocation(programDraw, "rotation");
+		programDraw.texture = gl.getUniformLocation(programDraw, "texture");
+
+		// prepare frame buffer and textures
+		fbo = gl.createFramebuffer();
+		texture1 = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, texture1);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		IItexture2 = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, IItexture2);
+		texture2 = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, texture2);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+		// prepare data for drawing (basic face)
 		initBuffers();
 
-		Utils.Axis.init(gl);
 		Utils.initRequestAnimationFrame();
 
 		let img = new Image();
-		img.src = "real.jpg";
+		img.src = "test.png";
 		img.onload = function() {
 			setupAfterLoad(img);
 			refreshTexture(img);
@@ -267,19 +344,14 @@
 		};
 	};
 
-	function setupAfterLoad(img) {
-		canvas.width = img.width;
-		canvas.height = img.height;
-
-		gl.useProgram(program);
-		gl.viewport(0, 0, canvas.width, canvas.height);
-		gl.uniform1f(program.width, canvas.width);
-		gl.uniform1f(program.height, canvas.height);
-	}
-
 	function animate() {
 		repaint();
 		requestAnimFrame(animate);
+	}
+
+	function setupAfterLoad(img) {
+		width = canvas.width = img.width;
+		height = canvas.height = img.height;
 	}
 
 	function refreshTexture(img) {
