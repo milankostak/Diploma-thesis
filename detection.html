@@ -22,6 +22,7 @@
 		vec4 current = texture2D(texture, textureCoord);
 
 		vec4 left = texture2D(texture, vec2(textureCoord.x - diffW, textureCoord.y));
+		// TODO pozor na bílou
 		bool leftDiff = abs(current.g - left.g) < threshold;
 		vec4 right = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y));
 		bool rightDiff = abs(current.g - right.g) < threshold;
@@ -39,13 +40,13 @@
 		vec4 rightBottom = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y + diffH));
 		bool rightBottomDiff = abs(current.g - rightBottom.g) < threshold;
 
-		if (current.r < 0.4 && current.b < 0.4 && current.g > 0.6 &&
+		if (current.r < 0.4 && current.b < 0.4 && current.g > 0.6/* &&
 			leftDiff && rightDiff && topDiff && bottomDiff &&
-			leftTopDiff && rightTopDiff && leftBottomDiff && rightBottomDiff) {
+			leftTopDiff && rightTopDiff && leftBottomDiff && rightBottomDiff*/) {
 			gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 		} else {
-			gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-			//discard;
+			//gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+			discard;
 		}
 
 	}
@@ -54,17 +55,77 @@
 	precision mediump float;
 
 	uniform sampler2D texture;
+	uniform float width;
+	uniform float height;
 
 	varying vec2 textureCoord;
 
 	void main(void) {
-		vec4 current = texture2D(texture, textureCoord);
+		// current coordinates
+		float x = floor(textureCoord.x * width);
+		float y = floor(textureCoord.y * height);
 
-		if (current.r > 0.8 && current.b > 0.8 && current.g > 0.8) {
-			gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-		} else {
-			discard;
-		}
+		// base top left coordinates of given square
+		float baseX = x - mod(x, 4.0);
+		float baseY = y - mod(y, 4.0);
+
+		// distance between 2 pixels
+		vec2 diff = vec2(1.0/width, 1.0/height);
+
+		// actual texture coordinates of top left pixel
+		// + diff/2 because textureCoord is always between numbers
+		vec2 baseTextureCoord = vec2(baseX / width + diff.x / 2.0, baseY / height + diff.y / 2.0);
+
+		// get all 16 pixels in given square
+		// done this way because when making the texture smaller, browsers where returning different sampled coordinates
+		// doing it like this means all 16 pixels have the same values and it doesn't matter anymore which one is picked by browser
+		vec4 pix00 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y));
+		vec4 pix10 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y));
+		vec4 pix20 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y));
+		vec4 pix30 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y));
+
+		vec4 pix01 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + diff.y));
+		vec4 pix11 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + diff.y));
+		vec4 pix21 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + diff.y));
+		vec4 pix31 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + diff.y));
+
+		vec4 pix02 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + 2.0*diff.y));
+		vec4 pix12 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + 2.0*diff.y));
+		vec4 pix22 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + 2.0*diff.y));
+		vec4 pix32 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + 2.0*diff.y));
+
+		vec4 pix03 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + 3.0*diff.y));
+		vec4 pix13 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + 3.0*diff.y));
+		vec4 pix23 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + 3.0*diff.y));
+		vec4 pix33 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + 3.0*diff.y));
+
+		float thresholdG = 0.6;
+		float thresholdRB = 0.4;
+		float count = 0.0;
+
+		// count it as pixel of interest only if green is high enough and if red,blue not too much
+		if (pix00.g > thresholdG && pix00.r < thresholdRB && pix00.b < thresholdRB) count += 1.0;
+		if (pix10.g > thresholdG && pix10.r < thresholdRB && pix10.b < thresholdRB) count += 1.0;
+		if (pix20.g > thresholdG && pix20.r < thresholdRB && pix20.b < thresholdRB) count += 1.0;
+		if (pix30.g > thresholdG && pix30.r < thresholdRB && pix30.b < thresholdRB) count += 1.0;
+
+		if (pix01.g > thresholdG && pix01.r < thresholdRB && pix01.b < thresholdRB) count += 1.0;
+		if (pix11.g > thresholdG && pix11.r < thresholdRB && pix11.b < thresholdRB) count += 1.0;
+		if (pix21.g > thresholdG && pix21.r < thresholdRB && pix21.b < thresholdRB) count += 1.0;
+		if (pix31.g > thresholdG && pix31.r < thresholdRB && pix31.b < thresholdRB) count += 1.0;
+
+		if (pix02.g > thresholdG && pix02.r < thresholdRB && pix02.b < thresholdRB) count += 1.0;
+		if (pix12.g > thresholdG && pix12.r < thresholdRB && pix12.b < thresholdRB) count += 1.0;
+		if (pix22.g > thresholdG && pix22.r < thresholdRB && pix22.b < thresholdRB) count += 1.0;
+		if (pix32.g > thresholdG && pix32.r < thresholdRB && pix32.b < thresholdRB) count += 1.0;
+
+		if (pix03.g > thresholdG && pix03.r < thresholdRB && pix03.b < thresholdRB) count += 1.0;
+		if (pix13.g > thresholdG && pix13.r < thresholdRB && pix13.b < thresholdRB) count += 1.0;
+		if (pix23.g > thresholdG && pix23.r < thresholdRB && pix23.b < thresholdRB) count += 1.0;
+		if (pix33.g > thresholdG && pix33.r < thresholdRB && pix33.b < thresholdRB) count += 1.0;
+
+		// write count, and top left coordinates
+		gl_FragColor = vec4(count, baseX, baseY, 1.0);
 	}
 </script>
 <script id="shader-fs-draw" type="x-shader/x-fragment">
@@ -134,40 +195,6 @@
 	}
 
 	var firstRun = true;
-	function read(showAlert) {
-		if (firstRun) {
-			let arraySize = width * height * 4;
-			let buf = new Float32Array(arraySize);
-			gl.readPixels(0, 0, width, height, gl.RGBA, gl.FLOAT, buf);
-			console.log(buf);
-
-			// remove alpha
-			/*let buf2 = new Float32Array(width * height * 3);
-			for (let i = 0, j = 0; i < arraySize; i++) {
-				if ((i+1) % 4 != 0) {
-					buf2[j++] = buf[i];
-				}
-			}*/
-
-			// keep only red
-			//let buf2 = new Float32Array(width * height);
-			let ss = "";
-			let lineBreak = width * 4;
-			for (let i = 0; i < arraySize; i++) {
-				if (i % 4 === 0) {
-					ss += buf[i]+", ";
-				}
-				if ((i+1) % lineBreak === 0) {
-					ss += "\n";
-				}
-			}
-			if (showAlert) {
-				alert(ss);
-			}
-			console.log(ss);
-		}
-	}
-
 	function repaint() {
 
 		// bind vertex data
@@ -181,7 +208,7 @@
 		gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
 
 //**********************************************************
-		gl.useProgram(program1);
+		/*gl.useProgram(program1);
 
 		gl.uniformMatrix4fv(program1.rotation, false, Utils.convert(new Mat4Identity()));
 		gl.uniform1f(program1.width, width);
@@ -199,11 +226,15 @@
 
 		// draw
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);*/
 
 //**********************************************************
 		gl.useProgram(program2);
-		gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+
+		//gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+		gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4Identity()));
+		gl.uniform1f(program2.width, width);
+		gl.uniform1f(program2.height, height);
 
 		gl.bindTexture(gl.TEXTURE_2D, texture2);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, texturePrecision, null);
@@ -213,33 +244,60 @@
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2, 0);
 
 		// bind input texture
-		gl.bindTexture(gl.TEXTURE_2D, texture1);
+		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
 
 		// draw
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-/*
-		//let time = new Date().getTime();
-		let arraySize = width/4 * height/4 * 4;
-		let buf = new Float32Array(arraySize);
-		gl.readPixels(0, 0, width/4, height/4, gl.RGBA, gl.FLOAT, buf);
-		//let tt = (new Date().getTime() - time);
-		//let time2 = new Date().getTime();
-		let count = 0;
-		for (let i = 0; i < buf.length; i+=4) {
-			if (buf[i] == 1) count++;
-		}
-		//alert(tt+" @ "+(new Date().getTime() - time2));
-		//alert(count);
 
-		//read(true);
-		firstRun = false;
-*/
+//**********************************************************
+		gl.useProgram(programDraw);
+
+		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+
+		gl.bindTexture(gl.TEXTURE_2D, texture1);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width/4, height/4, 0, gl.RGBA, texturePrecision, null);
+		gl.viewport(0, 0, width/4, height/4);
+
+		// ... and draw to it
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture1, 0);
+
+		// bind input texture
+		gl.bindTexture(gl.TEXTURE_2D, texture2);
+
+		// draw
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+
+//**********************************************************
+		if (firstRun) {
+			//let time = new Date().getTime();
+			let arraySize = width/4 * height/4 * 4;
+			let buf = new Float32Array(arraySize);
+			gl.readPixels(0, 0, width/4, height/4, gl.RGBA, gl.FLOAT, buf);
+			//let tt = (new Date().getTime() - time);
+			//let time2 = new Date().getTime();
+			let count = 0;
+			//let ss = "";
+			for (let i = 0; i < buf.length; i+=4) {
+				if (buf[i] >= 1) {
+					count++;
+					//ss += buf[i] + ", " + buf[i+1] + ", "  + buf[i+2] + ", "  + buf[i+3] + "\n";
+					console.log(buf[i], buf[i+1], buf[i+2], buf[i+3]);
+				}
+			}
+			//alert(tt+" @ "+(new Date().getTime() - time2));
+			//alert(count);
+			//alert(ss);
+			//read(true);
+			firstRun = false;
+		}
+
 
 		// draw the output into canvas
 		gl.useProgram(programDraw);
-		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4Identity()));
-		gl.bindTexture(gl.TEXTURE_2D, texture2);
+		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+		gl.bindTexture(gl.TEXTURE_2D, texture1);
 		gl.viewport(0, 0, width, height);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -299,6 +357,8 @@
 
 		program2.rotation = gl.getUniformLocation(program2, "rotation");
 		program2.texture = gl.getUniformLocation(program2, "texture");
+		program2.width = gl.getUniformLocation(program2, "width");
+		program2.height = gl.getUniformLocation(program2, "height");
 
 		// basic draw program, doesn't do anything special in shaders
 		programDraw = gl.createProgram();
@@ -336,7 +396,7 @@
 		Utils.initRequestAnimationFrame();
 
 		let img = new Image();
-		img.src = "test.png";
+		img.src = "real.jpg";
 		img.onload = function() {
 			setupAfterLoad(img);
 			refreshTexture(img);
