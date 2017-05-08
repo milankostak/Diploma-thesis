@@ -16,51 +16,6 @@
 	varying vec2 textureCoord;
 
 	void main(void) {
-		/*float diffW = 1.0/width;
-		float diffH = 1.0/height;
-		float threshold = 0.1;
-		vec4 current = texture2D(texture, textureCoord);
-
-		vec4 left = texture2D(texture, vec2(textureCoord.x - diffW, textureCoord.y));
-		// TODO pozor na bílou
-		bool leftDiff = abs(current.g - left.g) < threshold;
-		vec4 right = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y));
-		bool rightDiff = abs(current.g - right.g) < threshold;
-		vec4 top = texture2D(texture, vec2(textureCoord.x, textureCoord.y - diffH));
-		bool topDiff = abs(current.g - top.g) < threshold;
-		vec4 bottom = texture2D(texture, vec2(textureCoord.x, textureCoord.y + diffH));
-		bool bottomDiff = abs(current.g - bottom.g) < threshold;
-
-		vec4 leftTop = texture2D(texture, vec2(textureCoord.x - diffW, textureCoord.y - diffH));
-		bool leftTopDiff = abs(current.g - leftTop.g) < threshold;
-		vec4 rightTop = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y - diffH));
-		bool rightTopDiff = abs(current.g - rightTop.g) < threshold;
-		vec4 leftBottom = texture2D(texture, vec2(textureCoord.x - diffW, textureCoord.y + diffH));
-		bool leftBottomDiff = abs(current.g - leftBottom.g) < threshold;
-		vec4 rightBottom = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y + diffH));
-		bool rightBottomDiff = abs(current.g - rightBottom.g) < threshold;
-
-		if (current.r < 0.4 && current.b < 0.4 && current.g > 0.6 &&
-			leftDiff && rightDiff && topDiff && bottomDiff &&
-			leftTopDiff && rightTopDiff && leftBottomDiff && rightBottomDiff) {
-			gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-		} else {
-			//gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-			discard;
-		}*/
-
-	}
-</script>
-<script id="shader-fs2" type="x-shader/x-fragment">
-	precision mediump float;
-
-	uniform sampler2D texture;
-	uniform float width;
-	uniform float height;
-
-	varying vec2 textureCoord;
-
-	void main(void) {
 		// current coordinates
 		float x = floor(textureCoord.x * width);
 		float y = floor(textureCoord.y * height);
@@ -128,7 +83,7 @@
 		gl_FragColor = vec4(count, baseX, baseY, 1.0);
 	}
 </script>
-<script id="shader-fs3" type="x-shader/x-fragment">
+<script id="shader-fs2" type="x-shader/x-fragment">
 	precision mediump float;
 
 	uniform sampler2D texture;
@@ -218,7 +173,7 @@
 	// HTMLCanvasElement, WebGLRenderingContext
 	var canvas, gl;
 	// WebGLProgram
-	var program1, program2, program3, programDraw;
+	var program1, program2, programDraw;
 	// WebGLBuffer
 	var vertexBuffer, indexBuffer, textureBuffer;
 	// WebGLTexture
@@ -228,9 +183,10 @@
 	// precision of reading from texture, either FLOAT or HALF_FLOAT_OES
 	var texturePrecision;
 	// number, input width and height
-	var width, height;
+	var width, height, w4, h4, w12, h12;
 
-	var buf;
+	var readBuffer;
+
 
 
 	function initBuffers() {
@@ -257,50 +213,27 @@
 	}
 
 	var firstRun = true;
+	var times = [];
 	function repaint() {
 
 		// bind vertex data
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-		gl.vertexAttribPointer(program2.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(program1.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
-		gl.vertexAttribPointer(program2.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(program1.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
 		// bind framebuffer
 		gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
 
 //**********************************************************
-		/*gl.useProgram(program1);
+		gl.useProgram(program1);
 
 		gl.uniformMatrix4fv(program1.rotation, false, Utils.convert(new Mat4Identity()));
 		gl.uniform1f(program1.width, width);
 		gl.uniform1f(program1.height, height);
 
-		gl.bindTexture(gl.TEXTURE_2D, texture1);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, texturePrecision, null);
-		gl.viewport(0, 0, width, height);
-
-		// ... and draw to it
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture1, 0);
-
-		// bind input texture
-		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-
-		// draw
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);*/
-
-//**********************************************************
-		gl.useProgram(program2);
-
-		//gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
-		gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4Identity()));
-		gl.uniform1f(program2.width, width);
-		gl.uniform1f(program2.height, height);
-
 		gl.bindTexture(gl.TEXTURE_2D, texture2);
-		let w4 = width/4;
-		let h4 = height/4;
 		// target, level, internalformat, width, height, border, format, type, ArrayBufferView? pixels)
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w4, h4, 0, gl.RGBA, texturePrecision, null);
 		gl.viewport(0, 0, w4, h4);
@@ -316,15 +249,13 @@
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
 //**********************************************************
-		gl.useProgram(program3);
+		gl.useProgram(program2);
 
-		gl.uniformMatrix4fv(program3.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
-		gl.uniform1f(program3.width, w4);
-		gl.uniform1f(program3.height, h4);
+		gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+		gl.uniform1f(program2.width, w4);
+		gl.uniform1f(program2.height, h4);
 
 		gl.bindTexture(gl.TEXTURE_2D, texture1);
-		let w12 = w4/3;
-		let h12 = h4/3;
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w12, h12, 0, gl.RGBA, texturePrecision, null);
 		gl.viewport(0, 0, w12, h12);
 
@@ -341,9 +272,9 @@
 //**********************************************************
 		if (firstRun) {
 			let arraySize = Math.ceil(w12 * h12 * 4);
-			buf = new Float32Array(arraySize);
+			readBuffer = new Float32Array(arraySize);
 			let time = new Date().getTime();
-			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, buf);
+			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
 			times.push(new Date().getTime() - time);
 			if (times.length % 60 == 0) {
 				let sum = 0;
@@ -354,18 +285,18 @@
 				times.length = 0;
 			}
 
-			for (let i = 0; i < buf.length; i+=4) {
-				if (buf[i] >= 1) {
-					console.log(buf[i], buf[i+1], buf[i+2], buf[i+3]);
+			for (let i = 0; i < readBuffer.length; i+=4) {
+				if (readBuffer[i] >= 1) {
+					console.log(readBuffer[i], readBuffer[i+1], readBuffer[i+2], readBuffer[i+3]);
 				}
 			}
 
 			let max = 0, x, y;
-			for (let i = 0; i < buf.length; i+=4) {
-				if (buf[i] >= max) {
-					max = buf[i];
-					x = buf[i+1];
-					y = buf[i+2];
+			for (let i = 0; i < readBuffer.length; i+=4) {
+				if (readBuffer[i] >= max) {
+					max = readBuffer[i];
+					x = readBuffer[i+1];
+					y = readBuffer[i+2];
 				}
 			}
 			console.log("MAX")
@@ -384,7 +315,6 @@
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 	}
 
-	var times = [];
 
 	window.onload = function() {
 		canvas = document.querySelector("canvas");
@@ -407,9 +337,8 @@
 			//alert("Using OES_texture_float");
 		}
 
-
-		// first step program - finds points of interest
-		/*program1 = gl.createProgram();
+		// first step program - find points of interest and group them, using 4×4 areas
+		program1 = gl.createProgram();
 		Utils.initShaders(gl, program1, "shader-vs", "shader-fs1");
 		gl.linkProgram(program1);
 		gl.useProgram(program1);
@@ -423,9 +352,9 @@
 		program1.rotation = gl.getUniformLocation(program1, "rotation");
 		program1.texture = gl.getUniformLocation(program1, "texture");
 		program1.width = gl.getUniformLocation(program1, "width");
-		program1.height = gl.getUniformLocation(program1, "height");*/
+		program1.height = gl.getUniformLocation(program1, "height");
 
-		// second step program - finds points of interest and group them
+		// second step program - further merging points of interest with weighted arithmetic mean
 		program2 = gl.createProgram();
 		Utils.initShaders(gl, program2, "shader-vs", "shader-fs2");
 		gl.linkProgram(program2);
@@ -441,23 +370,6 @@
 		program2.texture = gl.getUniformLocation(program2, "texture");
 		program2.width = gl.getUniformLocation(program2, "width");
 		program2.height = gl.getUniformLocation(program2, "height");
-
-		// third step program - further merging points of interest
-		program3 = gl.createProgram();
-		Utils.initShaders(gl, program3, "shader-vs", "shader-fs3");
-		gl.linkProgram(program3);
-		gl.useProgram(program3);
-
-		program3.vertexPositionAttribute = gl.getAttribLocation(program3, "aVertexPosition");
-		gl.enableVertexAttribArray(program3.vertexPositionAttribute);
-
-		program3.vertexTexCoordAttribute = gl.getAttribLocation(program3, "aTextureCoord");
-		gl.enableVertexAttribArray(program3.vertexTexCoordAttribute);
-
-		program3.rotation = gl.getUniformLocation(program3, "rotation");
-		program3.texture = gl.getUniformLocation(program3, "texture");
-		program3.width = gl.getUniformLocation(program3, "width");
-		program3.height = gl.getUniformLocation(program3, "height");
 
 		// basic draw program, doesn't do anything special in shaders
 		programDraw = gl.createProgram();
@@ -497,7 +409,7 @@
 		let img = new Image();
 		img.src = "real.jpg";
 		img.onload = function() {
-			setupAfterLoad(img);
+			setupDimensionsAfterLoad(img);
 			refreshTexture(img);
 			animate();
 		};
@@ -508,9 +420,13 @@
 		requestAnimFrame(animate);
 	}
 
-	function setupAfterLoad(img) {
+	function setupDimensionsAfterLoad(img) {
 		width = canvas.width = img.width;
 		height = canvas.height = img.height;
+		w4 = width/4;
+		h4 = height/4;
+		w12 = w4/3;
+		h12 = h4/3;
 	}
 
 	function refreshTexture(img) {
