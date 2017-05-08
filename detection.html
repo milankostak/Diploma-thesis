@@ -187,6 +187,8 @@
 
 	var readBuffer;
 
+	var video;
+
 
 
 	function initBuffers() {
@@ -273,9 +275,13 @@
 		if (firstRun) {
 			let arraySize = Math.ceil(w12 * h12 * 4);
 			readBuffer = new Float32Array(arraySize);
-			let time = new Date().getTime();
+
+			firstRun = false;
+		}
+		//if (count++ < 100) {
+			//let time = new Date().getTime();
 			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
-			times.push(new Date().getTime() - time);
+			/*times.push(new Date().getTime() - time);
 			if (times.length % 60 == 0) {
 				let sum = 0;
 				for (var i = 0; i < times.length; i++) {
@@ -289,7 +295,7 @@
 				if (readBuffer[i] >= 1) {
 					console.log(readBuffer[i], readBuffer[i+1], readBuffer[i+2], readBuffer[i+3]);
 				}
-			}
+			}*/
 
 			let max = 0, x, y;
 			for (let i = 0; i < readBuffer.length; i+=4) {
@@ -315,7 +321,7 @@
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 	}
 
-
+	var count = 0;
 	window.onload = function() {
 		canvas = document.querySelector("canvas");
 		gl = Utils.initWebGL(canvas);
@@ -406,39 +412,77 @@
 
 		Utils.initRequestAnimationFrame();
 
-		let img = new Image();
+		/*let img = new Image();
 		img.src = "real.jpg";
 		img.onload = function() {
-			setupDimensionsAfterLoad(img);
-			refreshTexture(img);
-			animate();
-		};
+			imageLoaded(img);
+		};*/
+
+		video = document.querySelector("video");
+		video.addEventListener("canplaythrough", canPlayThrough, false);
+
+		//https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+		navigator.mediaDevices.getUserMedia({video: true, audio: false}).then(function(stream) {
+			video.srcObject = stream;
+		}).catch(function(error) {
+			console.log("%cVideo Error: " + error, 'color: red');
+		});
+
 	};
 
 	function animate() {
+		updateTexture();
 		repaint();
 		requestAnimFrame(animate);
 	}
 
-	function setupDimensionsAfterLoad(img) {
+	function updateTexture() {
+		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+		//gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+	}
+
+	function canPlayThrough() {
+		width = canvas.width = video.videoWidth;
+		height = canvas.height = video.videoHeight;
+
+		// mobile portrait 360×640
+		// mobile landscape 640×360
+		alert(width+", "+height);
+		w4 = width/4;
+		h4 = height/4;
+		w12 = w4/3;
+		h12 = h4/3;
+
+		cameraTexture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		animate();
+
+		setInterval(send, 50);
+	}
+
+	function imageLoaded(img) {
 		width = canvas.width = img.width;
 		height = canvas.height = img.height;
 		w4 = width/4;
 		h4 = height/4;
 		w12 = w4/3;
 		h12 = h4/3;
-	}
 
-	function refreshTexture(img) {
 		cameraTexture = gl.createTexture();
 
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);// throws DOMException
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		animate();
 	}
 
 </script>
@@ -446,5 +490,6 @@
 <body>
 <img src="">
 <canvas></canvas>
+<video src="" autoplay muted></video>
 </body>
 </html>
