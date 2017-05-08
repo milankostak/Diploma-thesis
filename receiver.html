@@ -140,6 +140,8 @@
 
 	window.onload = function() {
 		canvas = document.querySelector("canvas");
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight-5;
 		gl = Utils.initWebGL(canvas);
 
 		gl.clearColor(0.1, 0.1, 0.1, 1);
@@ -232,10 +234,10 @@
 			mouseDragging = false;
 		};
 
-		Utils.addMouseWheelListener(canvas, function(e) {
+		/*Utils.addMouseWheelListener(canvas, function(e) {
 			let a = -Math2.sign(Utils.getWheelRotation(e));
 			translation = translation.mul(new Mat4Transl(0, a, 0));
-		});
+		});*/
 
 		//zrušení kontextového menu na plátnem kvůli rušivosti
 		canvas.oncontextmenu = function() {
@@ -369,14 +371,14 @@
 			if (data.type === "rotation") {
 				//showTime(data);
 
-				if (data.sequence > lastReceivedSocketSequence) {
-					lastReceivedSocketSequence = data.sequence;
+				if (data.sequence > lastReceivedRotationSocketSequence) {
+					lastReceivedRotationSocketSequence = data.sequence;
 					let radiansA = Math2.toRadians(data.alpha);
 					let radiansB = Math2.toRadians(data.beta);
 					let radiansG = Math2.toRadians(data.gamma);
 					rotation = new Mat4RotXYZ(radiansB, radiansG, radiansA);
 				} else {
-					//console.log("skipping " + data.sequence);
+					//console.log("skipping roration data " + data.sequence);
 				}
 			} else if (data.type === "image") {
 				let img = document.querySelector("img");
@@ -386,6 +388,23 @@
 					refreshTexture(img);
 					console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
 				};
+			} else if (data.type === "marker") {
+
+				if (data.sequence > lastReceivedMarkerSocketSequence) {
+					lastReceivedMarkerSocketSequence = data.sequence;
+					//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
+					//console.log(data.max, lastX, data.x, lastY, data.y);
+					if (lastX != -10) {
+						//translate(lastX - data.x, lastY - data.y);
+						translation = translation.mul(new Mat4Transl((lastX - data.x)/60.0, 0, -(lastY - data.y)/60.0));
+					} else {
+						//translation = new Mat4Identity();
+					}
+					lastX = data.x;
+					lastY = data.y;
+				} else {
+					//console.log("skipping marker data " + data.sequence);
+				}
 			}
 
 		};
@@ -396,6 +415,9 @@
 			setWebSocket();
 		};
 	}
+
+	var lastX = -10, lastY = 0;
+
 
 	if ("WebSocket" in window) {
 		console.log("WebSocket: WS is supported by your browser!");
@@ -417,11 +439,11 @@
 
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-		gl.uniform1i(program.texture, 0);
 	}
 
 
-	var lastReceivedSocketSequence = -1;
+	var lastReceivedRotationSocketSequence = -1;
+	var lastReceivedMarkerSocketSequence = -1;
 	var times = [];
 	var synchronizing = true;
 	var basicTime = 0;
@@ -463,20 +485,24 @@
 	}
 
 </script>
+<style type="text/css">
+	* {
+		margin: 0;
+		padding: 0;
+	}
+	div.marker {
+		height: 20px;
+		width: 20px;
+		background-color: #00FF00;
+		position: fixed;
+		top: 50%;
+		left: 50%;
+	}
+</style>
 </head>
 <body>
 <img src="">
-<canvas width="800" height="600"></canvas>
-
-<p class="clear">
-	<strong>Ovládání</strong><br>
-	<em>Tažení levým tlačítkem myši:</em> rozhlížení kamerou<br>
-	<em>Ctrl + Tažení levým tlačítkem myši:</em> změna pozice krychle (osy x, z)<br>
-	<em>Kolečko myši:</em> změna pozice krychle (osa y)<br>
-	<em>Tažení prostředním tlačítkem (kolečkem) myši:</em> změna měřítka<br>
-	<em>Tažení pravým tlačítkem myši:</em> rotace krychle<br>
-	<em>WASDRF:</em> posun pozorovatele
-</p>
-
+<canvas></canvas>
+<div class="marker"></div>
 </body>
 </html>

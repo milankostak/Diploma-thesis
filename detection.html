@@ -305,12 +305,12 @@
 					y = readBuffer[i+2];
 				}
 			}
-			console.log("MAX")
-			console.log(max, x, y);
-
-			firstRun = false;
-		}
-
+			if (max > 1) {
+				dataToSend.push(max, x, y);
+			}
+			//console.log("MAX")
+			//console.log(max, x, y);
+		//}
 		// draw the output into canvas
 		gl.useProgram(programDraw);
 		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
@@ -483,6 +483,37 @@
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 		animate();
+	}
+
+	var dataToSend = [];
+	var sequence = 0;
+	function send() {
+		if (dataToSend.length == 0) return;
+
+		let sumMax = 0, sumX = 0, sumY = 0;
+		for (let i = 0; i < dataToSend.length; i+=3) {
+			sumMax += dataToSend[i];
+			sumX += dataToSend[i+1];
+			sumY += dataToSend[i+2];
+		}
+		let max = sumMax / (dataToSend.length / 3);
+		let coordX = sumX / (dataToSend.length / 3);
+		let coordY = sumY / (dataToSend.length / 3);
+		dataToSend.length = 0;
+
+		var request = new XMLHttpRequest();
+		request.open("POST", "/marker");
+		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+		var obj = {
+			type: "marker",
+			time: new Date().getTime(),
+			sequence: sequence++,
+			max: max,
+			x: coordX,
+			y: coordY
+		};
+		request.send(JSON.stringify(obj));
 	}
 
 </script>

@@ -15,6 +15,7 @@ const server = express()
 	.use(bodyParser.json({limit: '5mb'}))
 	.post('/show', receiveRotation)
 	.post('/picture', receivePicture)
+	.post('/marker', receiveRotation)
 	.listen(PORT, () => console.log(`App server is running.\nPort number: ${ PORT }`));
 
 const wsServer = new WebSocket.Server({ server });
