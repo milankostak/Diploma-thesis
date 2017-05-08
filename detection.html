@@ -16,7 +16,7 @@
 	varying vec2 textureCoord;
 
 	void main(void) {
-		float diffW = 1.0/width;
+		/*float diffW = 1.0/width;
 		float diffH = 1.0/height;
 		float threshold = 0.1;
 		vec4 current = texture2D(texture, textureCoord);
@@ -40,14 +40,14 @@
 		vec4 rightBottom = texture2D(texture, vec2(textureCoord.x + diffW, textureCoord.y + diffH));
 		bool rightBottomDiff = abs(current.g - rightBottom.g) < threshold;
 
-		if (current.r < 0.4 && current.b < 0.4 && current.g > 0.6/* &&
+		if (current.r < 0.4 && current.b < 0.4 && current.g > 0.6 &&
 			leftDiff && rightDiff && topDiff && bottomDiff &&
-			leftTopDiff && rightTopDiff && leftBottomDiff && rightBottomDiff*/) {
+			leftTopDiff && rightTopDiff && leftBottomDiff && rightBottomDiff) {
 			gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 		} else {
 			//gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
 			discard;
-		}
+		}*/
 
 	}
 </script>
@@ -128,6 +128,66 @@
 		gl_FragColor = vec4(count, baseX, baseY, 1.0);
 	}
 </script>
+<script id="shader-fs3" type="x-shader/x-fragment">
+	precision mediump float;
+
+	uniform sampler2D texture;
+	uniform float width;//w4
+	uniform float height;//h4
+
+	varying vec2 textureCoord;
+
+	void main(void) {
+		// current coordinates
+		float x = floor(textureCoord.x * width);
+		float y = floor(textureCoord.y * height);
+
+		// base top left synthetic coordinates of given square
+		// now working with smaller picture already so real coordinates are saved inside pixels
+		float baseX = x - mod(x, 3.0);
+		float baseY = y - mod(y, 3.0);
+
+		// distance between 2 pixels
+		vec2 diff = vec2(1.0/width, 1.0/height);
+
+		// actual texture coordinates of top left pixel
+		// + diff/2 because textureCoord is always between numbers
+		vec2 baseTextureCoord = vec2(baseX / width + diff.x / 2.0, baseY / height + diff.y / 2.0);
+
+		vec4 pix00 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y));
+		vec4 pix10 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y));
+		vec4 pix20 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y));
+
+		vec4 pix01 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + diff.y));
+		vec4 pix11 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + diff.y));
+		vec4 pix21 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + diff.y));
+
+		vec4 pix02 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + 2.0*diff.y));
+		vec4 pix12 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + 2.0*diff.y));
+		vec4 pix22 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + 2.0*diff.y));
+
+		float sumCount = pix00.r + pix10.r + pix20.r + pix01.r + pix11.r + pix21.r + pix02.r + pix12.r + pix22.r;
+
+		// no interesting pixels here
+		// discard squares with one interesting pixel?
+		if (sumCount < 2.0) discard;
+
+		// weighted arithmetic mean for coordinates
+		float sumX =
+			pix00.r * pix00.g + pix10.r * pix10.g + pix20.r * pix20.g +
+			pix01.r * pix01.g + pix11.r * pix11.g + pix21.r * pix21.g +
+			pix02.r * pix02.g + pix12.r * pix12.g + pix22.r * pix22.g;
+		float meanX = sumX / sumCount;
+		float sumY =
+			pix00.r * pix00.b + pix10.r * pix10.b + pix20.r * pix20.b +
+			pix01.r * pix01.b + pix11.r * pix11.b + pix21.r * pix21.b +
+			pix02.r * pix02.b + pix12.r * pix12.b + pix22.r * pix22.b;
+		float meanY = sumY / sumCount;
+
+
+		gl_FragColor = vec4(sumCount, meanX, meanY, 1.0);
+	}
+</script>
 <script id="shader-fs-draw" type="x-shader/x-fragment">
 	precision mediump float;
 
@@ -158,17 +218,19 @@
 	// HTMLCanvasElement, WebGLRenderingContext
 	var canvas, gl;
 	// WebGLProgram
-	var program1, program2, programDraw;
+	var program1, program2, program3, programDraw;
 	// WebGLBuffer
 	var vertexBuffer, indexBuffer, textureBuffer;
 	// WebGLTexture
 	var cameraTexture, texture1, texture2;
 	// WebGLFramebuffer
 	var fbo;
-
+	// precision of reading from texture, either FLOAT or HALF_FLOAT_OES
 	var texturePrecision;
-	// number
+	// number, input width and height
 	var width, height;
+
+	var buf;
 
 
 	function initBuffers() {
@@ -199,9 +261,9 @@
 
 		// bind vertex data
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-		gl.vertexAttribPointer(program1.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(program2.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
-		gl.vertexAttribPointer(program1.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(program2.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
 		// bind framebuffer
@@ -237,8 +299,11 @@
 		gl.uniform1f(program2.height, height);
 
 		gl.bindTexture(gl.TEXTURE_2D, texture2);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, texturePrecision, null);
-		gl.viewport(0, 0, width, height);
+		let w4 = width/4;
+		let h4 = height/4;
+		// target, level, internalformat, width, height, border, format, type, ArrayBufferView? pixels)
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w4, h4, 0, gl.RGBA, texturePrecision, null);
+		gl.viewport(0, 0, w4, h4);
 
 		// ... and draw to it
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2, 0);
@@ -251,13 +316,17 @@
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
 //**********************************************************
-		gl.useProgram(programDraw);
+		gl.useProgram(program3);
 
-		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+		gl.uniformMatrix4fv(program3.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+		gl.uniform1f(program3.width, w4);
+		gl.uniform1f(program3.height, h4);
 
 		gl.bindTexture(gl.TEXTURE_2D, texture1);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width/4, height/4, 0, gl.RGBA, texturePrecision, null);
-		gl.viewport(0, 0, width/4, height/4);
+		let w12 = w4/3;
+		let h12 = h4/3;
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w12, h12, 0, gl.RGBA, texturePrecision, null);
+		gl.viewport(0, 0, w12, h12);
 
 		// ... and draw to it
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture1, 0);
@@ -271,28 +340,39 @@
 
 //**********************************************************
 		if (firstRun) {
-			//let time = new Date().getTime();
-			let arraySize = width/4 * height/4 * 4;
-			let buf = new Float32Array(arraySize);
-			gl.readPixels(0, 0, width/4, height/4, gl.RGBA, gl.FLOAT, buf);
-			//let tt = (new Date().getTime() - time);
-			//let time2 = new Date().getTime();
-			let count = 0;
-			//let ss = "";
+			let arraySize = Math.ceil(w12 * h12 * 4);
+			buf = new Float32Array(arraySize);
+			let time = new Date().getTime();
+			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, buf);
+			times.push(new Date().getTime() - time);
+			if (times.length % 60 == 0) {
+				let sum = 0;
+				for (var i = 0; i < times.length; i++) {
+					sum += times[i];
+				}
+				console.log(sum / times.length);
+				times.length = 0;
+			}
+
 			for (let i = 0; i < buf.length; i+=4) {
 				if (buf[i] >= 1) {
-					count++;
-					//ss += buf[i] + ", " + buf[i+1] + ", "  + buf[i+2] + ", "  + buf[i+3] + "\n";
 					console.log(buf[i], buf[i+1], buf[i+2], buf[i+3]);
 				}
 			}
-			//alert(tt+" @ "+(new Date().getTime() - time2));
-			//alert(count);
-			//alert(ss);
-			//read(true);
+
+			let max = 0, x, y;
+			for (let i = 0; i < buf.length; i+=4) {
+				if (buf[i] >= max) {
+					max = buf[i];
+					x = buf[i+1];
+					y = buf[i+2];
+				}
+			}
+			console.log("MAX")
+			console.log(max, x, y);
+
 			firstRun = false;
 		}
-
 
 		// draw the output into canvas
 		gl.useProgram(programDraw);
@@ -303,6 +383,8 @@
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 	}
+
+	var times = [];
 
 	window.onload = function() {
 		canvas = document.querySelector("canvas");
@@ -327,7 +409,7 @@
 
 
 		// first step program - finds points of interest
-		program1 = gl.createProgram();
+		/*program1 = gl.createProgram();
 		Utils.initShaders(gl, program1, "shader-vs", "shader-fs1");
 		gl.linkProgram(program1);
 		gl.useProgram(program1);
@@ -341,9 +423,9 @@
 		program1.rotation = gl.getUniformLocation(program1, "rotation");
 		program1.texture = gl.getUniformLocation(program1, "texture");
 		program1.width = gl.getUniformLocation(program1, "width");
-		program1.height = gl.getUniformLocation(program1, "height");
+		program1.height = gl.getUniformLocation(program1, "height");*/
 
-		// second step program - finds points of interest
+		// second step program - finds points of interest and group them
 		program2 = gl.createProgram();
 		Utils.initShaders(gl, program2, "shader-vs", "shader-fs2");
 		gl.linkProgram(program2);
@@ -359,6 +441,23 @@
 		program2.texture = gl.getUniformLocation(program2, "texture");
 		program2.width = gl.getUniformLocation(program2, "width");
 		program2.height = gl.getUniformLocation(program2, "height");
+
+		// third step program - further merging points of interest
+		program3 = gl.createProgram();
+		Utils.initShaders(gl, program3, "shader-vs", "shader-fs3");
+		gl.linkProgram(program3);
+		gl.useProgram(program3);
+
+		program3.vertexPositionAttribute = gl.getAttribLocation(program3, "aVertexPosition");
+		gl.enableVertexAttribArray(program3.vertexPositionAttribute);
+
+		program3.vertexTexCoordAttribute = gl.getAttribLocation(program3, "aTextureCoord");
+		gl.enableVertexAttribArray(program3.vertexTexCoordAttribute);
+
+		program3.rotation = gl.getUniformLocation(program3, "rotation");
+		program3.texture = gl.getUniformLocation(program3, "texture");
+		program3.width = gl.getUniformLocation(program3, "width");
+		program3.height = gl.getUniformLocation(program3, "height");
 
 		// basic draw program, doesn't do anything special in shaders
 		programDraw = gl.createProgram();
@@ -418,15 +517,12 @@
 		cameraTexture = gl.createTexture();
 
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);// vyhazuje DOMException
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);// throws DOMException
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-		//gl.activeTexture(gl.TEXTURE0);
-		//gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
 	}
 
 </script>
