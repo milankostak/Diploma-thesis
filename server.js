@@ -14,9 +14,9 @@ const server = express()
 	.use(serveStatic(__dirname, {'camera': false}))
 	.use(serveStatic(__dirname, {'detection': false}))
 	.use(bodyParser.json({limit: '5mb'}))
-	.post('/show', receiveData)
-	.post('/picture', receivePicture)
-	.post('/marker', receiveData)
+	.post('/ajax/rotation', receiveData)
+	.post('/ajax/marker', receiveData)
+	.post('/ajax/picture', receivePicture)
 	.listen(PORT, () => console.log(`App server is running.\nPort number: ${ PORT }`));
 
 const wsServer = new WebSocket.Server({ server });
