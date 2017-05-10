@@ -12,10 +12,11 @@ const server = express()
 	.use(serveStatic(__dirname, {'controller': false}))
 	.use(serveStatic(__dirname, {'receiver': false}))
 	.use(serveStatic(__dirname, {'camera': false}))
+	.use(serveStatic(__dirname, {'detection': false}))
 	.use(bodyParser.json({limit: '5mb'}))
-	.post('/show', receiveRotation)
+	.post('/show', receiveData)
 	.post('/picture', receivePicture)
-	.post('/marker', receiveRotation)
+	.post('/marker', receiveData)
 	.listen(PORT, () => console.log(`App server is running.\nPort number: ${ PORT }`));
 
 const wsServer = new WebSocket.Server({ server });
@@ -45,21 +46,19 @@ wsServer.on('connection', (ws) => {
 	});
 });
 
-function receiveRotation(req, res) {
+function receiveData(req, res) {
 	res.sendStatus(200);
 	// console.log(req.body);
-
-	sendToClients(req.body);
+	forwardToClients(req.body);
 }
 
 function receivePicture(req, res) {
 	res.sendStatus(200);
 	//console.log(req.body.dataUrl.substr(0, 50));
-
-	sendToClients(req.body);
+	forwardToClients(req.body);
 }
 
-function sendToClients(body) {
+function forwardToClients(body) {
 	var data = JSON.stringify(body);
 
 	wsClients.forEach((client) => {
