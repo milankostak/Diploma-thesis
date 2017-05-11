@@ -2,7 +2,7 @@
 <html lang="en-GB" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<title>Controller</title>
+<title>Rotation</title>
 <script>
 	"use strict";
 	var i = 0,
@@ -10,6 +10,7 @@
 		tmpBeta = 0,
 		tmpGamma = 0,
 		errorShown = false;
+
 	if (window.DeviceOrientationEvent) {
 		console.log("DeviceOrientation is supported.");
 		window.addEventListener('deviceorientation', deviceOrientationHandler, false);
