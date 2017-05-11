@@ -9,8 +9,8 @@ const PORT = process.env.PORT || 3000;
 const wsClients = [];
 
 const server = express()
-	.use(serveStatic(__dirname, {'controller': false}))
 	.use(serveStatic(__dirname, {'receiver': false}))
+	.use(serveStatic(__dirname, {'rotation': false}))
 	.use(serveStatic(__dirname, {'camera': false}))
 	.use(serveStatic(__dirname, {'detection': false}))
 	.use(bodyParser.json({limit: '5mb'}))
