@@ -190,7 +190,7 @@
 		mouseButton = -1;
 		initBuffers();
 
-		canvas.onmousedown = function(e){
+		canvas.onmousedown = function(e) {
 			mouseButton = e.which;
 			mouseDragging = true;
 			let point = Utils.getMousePoint(e);
@@ -205,7 +205,7 @@
 				let y = point.y - my;
 				//levé tlačítko
 				if (mouseButton === 1 && e.ctrlKey) {
-					translate(x, y);
+					translate(x, y, 100);
 				} else if (mouseButton === 1) {
 					let step = 270;
 					azimuth -= step * x / canvas.width;
@@ -233,11 +233,6 @@
 		document.onmouseup = function() {
 			mouseDragging = false;
 		};
-
-		/*Utils.addMouseWheelListener(canvas, function(e) {
-			let a = -Math2.sign(Utils.getWheelRotation(e));
-			translation = translation.mul(new Mat4Transl(0, a, 0));
-		});*/
 
 		//zrušení kontextového menu na plátnem kvůli rušivosti
 		canvas.oncontextmenu = function() {
@@ -320,8 +315,8 @@
 		rotation = rotation.mul(new Mat4RotXYZ(y/50.0, 0, x/50.0));
 	}
 
-	function translate(x, y) {
-		translation = translation.mul(new Mat4Transl(x/100.0, 0, -y/100.0));
+	function translate(x, y, divisor) {
+		translation = translation.mul(new Mat4Transl(x/divisor, 0, -y/divisor));
 	}
 
 	function scaleF(x, y) {
@@ -395,10 +390,8 @@
 					//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
 					//console.log(data.max, lastX, data.x, lastY, data.y);
 					if (lastX != -10) {
-						//translate(lastX - data.x, lastY - data.y);
-						translation = translation.mul(new Mat4Transl((lastX - data.x)/60.0, 0, -(lastY - data.y)/60.0));
-					} else {
-						//translation = new Mat4Identity();
+						translate(lastX - data.x, lastY - data.y, 60);
+						//translation = translation.mul(new Mat4Transl((lastX - data.x)/60.0, 0, -(lastY - data.y)/60.0));
 					}
 					lastX = data.x;
 					lastY = data.y;

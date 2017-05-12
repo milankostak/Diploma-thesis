@@ -188,6 +188,8 @@
 	var readBuffer;
 
 	var video;
+	// variables for sending marker location
+	var dataToSend = [], sequence = 0;
 
 
 
@@ -476,7 +478,7 @@
 		cameraTexture = gl.createTexture();
 
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -485,8 +487,6 @@
 		animate();
 	}
 
-	var dataToSend = [];
-	var sequence = 0;
 	function send() {
 		if (dataToSend.length == 0) return;
 
@@ -501,11 +501,11 @@
 		let coordY = sumY / (dataToSend.length / 3);
 		dataToSend.length = 0;
 
-		var request = new XMLHttpRequest();
+		let request = new XMLHttpRequest();
 		request.open("POST", "/ajax/marker");
 		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 
-		var obj = {
+		let obj = {
 			type: "marker",
 			time: new Date().getTime(),
 			sequence: sequence++,

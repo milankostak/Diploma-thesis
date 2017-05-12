@@ -33,10 +33,10 @@
 			let betaToSend = (tmpBeta + e.beta) / 2.0;
 			let gammaToSend = (tmpGamma + e.gamma) / 2.0;
 
-			var request = new XMLHttpRequest();
+			let request = new XMLHttpRequest();
 			request.open('POST', "/ajax/rotation");
 			request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-			var obj = {
+			let obj = {
 				type: "rotation",
 				time: new Date().getTime(),
 				sequence: i,
