@@ -62,8 +62,10 @@
 	var cameraTexture, textureBuffer;
 
 	var blockIndices;
-
-	var lastMarkerX = -10, lastMarkerY = 0;
+	// numbers, holding last recived data for computing relative change
+	var lastMarkerX = 0, lastMarkerY = 0;
+	// numbers, holding last sequence number for skipping delayed packets
+	var lastReceivedRotationSocketSequence = -1, lastReceivedMarkerSocketSequence = -1;
 
 	/**
 	 * Inicializace scény a bufferů
@@ -373,13 +375,17 @@
 			};
 		} else if (data.type === "marker") {
 
+			// start or restart
+			if (data.sequence <= 1) {
+				lastReceivedMarkerSocketSequence = -1;
+			}
+
 			if (data.sequence > lastReceivedMarkerSocketSequence) {
 				lastReceivedMarkerSocketSequence = data.sequence;
 				//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
 				//console.log(data.max, lastMarkerX, data.x, lastMarkerY, data.y);
-				if (lastMarkerX != -10) {
-					translate(lastMarkerX - data.x, lastMarkerY - data.y, 60);
-					//translation = translation.mul(new Mat4Transl((lastMarkerX - data.x)/60.0, 0, -(lastMarkerY - data.y)/60.0));
+				if (data.sequence > 1) {
+					translate(lastMarkerX - data.x, lastMarkerY - data.y, 50);
 				}
 				lastMarkerX = data.x;
 				lastMarkerY = data.y;
@@ -405,8 +411,6 @@
 	}
 
 
-	var lastReceivedRotationSocketSequence = -1;
-	var lastReceivedMarkerSocketSequence = -1;
 	var times = [];
 	var synchronizing = true;
 	var basicTime = 0;
