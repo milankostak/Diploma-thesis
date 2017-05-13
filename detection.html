@@ -2,6 +2,7 @@
 <html lang="en-GB" dir="ltr">
 <head>
 <meta charset="UTF-8">
+<!--<meta name="viewport" content="width=device-width,initial-scale=1">-->
 <title>Detection</title>
 <script type="text/javascript" src="js/transforms3d.js"></script>
 <script type="text/javascript" src="js/webgl-utils.js"></script>
@@ -273,7 +274,7 @@
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
 //**********************************************************
-
+		// read pixels
 		//if (count++ < 100) {
 			//let time = new Date().getTime();
 			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
@@ -307,6 +308,8 @@
 			//console.log("MAX")
 			//console.log(max, x, y);
 		//}
+
+//**********************************************************
 		// draw the output into canvas
 		gl.useProgram(programDraw);
 		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
@@ -405,14 +408,12 @@
 		// prepare data for drawing (basic face)
 		initBuffers();
 
-		// allocate readBuffer for reading pixels
-		let arraySize = Math.ceil(w12 * h12 * 4);
-		readBuffer = new Float32Array(arraySize);
-
+		// init requestAnimFrame function
 		Utils.initRequestAnimationFrame();
 
+		// set video listener, important for starting animation
 		video = document.querySelector("video");
-		video.addEventListener("canplaythrough", canPlayThrough, false);
+		video.addEventListener("canplaythrough", setupAfterGettingVideoStream, false);
 
 		//https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
 		navigator.mediaDevices.getUserMedia({video: true, audio: false}).then(function(stream) {
@@ -420,7 +421,6 @@
 		}).catch(function(error) {
 			console.log("%cVideo Error: " + error, 'color: red');
 		});
-
 	};
 
 	function animate() {
@@ -432,10 +432,14 @@
 	function updateTexture() {
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
 		//gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+		// Firefox warning: Failed to hit GPU-copy fast-path. Falling back to CPU upload.
+		// https://bugzilla.mozilla.org/show_bug.cgi?id=1246410
+		// https://bugzilla.mozilla.org/show_bug.cgi?id=1322746
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
 	}
 
-	function canPlayThrough() {
+	function setupAfterGettingVideoStream() {
 		width = canvas.width = video.videoWidth;
 		height = canvas.height = video.videoHeight;
 
@@ -452,6 +456,13 @@
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		// allocate readBuffer for reading pixels
+		let arraySize = Math.ceil(w12 * h12 * 4);
+		readBuffer = new Float32Array(arraySize);
+
+		// hide loading message
+		document.querySelector(".loading").style.display = "none";
 
 		animate();
 
@@ -489,10 +500,46 @@
 	}
 
 </script>
+<style type="text/css">
+	* {
+		margin: 0;
+		padding: 0;
+	}
+	body {
+		background-color: #DEDEDE;
+		font-family: Calibri, Arial, sans-serif;
+	}
+	.loading {
+		position: fixed;
+		top: calc(50% - 60px);
+		left: calc(50% - 220px);
+		margin: auto;
+		text-align: center;
+		background-color: white;
+		box-shadow: 0 0 60px 0 #333;
+
+		color: #666;
+		border: 1px solid #ddd;
+		margin: 0 auto 20px;
+		padding: 20px;
+	}
+	.center {
+		text-align: center;
+	}
+	canvas {
+		display: none;
+	}
+</style>
 </head>
 <body>
-<img src="">
-<canvas></canvas>
-<video src="" autoplay muted></video>
+<div class="loading">
+	Loading, please wait...<br>
+	Access to your camera is needed for this appplication to work.<br>
+	You might be asked for giving a permissison to access it.
+</div>
+<div class="center">
+	<canvas></canvas>
+	<video src="" autoplay muted></video>
+</div>
 </body>
 </html>
