@@ -6,6 +6,7 @@
 <script type="text/javascript" src="js/transforms3d.js"></script>
 <script type="text/javascript" src="js/webgl-utils.js"></script>
 <script type="text/javascript" src="js/math2.js"></script>
+<script type="text/javascript" src="js/ws.js"></script>
 <script id="shader-fs" type="x-shader/x-fragment">
 	precision mediump float;
 
@@ -61,6 +62,8 @@
 	var cameraTexture, textureBuffer;
 
 	var blockIndices;
+
+	var lastMarkerX = -10, lastMarkerY = 0;
 
 	/**
 	 * Inicializace scény a bufferů
@@ -299,6 +302,8 @@
 			}
 		};
 
+		WS.setWebSocket(() => {}, onWsMessage, () => {});
+
 		Utils.Axis.init(gl);
 		Utils.initRequestAnimationFrame();
 
@@ -311,16 +316,10 @@
 
 	};
 
-	function rotate(x, y) {
-		rotation = rotation.mul(new Mat4RotXYZ(y/50.0, 0, x/50.0));
-	}
-
-	function translate(x, y, divisor) {
-		translation = translation.mul(new Mat4Transl(x/divisor, 0, -y/divisor));
-	}
-
-	function scaleF(x, y) {
-		scale = scale.mul(new Mat4Scale(1+Math2.sign(x)*0.02, 1, 1-Math2.sign(y)*0.02));
+	function animate() {
+		manageCameraMoving();
+		repaint();
+		requestAnimFrame(animate);
 	}
 
 	var oldmils = new Date().getTime();
@@ -338,92 +337,63 @@
 		if (down) camera.down(step);
 	}
 
-	function animate() {
-		manageCameraMoving();
-		repaint();
-		requestAnimFrame(animate);
+	function rotate(x, y) {
+		rotation = rotation.mul(new Mat4RotXYZ(y/50.0, 0, x/50.0));
 	}
 
-	function setWebSocket() {
+	function translate(x, y, divisor) {
+		translation = translation.mul(new Mat4Transl(x/divisor, 0, -y/divisor));
+	}
 
-		var HOST = location.origin.replace(/^https?/, 'ws');
-		var ws = new WebSocket(HOST);
+	function scaleF(x, y) {
+		scale = scale.mul(new Mat4Scale(1+Math2.sign(x)*0.02, 1, 1-Math2.sign(y)*0.02));
+	}
 
-		ws.onopen = function() {
-			console.log("WebSocket: connection is opened.");
-		};
+	function onWsMessage(data) {
 
-		// refresh connection every 30 seconds
-		setInterval(function() {
-			ws.send("Refresh");
-			console.log("WebSocket: refreshing connection");
-		}, 30000);
+		if (data.type === "rotation") {
+			//showTime(data);
 
-		ws.onmessage = function (evt) {
-			//console.log(evt.data);
-			let data = JSON.parse(evt.data);
-
-			if (data.type === "rotation") {
-				//showTime(data);
-
-				if (data.sequence > lastReceivedRotationSocketSequence) {
-					lastReceivedRotationSocketSequence = data.sequence;
-					let radiansA = Math2.toRadians(data.alpha);
-					let radiansB = Math2.toRadians(data.beta);
-					let radiansG = Math2.toRadians(data.gamma);
-					rotation = new Mat4RotXYZ(radiansB, radiansG, radiansA);
-				} else {
-					//console.log("skipping roration data " + data.sequence);
-				}
-			} else if (data.type === "image") {
-				let img = document.querySelector("img");
-				img.src = data.dataUrl;
-				img.style.display = "none";
-				img.onload = function() {
-					refreshTexture(img);
-					console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
-				};
-			} else if (data.type === "marker") {
-
-				if (data.sequence > lastReceivedMarkerSocketSequence) {
-					lastReceivedMarkerSocketSequence = data.sequence;
-					//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
-					//console.log(data.max, lastX, data.x, lastY, data.y);
-					if (lastX != -10) {
-						translate(lastX - data.x, lastY - data.y, 60);
-						//translation = translation.mul(new Mat4Transl((lastX - data.x)/60.0, 0, -(lastY - data.y)/60.0));
-					}
-					lastX = data.x;
-					lastY = data.y;
-				} else {
-					//console.log("skipping marker data " + data.sequence);
-				}
+			if (data.sequence > lastReceivedRotationSocketSequence) {
+				lastReceivedRotationSocketSequence = data.sequence;
+				let radiansA = Math2.toRadians(data.alpha);
+				let radiansB = Math2.toRadians(data.beta);
+				let radiansG = Math2.toRadians(data.gamma);
+				rotation = new Mat4RotXYZ(radiansB, radiansG, radiansA);
+			} else {
+				//console.log("skipping roration data " + data.sequence);
 			}
+		} else if (data.type === "image") {
+			let img = document.querySelector("img");
+			img.src = data.dataUrl;
+			img.style.display = "none";
+			img.onload = function() {
+				refreshTexture(img);
+				console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
+			};
+		} else if (data.type === "marker") {
 
-		};
-
-		ws.onclose = function() {
-			console.log("WebSocket: connection was closed.");
-			console.log("WebSocket: trying to restore the connection...");
-			setWebSocket();
-		};
-	}
-
-	var lastX = -10, lastY = 0;
-
-
-	if ("WebSocket" in window) {
-		console.log("WebSocket: WS is supported by your browser!");
-		setWebSocket();
-	} else {
-		console.log("WebSocket is NOT supported by your browser!");
+			if (data.sequence > lastReceivedMarkerSocketSequence) {
+				lastReceivedMarkerSocketSequence = data.sequence;
+				//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
+				//console.log(data.max, lastMarkerX, data.x, lastMarkerY, data.y);
+				if (lastMarkerX != -10) {
+					translate(lastMarkerX - data.x, lastMarkerY - data.y, 60);
+					//translation = translation.mul(new Mat4Transl((lastMarkerX - data.x)/60.0, 0, -(lastMarkerY - data.y)/60.0));
+				}
+				lastMarkerX = data.x;
+				lastMarkerY = data.y;
+			} else {
+				//console.log("skipping marker data " + data.sequence);
+			}
+		}
 	}
 
 	function refreshTexture(img) {
 		cameraTexture = gl.createTexture();
 
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);// vyhazuje DOMException
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
