@@ -5,7 +5,6 @@
 <title>Detection</title>
 <script type="text/javascript" src="js/transforms3d.js"></script>
 <script type="text/javascript" src="js/webgl-utils.js"></script>
-<script type="text/javascript" src="js/math2.js"></script>
 <script id="shader-fs1" type="x-shader/x-fragment">
 	precision mediump float;
 
@@ -184,7 +183,7 @@
 	var texturePrecision;
 	// number, input width and height
 	var width, height, w4, h4, w12, h12;
-
+	// Float32Array
 	var readBuffer;
 
 	var video;
@@ -216,8 +215,8 @@
 		textureBuffer.numItems = scene.textureCoords.length;
 	}
 
-	var firstRun = true;
 	var times = [];
+	var count = 0;
 	function repaint() {
 
 		// bind vertex data
@@ -274,12 +273,7 @@
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
 //**********************************************************
-		if (firstRun) {
-			let arraySize = Math.ceil(w12 * h12 * 4);
-			readBuffer = new Float32Array(arraySize);
 
-			firstRun = false;
-		}
 		//if (count++ < 100) {
 			//let time = new Date().getTime();
 			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
@@ -323,7 +317,6 @@
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 	}
 
-	var count = 0;
 	window.onload = function() {
 		canvas = document.querySelector("canvas");
 		gl = Utils.initWebGL(canvas);
@@ -412,13 +405,11 @@
 		// prepare data for drawing (basic face)
 		initBuffers();
 
-		Utils.initRequestAnimationFrame();
+		// allocate readBuffer for reading pixels
+		let arraySize = Math.ceil(w12 * h12 * 4);
+		readBuffer = new Float32Array(arraySize);
 
-		/*let img = new Image();
-		img.src = "real.jpg";
-		img.onload = function() {
-			imageLoaded(img);
-		};*/
+		Utils.initRequestAnimationFrame();
 
 		video = document.querySelector("video");
 		video.addEventListener("canplaythrough", canPlayThrough, false);
@@ -450,7 +441,7 @@
 
 		// mobile portrait 360×640
 		// mobile landscape 640×360
-		alert(width+", "+height);
+		//alert(width+", "+height);
 		w4 = width/4;
 		h4 = height/4;
 		w12 = w4/3;
@@ -467,28 +458,8 @@
 		setInterval(send, 50);
 	}
 
-	function imageLoaded(img) {
-		width = canvas.width = img.width;
-		height = canvas.height = img.height;
-		w4 = width/4;
-		h4 = height/4;
-		w12 = w4/3;
-		h12 = h4/3;
-
-		cameraTexture = gl.createTexture();
-
-		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-		animate();
-	}
-
 	function send() {
-		if (dataToSend.length == 0) return;
+		if (dataToSend.length === 0) return;
 
 		let sumMax = 0, sumX = 0, sumY = 0;
 		for (let i = 0; i < dataToSend.length; i+=3) {
@@ -499,6 +470,7 @@
 		let max = sumMax / (dataToSend.length / 3);
 		let coordX = sumX / (dataToSend.length / 3);
 		let coordY = sumY / (dataToSend.length / 3);
+		// clear dataToSend
 		dataToSend.length = 0;
 
 		let request = new XMLHttpRequest();
