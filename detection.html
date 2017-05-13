@@ -170,8 +170,10 @@
 <script type="text/javascript">
 	"use strict";
 
-	// HTMLCanvasElement, WebGLRenderingContext
-	var canvas, gl;
+	// HTMLCanvasElement
+	var canvas;
+	// WebGLRenderingContext
+	var gl;
 	// WebGLProgram
 	var program1, program2, programDraw;
 	// WebGLBuffer
@@ -182,15 +184,14 @@
 	var fbo;
 	// precision of reading from texture, either FLOAT or HALF_FLOAT_OES
 	var texturePrecision;
-	// number, input width and height
+	// numbers, input width and height
 	var width, height, w4, h4, w12, h12;
 	// Float32Array
 	var readBuffer;
-
+	// HTMLVideoElement
 	var video;
 	// variables for sending marker location
 	var dataToSend = [], sequence = 0;
-
 
 
 	function initBuffers() {
@@ -517,7 +518,6 @@
 		text-align: center;
 		background-color: white;
 		box-shadow: 0 0 60px 0 #333;
-
 		color: #666;
 		border: 1px solid #ddd;
 		margin: 0 auto 20px;

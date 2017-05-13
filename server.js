@@ -1,13 +1,23 @@
 "use strict";
 
+/**
+ * Port on which the app is running
+ * @type {number}
+ */
+const PORT = process.env.PORT || 3000;
+
+/**
+ * Connected clients
+ * @type {Array}
+ */
+const wsClients = [];
+
 const WebSocket = require('ws');
 const express = require('express');
 const bodyParser = require('body-parser');
 const serveStatic = require('serve-static');
 
-const PORT = process.env.PORT || 3000;
-const wsClients = [];
-
+// setup server with all important resources and listeners for ajax calls
 const server = express()
 	.use(serveStatic(__dirname, {'receiver': false}))
 	.use(serveStatic(__dirname, {'rotation': false}))
@@ -36,7 +46,6 @@ wsServer.on('connection', (ws) => {
 
 	// event for closing, remove closing client from an array of active clients
 	ws.on('close', (message) => {
-		//console.log("WS: connection closing: ", message);
 		console.log("WS: client closing ", host);
 		let index = wsClients.indexOf(ws);
 		if (index > -1) {
@@ -46,18 +55,32 @@ wsServer.on('connection', (ws) => {
 	});
 });
 
+/**
+ * Receive general JSON data and forward to all connected clients
+ * @param  {object} req request object
+ * @param  {object} res response object
+ */
 function receiveData(req, res) {
 	res.sendStatus(200);
 	// console.log(req.body);
 	forwardToClients(req.body);
 }
 
+/**
+ * Receive image data and forward to all connected clients
+ * @param  {object} req request object
+ * @param  {object} res response object
+ */
 function receivePicture(req, res) {
 	res.sendStatus(200);
 	//console.log(req.body.dataUrl.substr(0, 50));
 	forwardToClients(req.body);
 }
 
+/**
+ * Method forwards given data to all connected clients
+ * @param  {object} body JSON data
+ */
 function forwardToClients(body) {
 	var data = JSON.stringify(body);
 

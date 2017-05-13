@@ -44,12 +44,20 @@
 <script type="text/javascript">
 	"use strict";
 
-	// HTMLCanvasElement, WebGLProgram, WebGLRenderingContext
-	var canvas, program, gl;
+	// HTMLCanvasElement
+	var canvas;
+	// WebGLRenderingContext
+	var gl;
+	// WebGLProgram
+	var program;
 	// WebGLBuffer
 	var vertexBuffer, indexBuffer, colorBuffer;
 	// Mat4PerspRH
 	var projection;
+	// WebGLBuffer
+	var textureBuffer;
+	// WebGLTexture
+	var cameraTexture;
 	// Mat4
 	var scale, rotation, translation;
 	//  Camera, number,  number
@@ -58,9 +66,7 @@
 	var mouseDragging, mx, my, mouseButton;
 	// booleans
 	var forward, backward, right, left, up, down;
-
-	var cameraTexture, textureBuffer;
-
+	// number, holds indices count of block object without face object
 	var blockIndices;
 	// numbers, holding last recived data for computing relative change
 	var lastMarkerX = 0, lastMarkerY = 0;
