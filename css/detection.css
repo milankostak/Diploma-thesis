@@ -8,11 +8,13 @@ body {
 	font-family: Calibri, Arial, sans-serif;
 }
 
-body, html {
+body,
+html {
 	height: 100%;
 	width: 100%;
 }
 
+/* canvas is used for drawing only, video is shown instead */
 canvas {
 	display: none;
 }
@@ -69,7 +71,7 @@ canvas {
 }
 
 .main.right .controls label {
-	width: calc(100% - 40px); /* 2× padding */
+	width: calc(100% - 40px); /* 2× padding of .controls */
 }
 
 .main.right .controls label:first-child {
@@ -81,18 +83,20 @@ label {
 	margin: 10px;
 	border-radius: 4px;
 	background-color: #eee;
-
 	transition: all .2s ease-in;
 }
 
-label, label input {
+label,
+label input {
 	cursor: pointer;
 }
 
-label:hover, label input:hover {
+label:hover,
+label input:hover {
 	background: #99ccde;
 }
 
+/* controls in one line when bottom orientation */
 .main.bottom .controls br {
 	display: none;
 }
