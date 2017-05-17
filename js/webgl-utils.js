@@ -2,7 +2,7 @@
 
 /**
  * Utils object contains some useful functions for use with WebGL.
- * Minimum browser support (syntax-wise, not function-wise): Edge 12+, Chrome 45+, FF 22+, Opera 32+
+ * Minimum browser support (syntax-wise, NOT function-wise) (mainly because arrow functions): Edge 12+, Chrome 45+, FF 22+, Opera 32+
  * It intentionally doesn't support anything that wouldn't work with used syntax.
  * @type {Object}
  * @author Milan Košťák
@@ -70,6 +70,7 @@ Utils.initShaders = function(gl, program, vsId, fsId) {
 		}
 		gl.shaderSource(shader, value);
 		gl.compileShader(shader);
+		// window.console.log(gl.getExtension('WEBGL_debug_shaders').getTranslatedShaderSource(shader));
 		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
 			let x = (type === gl.VERTEX_SHADER) ? "Vertex shader error\n" : "Fragment shader error\n";
 			x += gl.getShaderInfoLog(shader);
@@ -811,7 +812,7 @@ Utils.getDataFromJSON = function(url, callback) {
 		unknown_error = false,
 		http_request = new XMLHttpRequest();
 	http_request.open("GET", url, true);
-	http_request.onreadystatechange = function () {
+	http_request.onreadystatechange = function() {
 		// http_request.readyState
 		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
 			// 0	UNSENT open() has not been called yet.

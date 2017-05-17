@@ -4,18 +4,16 @@
  *  funcionalitu pro práci s kvaterniony, kubikami a bikubikami
  *  a speciální objekt pro práci s kamerou.
  *
- * 	Založeno na balíčku javovských tříd "transforms3d" použivaného na FIM UHK
- * 		při výuce předmětu PGRF.
+ * 	Založeno na balíčku javovských tříd "transforms3d" použivaného na FIM UHK při výuce předmětu PGRF.
  * 	Největší změny oproti vzoru:
- * 		- ZeroArray: v JavaScriptu je odlišná práce s poli,
- * 			nutný pomocný objekt
+ * 		- ZeroArray: v JavaScriptu je odlišná práce s poli, nutný pomocný objekt
  * 		- Mat4: toMat3 metoda
  * 		- Camera: změny pro uzpůsobení WebGL.
- * 		- Camera: přidána vlastnost "xy" pro možnost uzamknutí pohybu v
- * 			rámci roviny os x a y
+ * 		- Camera: přidána vlastnost "xy" pro možnost uzamknutí pohybu v rámci roviny os x a y
  * 		- Col: vynechány některé konstruktory
+ * 		- "c" funkce pro výpis do konzole
  * 
- * @version 1.0
+ * @version 1.1
  */
 
 "use strict";
@@ -38,7 +36,7 @@ var ZeroArray = function(x) {
 		}
 		return mat;
 	} else {
-		throw new TypeError("Vec1D, add: Neplatný parametr: musí být Vec1D");
+		throw new TypeError("ZeroArray: Neplatný parametr: musí být číslo");
 	}
 };
 
