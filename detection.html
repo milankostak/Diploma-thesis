@@ -194,6 +194,12 @@
 	// variables for sending marker location
 	var dataToSend = [], sequence = 0;
 
+	var DO_NOTHING = 1, DO_POSITION = 2, DO_ROTATION = 3;
+
+	var currentMethod = DO_NOTHING;
+
+	var sendPositionInterval;
+
 
 	function initBuffers() {
 		let scene = new Utils.Scene();
@@ -417,8 +423,13 @@
 		video = document.querySelector("video");
 		video.addEventListener("canplaythrough", setupAfterGettingVideoStream, false);
 
-		document.querySelector("label, label input").addEventListener("click", changeMethod, false);
+		// method change listeners
+		document.querySelector("label#nothing").addEventListener("click", doNothing, false);
+		document.querySelector("label#position").addEventListener("click", doPosition, false);
+		document.querySelector("label#rotation").addEventListener("click", doRotation, false);
 
+		// window size listener for changing layout
+		// checks which one of height or width is bigger and changes the layout appropriately
 		window.addEventListener('resize', windowSizeChanged, false);
 		windowSizeChanged();
 
@@ -431,9 +442,11 @@
 	};
 
 	function animate() {
-		updateTexture();
-		repaint();
-		requestAnimFrame(animate);
+		if (currentMethod === DO_POSITION) {
+			updateTexture();
+			repaint();
+			requestAnimFrame(animate);
+		}
 	}
 
 	function updateTexture() {
@@ -474,10 +487,10 @@
 
 		animate();
 
-		setInterval(send, 50);
+		sendPositionInterval = setInterval(sendPosition, 50);
 	}
 
-	function send() {
+	function sendPosition() {
 		if (dataToSend.length === 0) return;
 
 		let sumMax = 0, sumX = 0, sumY = 0;
@@ -507,8 +520,24 @@
 		request.send(JSON.stringify(obj));
 	}
 
-	function changeMethod(e) {
-		console.log(e);
+	function doNothing() {
+		currentMethod = DO_NOTHING;
+		clearInterval(sendPositionInterval);
+		// send any possible remaining data
+		sendPosition();
+	}
+
+	function doPosition() {
+		if (currentMethod !== DO_POSITION) {
+			currentMethod = DO_POSITION;
+			// start rendering again and set sending interval
+			animate();
+			sendPositionInterval = setInterval(sendPosition, 50);
+		}
+	}
+
+	function doRotation() {
+		currentMethod = DO_ROTATION;
 	}
 
 	function windowSizeChanged(e) {
@@ -538,14 +567,14 @@
 		<video src="" autoplay muted></video>
 	</div>
 	<div class="controls">
-		<label>
-			<input type="radio" name="aa" id="nothing" checked> Do nothing
+		<label id="nothing">
+			<input type="radio" name="aa" checked> Do nothing
 		</label><br>
-		<label>
-			<input type="radio" name="aa" id="position"> Position
+		<label id="position">
+			<input type="radio" name="aa"> Position
 		</label><br>
-		<label>
-			<input type="radio" name="aa" id="rotation"> Rotation
+		<label id="rotation">
+			<input type="radio" name="aa"> Rotation
 		</label>
 	</div>
 </div>
