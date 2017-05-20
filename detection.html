@@ -525,6 +525,7 @@
 	}
 
 	function doNothing() {
+		setActive("nothing");
 		// finish others
 		Rotation.finish();
 		clearInterval(sendPositionInterval);
@@ -535,6 +536,7 @@
 	}
 
 	function doPosition() {
+		setActive("position");
 		// finish others
 		Rotation.finish();
 
@@ -550,15 +552,26 @@
 	}
 
 	function doRotation() {
+		setActive("rotation");
 		currentMethod = DO_ROTATION;
 		Rotation.start();
 	}
 
+	function setActive(current) {
+		let all = ["#nothing", "#position", "#rotation"];
+		for (let i = 0; i < all.length; i++) {
+			document.querySelector(all[i]).classList.remove("active");
+		}
+		document.querySelector("#" + current).classList.add("active");
+	}
+
 	function windowSizeChanged() {
 		if (window.innerHeight < window.innerWidth) {
+			// window is wider than higher
 			document.querySelector(".main").classList.remove("bottom");
 			document.querySelector(".main").classList.add("right");
 		} else {
+			// window is higher than wider
 			document.querySelector(".main").classList.remove("right");
 			document.querySelector(".main").classList.add("bottom");
 		}
@@ -581,15 +594,9 @@
 		<video src="" autoplay muted></video>
 	</div>
 	<div class="controls">
-		<label id="nothing">
-			<input type="radio" name="aa" checked> Do nothing
-		</label><br>
-		<label id="position">
-			<input type="radio" name="aa"> Position
-		</label><br>
-		<label id="rotation">
-			<input type="radio" name="aa"> Rotation
-		</label>
+		<label id="nothing" class="active"><input type="radio" name="aa" checked> Do nothing</label><br>
+		<label id="position"><input type="radio" name="aa"> Position</label><br>
+		<label id="rotation"><input type="radio" name="aa"> Rotation</label>
 	</div>
 </div>
 </body>
