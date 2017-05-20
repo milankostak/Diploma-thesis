@@ -91,6 +91,9 @@ var Rotation = (function() {
 		if (isSupported && !isRunning) {
 			window.addEventListener("deviceorientation", deviceOrientationHandler, false);
 			isRunning = true;
+		} else if (!isSupported) {
+			console.log("%cDeviceOrientation is not supported.", 'color: red');
+			console.log("Did you run Rotation.init function?");
 		}
 	};
 
