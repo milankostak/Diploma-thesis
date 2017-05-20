@@ -1,83 +1,102 @@
 "use strict";
 
 /**
- * Object covers basic work with web sockets on the client side
- * @version 1.0
+ * Object covers basic work with web sockets on the client side.
+ * It is assigned by its inner anonymous self-invoking function. By using this approach some variables and functions can remain private.
+ *
+ * @public
  * @type {Object}
  * @author Milan Košťák
+ * @version 1.0
  */
-var WS = {};
+var WS = (function() {
 
-/**
- * Holds information if web sockets are supported by th browser.
- * Requires the init method to be called
- * @type {Boolean}
- */
-WS.isSupported = false;
+	/**
+	 * Main object which is exported into public WS variable.
+	 * @public
+	 * @type {Object}
+	 */
+	let WS = {};
 
-/**
- * Holds the URL of the web socket server
- * @type {String}
- */
-WS.HOST = "";
+	/**
+	 * Holds information if web sockets are supported by the browser.
+	 * Requires the init method to be called.
+	 * @private
+	 * @type {Boolean}
+	 */
+	let isSupported = false;
 
-/**
- * Holds WebSocket reference
- * @type {WebSocket}
- */
-WS.ws = null;
+	/**
+	 * Holds the URL of the web socket server
+	 * @private
+	 * @type {String}
+	 */
+	let host = "";
 
-/**
- * This method needs to be called at first to check if web scokets are supported
- */
-WS.init = function() {
-	if ("WebSocket" in window) {
-		console.log("WebSocket: WS is supported by your browser!");
-		WS.isSupported = true;
-	} else {
-		console.log("WebSocket is NOT supported by your browser!");
-	}
-};
+	/**
+	 * Holds WebSocket reference
+	 * @private
+	 * @type {WebSocket}
+	 */
+	let ws = null;
 
-/**
- * Main method, used for opening connection and receiving messages.
- * Close method always tries to automatically reconnect
- * @param {Function} open    function to be called when connection is opened
- * @param {Function} message function to be called when any data is received, called with parsed JSON data as parameter
- * @param {Function} close   function to be called when connection is closed, called before trying to reconnect
- */
-WS.setWebSocket = function(open, message, close) {
-
-	if (!WS.isSupported) {
-		WS.init();
-		if (!WS.isSupported) return;
-	}
-
-	WS.HOST = location.origin.replace(/^https?/, 'ws');
-	WS.ws = new WebSocket(WS.HOST);
-
-	// refresh connection every 30 seconds
-	let refreshInterval = setInterval(() => {
-		WS.ws.send("Refresh");
-		console.log("WebSocket: refreshing connection");
-	}, 30000);
-
-	WS.ws.onopen = function() {
-		console.log("WebSocket: connection is opened.");
-		open();
+	/**
+	 * This method needs to be called at first to check if web scokets are supported
+	 * @public
+	 */
+	WS.init = function() {
+		if ("WebSocket" in window) {
+			console.log("WebSocket: WS is supported by your browser!");
+			isSupported = true;
+		} else {
+			console.log("%cWebSocket is NOT supported by your browser!", 'color: red');
+		}
 	};
 
-	WS.ws.onmessage = function (evt) {
-		let data = JSON.parse(evt.data);
-		message(data);
+	/**
+	 * Main method, used for opening connection and receiving messages.
+	 * Close method always tries to automatically reconnect.
+	 * @public
+	 * @param {Function} open    function to be called when connection is opened
+	 * @param {Function} message function to be called when any data is received, called with parsed JSON data as parameter
+	 * @param {Function} close   function to be called when connection is closed, called before trying to reconnect
+	 */
+	WS.setWebSocket = function(open, message, close) {
+
+		if (!isSupported) {
+			WS.init();
+			if (!isSupported) return;
+		}
+
+		host = location.origin.replace(/^https?/, 'ws');
+		ws = new WebSocket(host);
+
+		// refresh connection every 30 seconds
+		let refreshInterval = setInterval(() => {
+			ws.send("Refresh");
+			console.log("WebSocket: refreshing connection");
+		}, 30000);
+
+		ws.onopen = function() {
+			console.log("WebSocket: connection is opened.");
+			open();
+		};
+
+		ws.onmessage = function(e) {
+			let data = JSON.parse(e.data);
+			message(data);
+		};
+
+		ws.onclose = function() {
+			console.log("WebSocket: connection was closed.");
+			console.log("WebSocket: trying to restore the connection...");
+			clearInterval(refreshInterval);
+			close();
+			WS.setWebSocket(open, message, close);
+		};
+
 	};
 
-	WS.ws.onclose = function() {
-		console.log("WebSocket: connection was closed.");
-		console.log("WebSocket: trying to restore the connection...");
-		clearInterval(refreshInterval);
-		close();
-		WS.setWebSocket(open, message, close);
-	};
-
-};
+	// export WS object
+	return WS;
+})();
