@@ -2,61 +2,13 @@
 <html lang="en-GB" dir="ltr">
 <head>
 <meta charset="UTF-8">
+<script type="text/javascript" src="/js/rotation.js"></script>
 <title>Rotation</title>
 <script>
 	"use strict";
-	var i = 0,
-		tmpAlpha = 0,
-		tmpBeta = 0,
-		tmpGamma = 0,
-		errorShown = false;
 
-	if (window.DeviceOrientationEvent) {
-		console.log("DeviceOrientation is supported.");
-		window.addEventListener('deviceorientation', deviceOrientationHandler, false);
-	} else {
-		console.log("%cDeviceOrientation is not supported.", 'color: red');
-		window.alert("This device doesn't have all necessary sensors to determine its rotation.");
-	}
-
-	function deviceOrientationHandler(e) {
-		// alpha is the compass direction the device is facing in degrees
-		// beta is the front-to-back tilt in degrees, where front is positive
-		// gamma is the left-to-right tilt in degrees, where right is positive
-		if (i++ % 2 === 0) {
-			tmpAlpha = e.alpha;
-			tmpBeta = e.beta;
-			tmpGamma = e.gamma;
-			checkError(e);
-		} else {
-			let alphaToSend = (tmpAlpha + e.alpha) / 2.0;
-			let betaToSend = (tmpBeta + e.beta) / 2.0;
-			let gammaToSend = (tmpGamma + e.gamma) / 2.0;
-
-			let request = new XMLHttpRequest();
-			request.open('POST', "/ajax/rotation");
-			request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-			let obj = {
-				type: "rotation",
-				time: new Date().getTime(),
-				sequence: i,
-				alpha: alphaToSend,
-				beta: betaToSend,
-				gamma: gammaToSend
-			};
-			request.send(JSON.stringify(obj));
-		}
-	}
-
-	function checkError(e) {
-		if ((e.alpha === null || e.beta === null || e.gamma === null) && !errorShown) {
-			let msg = "This device doesn't have all necessary sensors to determine its rotation.";
-			console.log("%c" + msg, 'color: red');
-			window.alert(msg);
-			window.removeEventListener('deviceorientation', deviceOrientationHandler, false);
-			errorShown = true;
-		}
-	}
+	Rotation.init("/ajax/rotation");
+	Rotation.start();
 
 </script>
 </head>
