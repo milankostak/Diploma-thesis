@@ -38,7 +38,7 @@ var WS = (function() {
 	 * @private
 	 * @type {WebSocket}
 	 */
-	let ws = null;
+	let wsClient = null;
 
 	/**
 	 * This method needs to be called at first to check if web scokets are supported
@@ -69,25 +69,25 @@ var WS = (function() {
 		}
 
 		host = location.origin.replace(/^https?/, 'ws');
-		ws = new WebSocket(host);
+		wsClient = new WebSocket(host);
 
 		// refresh connection every 30 seconds
 		let refreshInterval = setInterval(() => {
-			ws.send("Refresh");
+			wsClient.send("Refresh");
 			console.log("WebSocket: refreshing connection");
 		}, 30000);
 
-		ws.onopen = function() {
+		wsClient.onopen = function() {
 			console.log("WebSocket: connection is opened.");
 			open();
 		};
 
-		ws.onmessage = function(e) {
+		wsClient.onmessage = function(e) {
 			let data = JSON.parse(e.data);
 			message(data);
 		};
 
-		ws.onclose = function() {
+		wsClient.onclose = function() {
 			console.log("WebSocket: connection was closed.");
 			console.log("WebSocket: trying to restore the connection...");
 			clearInterval(refreshInterval);
