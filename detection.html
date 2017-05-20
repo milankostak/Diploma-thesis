@@ -5,8 +5,9 @@
 <!--<meta name="viewport" content="width=device-width,initial-scale=1">-->
 <title>Detection</title>
 <link rel="stylesheet" type="text/css" href="/css/detection.css">
-<script type="text/javascript" src="js/transforms3d.js"></script>
-<script type="text/javascript" src="js/webgl-utils.js"></script>
+<script type="text/javascript" src="/js/transforms3d.js"></script>
+<script type="text/javascript" src="/js/webgl-utils.js"></script>
+<script type="text/javascript" src="/js/rotation.js"></script>
 <script id="shader-fs1" type="x-shader/x-fragment">
 	precision mediump float;
 
@@ -192,7 +193,7 @@
 	// HTMLVideoElement
 	var video;
 	// variables for sending marker location
-	var dataToSend = [], sequence = 0;
+	var dataToSend = [], positionSequence = 0;
 
 	var DO_NOTHING = 1, DO_POSITION = 2, DO_ROTATION = 3;
 
@@ -433,6 +434,9 @@
 		window.addEventListener('resize', windowSizeChanged, false);
 		windowSizeChanged();
 
+		// init Rotation object with address on which server is listening
+		Rotation.init("/ajax/rotation");
+
 		//https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
 		navigator.mediaDevices.getUserMedia({video: true, audio: false}).then(function(stream) {
 			video.srcObject = stream;
@@ -512,7 +516,7 @@
 		let obj = {
 			type: "marker",
 			time: new Date().getTime(),
-			sequence: sequence++,
+			sequence: ++positionSequence,
 			max: max,
 			x: coordX,
 			y: coordY
@@ -521,15 +525,24 @@
 	}
 
 	function doNothing() {
-		currentMethod = DO_NOTHING;
+		// finish others
+		Rotation.finish();
 		clearInterval(sendPositionInterval);
+		// set nothing
+		currentMethod = DO_NOTHING;
 		// send any possible remaining data
 		sendPosition();
 	}
 
 	function doPosition() {
+		// finish others
+		Rotation.finish();
+
+		// making sure that animation is not run multiple times
 		if (currentMethod !== DO_POSITION) {
 			currentMethod = DO_POSITION;
+			// restart the sequence so the receiver can also restart the relative position
+			positionSequence = 0;
 			// start rendering again and set sending interval
 			animate();
 			sendPositionInterval = setInterval(sendPosition, 50);
@@ -538,9 +551,10 @@
 
 	function doRotation() {
 		currentMethod = DO_ROTATION;
+		Rotation.start();
 	}
 
-	function windowSizeChanged(e) {
+	function windowSizeChanged() {
 		if (window.innerHeight < window.innerWidth) {
 			document.querySelector(".main").classList.remove("bottom");
 			document.querySelector(".main").classList.add("right");
