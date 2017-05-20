@@ -362,6 +362,11 @@
 		if (data.type === "rotation") {
 			//showTime(data);
 
+			// start or restart
+			if (data.sequence <= 2) {
+				lastReceivedRotationSocketSequence = -1;
+			}
+
 			if (data.sequence > lastReceivedRotationSocketSequence) {
 				lastReceivedRotationSocketSequence = data.sequence;
 				let radiansA = Math2.toRadians(data.alpha);
@@ -382,7 +387,7 @@
 		} else if (data.type === "marker") {
 
 			// start or restart
-			if (data.sequence <= 1) {
+			if (data.sequence <= 2) {
 				lastReceivedMarkerSocketSequence = -1;
 			}
 
