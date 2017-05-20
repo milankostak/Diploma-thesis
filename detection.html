@@ -176,7 +176,7 @@
 	// HTMLVideoElement
 	var video;
 	// constants of methods
-	var DO_NOTHING = 1, DO_POSITION = 2, DO_ROTATION = 3;
+	var DO_NOTHING = 1, DO_POSITION = 2, DO_ROTATION = 3, DO_BOTH = 4;
 	// currenlty running method
 	var currentMethod = DO_NOTHING;
 
@@ -191,6 +191,7 @@
 		document.querySelector("label#nothing").addEventListener("click", doNothing, false);
 		document.querySelector("label#position").addEventListener("click", doPosition, false);
 		document.querySelector("label#rotation").addEventListener("click", doRotation, false);
+		document.querySelector("label#both").addEventListener("click", doBoth, false);
 
 		// window size listener for changing layout
 		// checks which one of height or width is bigger and changes the layout appropriately
@@ -212,7 +213,7 @@
 	};
 
 	function animate() {
-		if (currentMethod === DO_POSITION) {
+		if (currentMethod === DO_POSITION || currentMethod === DO_BOTH) {
 			Detection.updateTexture(video);
 			Detection.repaint();
 			requestAnimFrame(animate);
@@ -245,12 +246,14 @@
 		Rotation.finish();
 
 		// making sure that animation is not run multiple times
-		if (currentMethod !== DO_POSITION) {
-			currentMethod = DO_POSITION;
+		if (currentMethod !== DO_POSITION && currentMethod !== DO_BOTH) {
 			Detection.restart();
+			currentMethod = DO_POSITION;
 			// start rendering again and set sending interval
 			animate();
 		}
+		// set for case that the if statement was not run because switching from DO_BOTH
+		currentMethod = DO_POSITION;
 
 		setActive("position");
 	}
@@ -264,8 +267,24 @@
 		setActive("rotation");
 	}
 
+	function doBoth() {
+		Rotation.start();
+
+		if (currentMethod !== DO_POSITION && currentMethod !== DO_BOTH) {
+			Detection.restart();
+			// this assignment need to be done before animate
+			currentMethod = DO_BOTH;
+			// start rendering again and set sending interval
+			animate();
+		}
+		// set for case that the if statement was not run because switching from DO_POSITION
+		currentMethod = DO_BOTH;
+
+		setActive("both");
+	}
+
 	function setActive(current) {
-		let allLabels = ["#nothing", "#position", "#rotation"];
+		let allLabels = ["#nothing", "#position", "#rotation", "#both"];
 		for (let i = 0; i < allLabels.length; i++) {
 			document.querySelector(allLabels[i]).classList.remove("active");
 		}
@@ -303,7 +322,8 @@
 	<div class="controls">
 		<label id="nothing" class="active"><input type="radio" name="aa" checked> Do nothing</label><br>
 		<label id="position"><input type="radio" name="aa"> Position</label><br>
-		<label id="rotation"><input type="radio" name="aa"> Rotation</label>
+		<label id="rotation"><input type="radio" name="aa"> Rotation</label><br>
+		<label id="both"><input type="radio" name="aa"> Both</label>
 	</div>
 </div>
 </body>
