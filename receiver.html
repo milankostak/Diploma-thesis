@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>Receiver</title>
-<script type="text/javascript" src="js/transforms3d.js"></script>
-<script type="text/javascript" src="js/webgl-utils.js"></script>
-<script type="text/javascript" src="js/math2.js"></script>
-<script type="text/javascript" src="js/ws.js"></script>
+<script type="text/javascript" src="/js/transforms3d.js"></script>
+<script type="text/javascript" src="/js/webgl-utils.js"></script>
+<script type="text/javascript" src="/js/math2.js"></script>
+<script type="text/javascript" src="/js/ws.js"></script>
 <script id="shader-fs" type="x-shader/x-fragment">
 	precision mediump float;
 
@@ -186,7 +186,7 @@
 
 		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
 		scale = new Mat4Identity();
-		rotation = new Mat4Identity();
+		rotation = new Mat4RotY(-Math.PI/2)
 		translation = new Mat4Identity();
 		camera = new Camera();
 		azimuth = zenith = 0;
@@ -357,6 +357,7 @@
 		scale = scale.mul(new Mat4Scale(1+Math2.sign(x)*0.02, 1, 1-Math2.sign(y)*0.02));
 	}
 
+	var oldRotation = 0;
 	function onWsMessage(data) {
 
 		if (data.type === "rotation") {
@@ -369,10 +370,19 @@
 
 			if (data.sequence > lastReceivedRotationSocketSequence) {
 				lastReceivedRotationSocketSequence = data.sequence;
-				let radiansA = Math2.toRadians(data.alpha);
-				let radiansB = Math2.toRadians(data.beta);
-				let radiansG = Math2.toRadians(data.gamma);
-				rotation = new Mat4RotXYZ(radiansB, radiansG, radiansA);
+
+				let rotDegrees = (Math.sign(data.gamma) > 0) ? 180 - data.beta : data.beta;
+				//console.log(data.beta, data.gamma, rotDegrees);
+
+				// skip big changes, also prevents skipping to 90 degrees when phone cannot precisely tell its rotation
+				if (Math.abs(oldRotation - rotDegrees) < 60) {
+					let radiansB = Math2.toRadians(rotDegrees) - Math.PI/2;
+					rotation = new Mat4RotY(radiansB);
+				} else {
+					//console.log("skipping big rotation change");
+				}
+				oldRotation = rotDegrees;
+
 			} else {
 				//console.log("skipping roration data " + data.sequence);
 			}
