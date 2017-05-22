@@ -180,6 +180,8 @@
 	// currenlty running method
 	var currentMethod = DO_NOTHING;
 
+	var isAnimating = false;
+
 	window.onload = function() {
 		Detection.init();
 
@@ -213,7 +215,7 @@
 	};
 
 	function animate() {
-		if (currentMethod === DO_POSITION || currentMethod === DO_BOTH) {
+		if (isAnimating) {
 			Detection.updateTexture(video);
 			Detection.repaint();
 			requestAnimFrame(animate);
@@ -233,6 +235,7 @@
 
 	function doNothing() {
 		currentMethod = DO_NOTHING;
+		isAnimating = false;
 
 		// finish others
 		Rotation.finish();
@@ -242,24 +245,22 @@
 	}
 
 	function doPosition() {
-		// finish others
+		currentMethod = DO_POSITION;
+
 		Rotation.finish();
 
-		// making sure that animation is not run multiple times
-		if (currentMethod !== DO_POSITION && currentMethod !== DO_BOTH) {
+		if (!isAnimating) {
+			isAnimating = true;
 			Detection.restart();
-			currentMethod = DO_POSITION;
-			// start rendering again and set sending interval
 			animate();
 		}
-		// set for case that the if statement was not run because switching from DO_BOTH
-		currentMethod = DO_POSITION;
 
 		setActive("position");
 	}
 
 	function doRotation() {
 		currentMethod = DO_ROTATION;
+		isAnimating = false;
 
 		Detection.finish();
 		Rotation.start();
@@ -268,17 +269,15 @@
 	}
 
 	function doBoth() {
+		currentMethod = DO_BOTH;
+
 		Rotation.start();
 
-		if (currentMethod !== DO_POSITION && currentMethod !== DO_BOTH) {
+		if (!isAnimating) {
+			isAnimating = true;
 			Detection.restart();
-			// this assignment need to be done before animate
-			currentMethod = DO_BOTH;
-			// start rendering again and set sending interval
 			animate();
 		}
-		// set for case that the if statement was not run because switching from DO_POSITION
-		currentMethod = DO_BOTH;
 
 		setActive("both");
 	}
