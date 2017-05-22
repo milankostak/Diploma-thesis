@@ -4,9 +4,9 @@
     "email": ""
   },
   "dependencies": {
-    "body-parser": "^1.17.1",
-    "express": "^4.15.2",
-    "serve-static": "^1.12.1",
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3",
+    "serve-static": "^1.12.3",
     "ws": "^2.3.1"
   },
   "description": "Practical part of my diploma thesis.",
