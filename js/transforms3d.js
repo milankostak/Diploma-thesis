@@ -20,7 +20,7 @@
 
 /**
  * Vytvoření matice o zvoleném rozměru obsahující nuly
- * @param {number} x rozměr matice (např. 3 pro 3x3 matici), pokud není zadáno, tak se předpokládá matice 4x4
+ * @param {number} x rozměr matice (např. 3 pro 3×3 matici), pokud není zadáno, tak se předpokládá matice 4×4
  * @throws {TypeError} If x je zadáno a není číslo
  * @constructor
  */
@@ -179,7 +179,7 @@ Vec2D.prototype.c = function() {
 
 /**
  * Objekt pro práci s 3D vektory
- * @param {number,Vec3D,POint3D} x volitelný agrument, pokud není zadán, tak 0
+ * @param {number,Vec3D,Point3D} x volitelný agrument, pokud není zadán, tak 0
  * @param {number} y volitelný agrument, pokud není zadán, tak 0
  * @param {number} z volitelný agrument, pokud není zadán, tak 0
  * @constructor
@@ -212,7 +212,7 @@ Vec3D.prototype.add = function(v) {
 
 /**
  * Násobení skalárem, maticí zprava, kvaterninonem, vektoem po složkách
- * @param  {number,Mat3,Vec3D,Quat} m skalár, matice3x3, kvaternion, vektor (x, y, z)
+ * @param  {number,Mat3,Vec3D,Quat} m skalár, matice3×3, kvaternion, vektor (x, y, z)
  * @return {Vec3D}   nová instance Vec3D
  * @throws {TypeError} If m nemá povolený typ
  */
@@ -321,7 +321,7 @@ var Point3D = function(ax, ay, az, aw) {
 
 /**
  * Násobení skalárem, násobení maticí zprava, transformace 3D bodu kvaternionem
- * @param  {number,Mat4,Quat} m skalár, matice 4x4, kvaternion
+ * @param  {number,Mat4,Quat} m skalár, matice 4×4, kvaternion
  * @return {Point3D}   nová instance Point3D
  * @throws {TypeError} If m není číslo, Mat4 ani Quat
  */
@@ -850,7 +850,7 @@ Quat.prototype.c = function() {
 
 
 /**
- * Objekt pro práci s maticemi 3x3
+ * Objekt pro práci s maticemi 3×3
  * @param {Vec3D,Mat3,Mat4} v1
  * @param {Vec3D} v2
  * @param {Vec3D} v3
@@ -892,7 +892,7 @@ var Mat3 = function(v1, v2, v3){
 };
 
 /**
- * Vytváří jednotkovou matici 3x3
+ * Vytváří jednotkovou matici 3×3
  * @augments {Mat3}
  */
 var Mat3Identity = function() {
@@ -906,7 +906,7 @@ Mat3Identity.prototype.constructor = Mat3Identity;
 Mat3Identity.prototype.parent = Mat3;
 
 /**
- * Vytváří transformační matici 3x3 pro rotaci kolem osy X ve 3D
+ * Vytváří transformační matici 3×3 pro rotaci kolem osy X ve 3D
  * @augments {Mat3}
  * @param {number} alpha úhel rotace v radiánech
  */
@@ -922,7 +922,7 @@ Mat3RotX.prototype.constructor = Mat3RotX;
 Mat3RotX.prototype.parent = Mat3;
 
 /**
- * Vytváří transformační matici 3x3 pro rotaci kolem osy Y ve 3D
+ * Vytváří transformační matici 3×3 pro rotaci kolem osy Y ve 3D
  * @augments {Mat3}
  * @param {number} alpha úhel rotace v radiánech
  */
@@ -938,7 +938,7 @@ Mat3RotY.prototype.constructor = Mat3RotY;
 Mat3RotY.prototype.parent = Mat3;
 
 /**
- * Vytváří transformační matici 3x3 pro rotaci kolem osy Z ve 3D
+ * Vytváří transformační matici 3×3 pro rotaci kolem osy Z ve 3D
  * @augments {Mat3}
  * @param {number} alpha úhel rotace v radiánech
  */
@@ -954,8 +954,8 @@ Mat3RotZ.prototype.constructor = Mat3RotZ;
 Mat3RotZ.prototype.parent = Mat3;
 
 /**
- * Přičtení matice 3x3
- * @param {Mat3} m matice 3x3
+ * Přičtení matice 3×3
+ * @param {Mat3} m matice 3×3
  * @return {Mat3} nová instance Mat3
  * @throws {TypeError} If m není Mat3
  */
@@ -974,8 +974,8 @@ Mat3.prototype.add = function(m) {
 };
 
 /**
- * Násobení matice skalárem, Přinásobení matice 3x3 zprava
- * @param  {number,Mat3} m skalár, matice 3x3
+ * Násobení matice skalárem, Přinásobení matice 3×3 zprava
+ * @param  {number,Mat3} m skalár, matice 3×3
  * @return {Mat3} nová instance Mat3
  * @throws {TypeError} If m není číslo ani Mat3
  */
@@ -1007,7 +1007,7 @@ Mat3.prototype.mul = function(m) {
 };
 
 /**
- * Transponování matice 3x3
+ * Transponování matice 3×3
  * @return {Mat3} nová instance Mat3
  */
 Mat3.prototype.transpose = function() {
@@ -1021,7 +1021,7 @@ Mat3.prototype.transpose = function() {
 };
 
 /**
- * Determinant matice 3x3
+ * Determinant matice 3×3
  * @return {number} determinant
  */
 Mat3.prototype.det = function() {
@@ -1031,7 +1031,7 @@ Mat3.prototype.det = function() {
 };
 
 /**
- * Inverzní matice 3x3
+ * Inverzní matice 3×3
  * @return {Mat3} nová instance Mat3
  */
 Mat3.prototype.inverse = function() {
@@ -1069,7 +1069,7 @@ Mat3.prototype.c = function() {
 
 
 /**
- * Objekt pro práci s maticemi 4x4
+ * Objekt pro práci s maticemi 4×4
  * @param {Point3D,Mat4} p1
  * @param {Point3D} p2
  * @param {Point3D} p3
@@ -1113,7 +1113,7 @@ var Mat4 = function(p1, p2, p3, p4) {
 };
 
 /**
- * Vytváří jednotkou matici 4x4
+ * Vytváří jednotkou matici 4×4
  * @augments {Mat4}
  */
 var Mat4Identity = function() {
@@ -1127,7 +1127,7 @@ Mat4Identity.prototype.constructor = Mat4Identity;
 Mat4Identity.prototype.parent = Mat4;
 
 /**
- * Vytváří transformační matici 4x4 pro ortogonální deformaci zobrazovacího objemu
+ * Vytváří transformační matici 4×4 pro ortogonální deformaci zobrazovacího objemu
  * @augments {Mat4}
  * @param {number} w  šířka plátna
  * @param {number} h  výška plátna
@@ -1156,7 +1156,7 @@ Mat4OrthoRH.prototype.constructor = Mat4OrthoRH;
 Mat4OrthoRH.prototype.parent = Mat4;
 
 /**
- * Vytváří transformační matici 4x4 pro perspektivní deformaci zobrazovacího objemu
+ * Vytváří transformační matici 4×4 pro perspektivní deformaci zobrazovacího objemu
  * @augments {Mat4}
  * @param {number} alpha zorný úhel
  * @param {number} k     poměr šířka/výška plátna
@@ -1187,7 +1187,7 @@ Mat4PerspRH.prototype.parent = Mat4;
 
 
 /**
- * Vytváří transformační matici 4x4 pro rotaci kolem osy X ve 3D
+ * Vytváří transformační matici 4×4 pro rotaci kolem osy X ve 3D
  * @augments {Mat4}
  * @param {number} alpha úhel rotace v radiánech
  * @throws {TypeError} If alpha není číslo
@@ -1208,7 +1208,7 @@ Mat4RotX.prototype.constructor = Mat4RotX;
 Mat4RotX.prototype.parent = Mat4;
 
 /**
- * Vytváří transformační matici 4x4 pro rotaci kolem osy Y ve 3D
+ * Vytváří transformační matici 4×4 pro rotaci kolem osy Y ve 3D
  * @augments {Mat4}
  * @param {number} alpha úhel rotace v radiánech
  * @throws {TypeError} If alpha není číslo
@@ -1229,7 +1229,7 @@ Mat4RotY.prototype.constructor = Mat4RotY;
 Mat4RotY.prototype.parent = Mat4;
 
 /**
- * Vytváří transformační matici 4x4 pro rotaci kolem osy Z ve 3D
+ * Vytváří transformační matici 4×4 pro rotaci kolem osy Z ve 3D
  * @augments {Mat4}
  * @param {number} alpha úhel rotace v radiánech
  * @throws {TypeError} If alpha není číslo
@@ -1250,7 +1250,7 @@ Mat4RotZ.prototype.constructor = Mat4RotZ;
 Mat4RotZ.prototype.parent = Mat4;
 
 /**
- * Vytváří transformační matici 4x4 pro rotaci kolem os X, Y, Z ve 3D
+ * Vytváří transformační matici 4×4 pro rotaci kolem os X, Y, Z ve 3D
  * @augments {Mat4}
  * @param {number} alpha úhel rotace v radiánech
  * @param {number} beta  úhel rotace v radiánech
@@ -1277,7 +1277,7 @@ Mat4RotXYZ.prototype.constructor = Mat4RotXYZ;
 Mat4RotXYZ.prototype.parent = Mat4;
 
 /**
- * Vytváří transformační matici 4x4 pro změnu měřítka ve 3D
+ * Vytváří transformační matici 4×4 pro změnu měřítka ve 3D
  * @augments {Mat4}
  * @param {number} x zvětšení/zmenšení na ose x
  * @param {number} y zvětšení/zmenšení na ose y
@@ -1301,7 +1301,7 @@ Mat4Scale.prototype.constructor = Mat4Scale;
 Mat4Scale.prototype.parent = Mat4;
 
 /**
- * Vytváří transformační matici 4x4 pro translaci ve 3D
+ * Vytváří transformační matici 4×4 pro translaci ve 3D
  * @augments {Mat4}
  * @param {number} x posunutí na ose x
  * @param {number} y posunutí na ose y
@@ -1325,7 +1325,7 @@ Mat4Transl.prototype.constructor = Mat4Transl;
 Mat4Transl.prototype.parent = Mat4;
 
 /**
- * Vytváří transformační matici 4x4 pro pohledovou transformaci ve 3D
+ * Vytváří transformační matici 4×4 pro pohledovou transformaci ve 3D
  * @augments {Mat4}
  * @param {number} e vektor pozice pozorovatele
  * @param {number} v vektor pohledu
@@ -1362,8 +1362,8 @@ Mat4ViewRH.prototype.constructor = Mat4ViewRH;
 Mat4ViewRH.prototype.parent = Mat4;
 
 /**
- * Sčítání matic 4x4
- * @param {Mat4} m matice 4x4
+ * Sčítání matic 4×4
+ * @param {Mat4} m matice 4×4
  * @return {Mat4} nová instance Mat4
  * @throws {TypeError} If m není Mat4
  */
@@ -1382,8 +1382,8 @@ Mat4.prototype.add = function(m) {
 };
 
 /**
- * Násobení matice 4x4 skalárem, Násobení maticí 4x4 zprava
- * @param  {number,Mat4} m skalár, matice 4x4
+ * Násobení matice 4×4 skalárem, Násobení maticí 4×4 zprava
+ * @param  {number,Mat4} m skalár, matice 4×4
  * @return {Mat4} nová instance Mat4
  * @throws {TypeError} If m není číslo ani Mat4
  */
@@ -1416,7 +1416,7 @@ Mat4.prototype.mul = function(m) {
 };
 
 /**
- * Transponování matice 4x4
+ * Transponování matice 4×4
  * @return {Mat4} nová instance Mat4
  */
 Mat4.prototype.transpose = function() {
@@ -2059,7 +2059,7 @@ var Bikubika = function(typ) {
 };
 
 /**
- * Inicializace pomocí 4x4 řídících bodů
+ * Inicializace pomocí 4×4 řídících bodů
  * @param  {Point3D} b11 řídící bod
  * @param  {Point3D} b12 řídící bod
  * @param  {Point3D} b13 řídící bod
