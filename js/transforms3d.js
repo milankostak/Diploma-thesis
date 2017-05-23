@@ -150,21 +150,21 @@ Vec2D.prototype.dot = function(v) {
 };
 
 /**
- * Normalizace vektoru
- * @return {Vec2D} nová instance Vec2D
- */
-Vec2D.prototype.normalized = function() {
-	var l = this.length();
-	if (l === 0.0) return null;
-	return new Vec2D(this.x / l, this.y / l);
-};
-
-/**
  * Velikost vektoru
  * @return {number} velikost
  */
 Vec2D.prototype.length = function() {
 	return Math.sqrt(this.x * this.x + this.y * this.y);
+};
+
+/**
+ * Normalizace vektoru
+ * @return {Vec2D} nová instance Vec2D
+ */
+Vec2D.prototype.normalized = function() {
+	var l = this.length();
+	if (l === 0.0) return new Vec2D(0, 0);
+	return new Vec2D(this.x / l, this.y / l);
 };
 
 /**
@@ -278,7 +278,7 @@ Vec3D.prototype.length = function() {
  */
 Vec3D.prototype.normalized = function() {
 	var len = this.length();
-	if (len === 0) return new Vec3D(0,0,0);
+	if (len === 0) return new Vec3D(0, 0, 0);
 	return new Vec3D(this.x / len, this.y / len, this.z / len);
 };
 
