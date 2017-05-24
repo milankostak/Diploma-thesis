@@ -49,7 +49,15 @@ var Vec1D = function(x) {
 	if (x instanceof Vec1D) {
 		this.x = x.x;
 	} else {
-		this.x = (typeof x !== "undefined") ? x : 0.0;
+		if (typeof x !== "undefined") {
+			if (typeof x === "number") {
+				this.x = x;
+			} else {
+				throw new TypeError("Vec1D: Neplatný parametr x: musí být Vec1D nebo number")
+			}
+		} else {
+			this.x = 0.0;
+		}
 	}
 };
 
@@ -100,8 +108,26 @@ var Vec2D = function(x, y) {
 		this.x = x.x;
 		this.y = x.y;
 	} else {
-		this.x = (typeof x !== "undefined") ? x : 0.0;
-		this.y = (typeof y !== "undefined") ? y : 0.0;
+		// x
+		if (typeof x !== "undefined") {
+			if (typeof x === "number") {
+				this.x = x;
+			} else {
+				throw new TypeError("Vec2D: Neplatný parametr x: musí být Vec2D nebo number")
+			}
+		} else {
+			this.x = 0.0;
+		}
+		// y
+		if (typeof y !== "undefined") {
+			if (typeof y === "number") {
+				this.y = y;
+			} else {
+				throw new TypeError("Vec2D: Neplatný parametr y: musí být Vec2D nebo number")
+			}
+		} else {
+			this.y = 0.0;
+		}
 	}
 };
 
@@ -190,9 +216,36 @@ var Vec3D = function(x, y, z) {
 		this.y = x.y;
 		this.z = x.z;
 	} else {
-		this.x = (typeof x !== "undefined") ? x : 0.0;
-		this.y = (typeof y !== "undefined") ? y : 0.0;
-		this.z = (typeof z !== "undefined") ? z : 0.0;
+		// x
+		if (typeof x !== "undefined") {
+			if (typeof x === "number") {
+				this.x = x;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr x: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.x = 0.0;
+		}
+		// y
+		if (typeof y !== "undefined") {
+			if (typeof y === "number") {
+				this.y = y;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr y: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.y = 0.0;
+		}
+		// z
+		if (typeof z !== "undefined") {
+			if (typeof z === "number") {
+				this.z = z;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr z: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.z = 0.0;
+		}
 	}
 };
 
@@ -312,10 +365,46 @@ var Point3D = function(ax, ay, az, aw) {
 		this.z = ax.z;
 		this.w = ax.w;
 	} else {
-		this.x = (typeof ax !== "undefined") ? ax : 0.0;
-		this.y = (typeof ay !== "undefined") ? ay : 0.0;
-		this.z = (typeof az !== "undefined") ? az : 0.0;
-		this.w = (typeof aw !== "undefined") ? aw : 1.0;
+		// x
+		if (typeof ax !== "undefined") {
+			if (typeof ax === "number") {
+				this.x = ax;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr ax: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.x = 0.0;
+		}
+		// y
+		if (typeof ay !== "undefined") {
+			if (typeof ay === "number") {
+				this.y = ay;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr y: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.y = 0.0;
+		}
+		// z
+		if (typeof az !== "undefined") {
+			if (typeof az === "number") {
+				this.z = az;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr z: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.z = 0.0;
+		}
+		// w
+		if (typeof aw !== "undefined") {
+			if (typeof aw === "number") {
+				this.w = aw;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr w: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.w = 1.0;
+		}
 	}
 };
 
@@ -1078,8 +1167,7 @@ Mat3.prototype.c = function() {
  */
 var Mat4 = function(p1, p2, p3, p4) {
 	this.mat = [];
-	if (arguments.length == 4 && p1 instanceof Point3D &&
-			p2 instanceof Point3D && p3 instanceof Point3D && p4 instanceof Point3D) {
+	if (p1 instanceof Point3D && p2 instanceof Point3D && p3 instanceof Point3D && p4 instanceof Point3D) {
 		this.mat[0] = [];
 		this.mat[0][0] = p1.x;
 		this.mat[0][1] = p1.y;
