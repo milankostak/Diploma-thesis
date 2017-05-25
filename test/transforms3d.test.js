@@ -404,3 +404,407 @@ describe("Point3D", () => {
 		expect(new Point3D().c() instanceof Point3D).toBe(true);
 	});
 });
+
+
+describe("Quat", () => {
+
+	it("constructor can make copy of another Quat", () => {
+		let q = new Quat(new Quat(5, 6, 7, 8));
+		expect(q.r).toBe(5);
+		expect(q.i).toBe(6);
+		expect(q.j).toBe(7);
+		expect(q.k).toBe(8);
+	});
+
+	it("constructor w/o parameters sets 0", () => {
+		let q = new Quat();
+		expect(q.r).toBe(0);
+		expect(q.i).toBe(0);
+		expect(q.j).toBe(0);
+		expect(q.k).toBe(0);
+	});
+
+	it("constructor w/ parameters works", () => {
+		let q = new Quat(-2, -3, -9, 3);
+		expect(q.r).toBe(-2);
+		expect(q.i).toBe(-3);
+		expect(q.j).toBe(-9);
+		expect(q.k).toBe(3);
+	});
+
+	it("constructor throws TypeError when parameter is not a number or Quat", () => {
+		expect(() => new Quat("a")).toThrowError(TypeError);
+		expect(() => new Quat(1, 1, true)).toThrowError(TypeError);
+		expect(() => new Quat(new Quat(), "a", 2)).not.toThrowError(TypeError);
+	});
+
+	it("add prototype works with Quat as parameter", () => {
+		let v = new Quat(-4, 1, 2, 5);
+		let q = v.add(new Quat(1.3, 7, 4, -5));
+		expect(q.r).toBe(-2.7);
+		expect(q.i).toBe(8);
+		expect(q.j).toBe(6);
+		expect(q.k).toBe(0);
+	});
+
+	it("add prototype throws TypeError when parameter is not a Quat", () => {
+		expect(() => new Quat().add("a")).toThrowError(TypeError);
+		expect(() => new Quat().add()).toThrowError(TypeError);
+	});
+
+	it("sub prototype works with Quat as parameter", () => {
+		let v = new Quat(-4, 1, 2, 5);
+		let q = v.sub(new Quat(1.3, 7, 4, -5));
+		expect(q.r).toBe(-5.3);
+		expect(q.i).toBe(-6);
+		expect(q.j).toBe(-2);
+		expect(q.k).toBe(10);
+	});
+
+	it("sub prototype throws TypeError when parameter is not a Quat", () => {
+		expect(() => new Quat().sub("a")).toThrowError(TypeError);
+		expect(() => new Quat().sub()).toThrowError(TypeError);
+	});
+
+	it("mulR prototype works with Quat as parameter", () => {
+		let v = new Quat(1, 3, -2, 7);
+		let q = v.mulR(new Quat(-2, 0, 6, 3));
+		expect(q.r).toBe(-11);
+		expect(q.i).toBe(-54);
+		expect(q.j).toBe(1);
+		expect(q.k).toBe(7);
+	});
+
+	it("mulR prototype throws TypeError when parameter is not a Quat", () => {
+		expect(() => new Quat().mulR("a")).toThrowError(TypeError);
+		expect(() => new Quat().mulR()).toThrowError(TypeError);
+	});
+
+	it("mulL prototype works with Quat as parameter", () => {
+		let v = new Quat(1, 3, -2, 7);
+		let q = v.mulL(new Quat(-2, 0, 6, 3));
+		expect(q.r).toBe(-11);
+		expect(q.i).toBe(42);
+		expect(q.j).toBe(19);
+		expect(q.k).toBe(-29);
+	});
+
+	it("mulL prototype throws TypeError when parameter is not a Quat", () => {
+		expect(() => new Quat().mulL("a")).toThrowError(TypeError);
+		expect(() => new Quat().mulL()).toThrowError(TypeError);
+	});
+	it("mul prototype works with Quat as parameter", () => {
+		let v = new Quat(1, 3, -2, 7);
+		let q = v.mul(new Quat(-2, 0, 6, 3));
+		expect(q.r).toBe(-11);
+		expect(q.i).toBe(-54);
+		expect(q.j).toBe(1);
+		expect(q.k).toBe(7);
+	});
+
+	it("mul prototype works with number as parameter", () => {
+		let v = new Quat(1, 3, -2, 7);
+		let q = v.mul(3);
+		expect(q.r).toBe(3);
+		expect(q.i).toBe(9);
+		expect(q.j).toBe(-6);
+		expect(q.k).toBe(21);
+	});
+
+	it("mul prototype throws TypeError when parameter is not a Quat", () => {
+		expect(() => new Quat().mul("a")).toThrowError(TypeError);
+		expect(() => new Quat().mul()).toThrowError(TypeError);
+	});
+
+	it("norma prototype works as expected", () => {
+		let n = new Quat(1, 6, -4, 7).norma();
+		expect(n).toBeCloseTo(10.099504938362077, 5);
+	});
+
+	it("inv prototype works as expected", () => {
+		let q1 = new Quat(1, 6, -4, 7).inv();
+		expect(q1.r).toBeCloseTo(0.009803921568627453, 5);
+		expect(q1.i).toBeCloseTo(-0.05882352941176471, 5);
+		expect(q1.j).toBeCloseTo(0.03921568627450981, 5);
+		expect(q1.k).toBeCloseTo(-0.06862745098039216, 5);
+
+		let q2 = new Quat().inv();
+		expect(q2.r).toBe(0);
+		expect(q2.i).toBe(0);
+		expect(q2.j).toBe(0);
+		expect(q2.k).toBe(0);
+	});
+
+	it("log prototype works as expected", () => {
+		let q1 = new Quat(1, 3, -2, 7).log();
+		expect(q1.r).toBeCloseTo(2.0715673631957663, 5);
+		expect(q1.i).toBeCloseTo(0.5503445589964804, 5);
+		expect(q1.j).toBeCloseTo(-0.3668963726643203, 5);
+		expect(q1.k).toBeCloseTo(1.284137304325121, 5);
+
+		let q2 = new Quat(-2, 0, 0, 0).log();
+		expect(q2.r).toBeCloseTo(0.6931471805599453, 5);
+		expect(q2.i).toBe(1);
+		expect(q2.j).toBe(0);
+		expect(q2.k).toBe(0);
+
+		let q3 = new Quat(2, 0, 0, 0).log();
+		expect(q3.r).toBeCloseTo(0.6931471805599453, 5);
+		expect(q3.i).toBe(0);
+		expect(q3.j).toBe(0);
+		expect(q3.k).toBe(0);
+
+		let q4 = new Quat().log();
+		expect(q4.r).toBe(0);
+		expect(q4.i).toBe(0);
+		expect(q4.j).toBe(0);
+		expect(q4.k).toBe(0);
+	});
+
+	it("exp prototype works as expected", () => {
+		let q1 = new Quat(1, 3, -2, 7).exp();
+		expect(q1.r).toBeCloseTo(-0.05443332579873212, 5);
+		expect(q1.i).toBeCloseTo(1.0354587420929653, 5);
+		expect(q1.j).toBeCloseTo(-0.6903058280619768, 5);
+		expect(q1.k).toBeCloseTo(2.416070398216919, 5);
+
+		let q2 = new Quat(-2, 0, 0, 0).exp();
+		expect(q2.r).toBeCloseTo(0.1353352832366127, 5);
+		expect(q2.i).toBe(0);
+		expect(q2.j).toBe(0);
+		expect(q2.k).toBe(0);
+	});
+
+	it("neg prototype works as expected", () => {
+		let q1 = new Quat(1, 3, -2, 7).neg();
+		expect(q1.r).toBe(-1);
+		expect(q1.i).toBe(-3);
+		expect(q1.j).toBe(2);
+		expect(q1.k).toBe(-7);
+	});
+
+	it("dot prototype works as expected", () => {
+		let q1 = new Quat(1, 3, -2, 7);
+		let q2 = new Quat(2, -6, 1.5, 1);
+		let dot = q1.dot(q2);
+		expect(dot).toBe(-12);
+	});
+
+	it("dot prototype throws TypeError when parameter is not a Quat", () => {
+		expect(() => new Quat().dot("a")).toThrowError(TypeError);
+		expect(() => new Quat().dot()).toThrowError(TypeError);
+	});
+
+	it("renorm prototype works as expected", () => {
+		let q1 = new Quat(1, 3, -2, 7).renorm();
+		expect(q1.r).toBeCloseTo(0.1259881576697424, 5);
+		expect(q1.i).toBeCloseTo(0.3779644730092272, 5);
+		expect(q1.j).toBeCloseTo(-0.2519763153394848, 5);
+		expect(q1.k).toBeCloseTo(0.8819171036881969, 5);
+	});
+
+	it("toRotationMatrix prototype works as expected", () => {
+		let m = new Quat(1, 3, -2, 7).toRotationMatrix().mat;
+		expect(m[0][0]).toBe(-105);
+		expect(m[0][1]).toBe(2);
+		expect(m[0][2]).toBe(46);
+		expect(m[0][3]).toBe(0);
+		expect(m[1][0]).toBe(-26);
+		expect(m[1][1]).toBe(-115);
+		expect(m[1][2]).toBe(-22);
+		expect(m[1][3]).toBe(0);
+		expect(m[2][0]).toBe(38);
+		expect(m[2][1]).toBe(-34);
+		expect(m[2][2]).toBe(-25);
+		expect(m[2][3]).toBe(0);
+		expect(m[3][0]).toBe(0);
+		expect(m[3][1]).toBe(0);
+		expect(m[3][2]).toBe(0);
+		expect(m[3][3]).toBe(1);
+	});
+
+	it("toEulerAngle prototype works as expected", () => {
+		let v = new Quat(0.4, 3, -2, 7).toEulerAngle();
+		expect(v.x).toBeCloseTo(2.318558961454817, 5);
+		expect(v.y).toBeCloseTo(0.3810003810005715, 5);
+		expect(v.z).toBeCloseTo(-0.254000254000381, 5);
+		expect(v.w).toBeCloseTo(0.8890008890013334, 5);
+	});
+
+	it("lerp prototype works as expected", () => {
+		let q1 = new Quat(0.4, 3, -2, 7);
+		let q2 = new Quat(4, -2, 3, 7);
+
+		let q3 = q1.lerp(q2, 2);
+		expect(q3.r).toBe(q2.r);
+		expect(q3.i).toBe(q2.i);
+		expect(q3.j).toBe(q2.j);
+		expect(q3.k).toBe(q2.k);
+
+		let q4 = q1.lerp(q2, 0);
+		expect(q4.r).toBe(q1.r);
+		expect(q4.i).toBe(q1.i);
+		expect(q4.j).toBe(q1.j);
+		expect(q4.k).toBe(q1.k);
+
+		let q5 = q1.lerp(q2, 0.4);
+		let q6 = q2.lerp(q1, 0.6);
+		expect(q5.r).toBe(q6.r);
+		expect(q5.i).toBe(q6.i);
+		expect(q5.j).toBe(q6.j);
+		expect(q5.k).toBe(q6.k);
+	});
+
+	it("lerp prototype throws TypeError when parameters are not Quat and number", () => {
+		expect(() => new Quat().lerp("a", "a")).toThrowError(TypeError);
+		expect(() => new Quat().lerp()).toThrowError(TypeError);
+	});
+
+	it("slerp prototype works as expected", () => {
+		let q1 = new Quat(5, 3, -2, 7);
+
+		let q2 = new Quat(1, 2, -5, -3);// dot 0
+		let q3 = q1.slerp(q2, 0.5);
+		expect(q3.r).toBeCloseTo(0.49227672520391125, 5);
+		expect(q3.i).toBeCloseTo(0.45388481990259016, 5);
+		expect(q3.j).toBeCloseTo(-0.7177581257880786, 5);
+		expect(q3.k).toBeCloseTo(0.19098552026185375, 5);
+
+		let q4 = new Quat(1, 2, -3, -1);// dot 10
+		let q5 = q1.slerp(q4, 0);
+		expect(q5.r).toBe(5);
+		expect(q5.i).toBe(3);
+		expect(q5.j).toBe(-2);
+		expect(q5.k).toBe(7);
+
+		let q6 = new Quat(1, 2, -3, -3);// dot -4
+		let q7 = q1.slerp(q6, 0.4);
+		expect(q7.r).toBeCloseTo(0.5517368198016962, 5);
+		expect(q7.i).toBeCloseTo(0.547358844043825, 5);
+		expect(q7.j).toBeCloseTo(-0.6224258390801777, 5);
+		expect(q7.k).toBeCloseTo(0.09257889806783776, 5);
+
+		let q8 = new Quat(1, 2, -5, -3.1);// dot -0.7
+		let q9 = q1.slerp(q8, 2);
+		expect(q9.r).toBe(q1.r);
+		expect(q9.i).toBe(q1.i);
+		expect(q9.j).toBe(q1.j);
+		expect(q9.k).toBe(q1.k);
+
+		let q10 = q1.slerp(q8, -1);
+		expect(q10.r).toBe(q8.r);
+		expect(q10.i).toBe(q8.i);
+		expect(q10.j).toBe(q8.j);
+		expect(q10.k).toBe(q8.k);
+	});
+
+	it("slerp prototype throws TypeError when parameters are not Quat and number", () => {
+		expect(() => new Quat().slerp("a", "a")).toThrowError(TypeError);
+		expect(() => new Quat().slerp()).toThrowError(TypeError);
+	});
+
+	it("squad prototype works as expected", () => {
+		let a = new Quat(5, 3, -2, 7);
+		let b = new Quat(1, 2, -5, -3.1);
+		let c = new Quat(-2, 0, 6, 3);
+		let d = new Quat(-1, 0, 1, 2);
+		let e = a.squad(b, c, d, 0.6);
+
+		expect(e.r).toBeCloseTo(0.24857015719081804, 5);
+		expect(e.i).toBeCloseTo(0.6269395906460726, 5);
+		expect(e.j).toBeCloseTo(0.14129984737341578, 5);
+		expect(e.k).toBeCloseTo(0.7247026837034042, 5);
+	});
+
+	it("squad prototype throws TypeError when parameters are not Quat-s and number", () => {
+		expect(() => new Quat().squad("a", "a", "a", "a")).toThrowError(TypeError);
+		expect(() => new Quat().squad()).toThrowError(TypeError);
+	});
+
+	it("quadrangle prototype works as expected", () => {
+		let a = new Quat(5, 3, -2, 7);
+		let b = new Quat(1, 2, -5, -3.1);
+		let c = new Quat(-2, 0, 6, 3);
+		let e = a.quadrangle(b, c);
+
+		expect(e.r).toBeCloseTo(1.1738922180666038, 5);
+		expect(e.i).toBeCloseTo(-0.11515063497536307, 5);
+		expect(e.j).toBeCloseTo(0.11758452348157551, 5);
+		expect(e.k).toBeCloseTo(0.012650862133917222, 5);
+	});
+
+	it("quadrangle prototype throws TypeError when parameters are not Quat-s and number", () => {
+		expect(() => new Quat().quadrangle("a", "a")).toThrowError(TypeError);
+		expect(() => new Quat().quadrangle()).toThrowError(TypeError);
+	});
+
+	it("squad2 prototype works as expected", () => {
+		let a = new Quat(5, 3, -2, 7);
+		let b = new Quat(1, 2, -5, -3.1);
+		let c = new Quat(-2, 0, 6, 3);
+		let d = new Quat(-1, 0, 1, 2);
+		let e = a.squad2(b, c, d, 0.6);
+
+		expect(e.r).toBeCloseTo(0.73357337319017, 5);
+		expect(e.i).toBeCloseTo(0.09203478946363089, 5);
+		expect(e.j).toBeCloseTo(0.3660624883267518, 5);
+		expect(e.k).toBeCloseTo(0.5651530397288929, 5);
+	});
+
+	it("squad2 prototype throws TypeError when parameters are not Quat-s and number", () => {
+		expect(() => new Quat().squad2("a", "a", "a", "a")).toThrowError(TypeError);
+		expect(() => new Quat().squad2()).toThrowError(TypeError);
+	});
+
+	it("c function returns itself", () => {
+		expect(new Quat().c() instanceof Quat).toBe(true);
+	});
+});
+
+
+describe("Quat2", () => {
+
+	it("fromRotationMatrix works as expected", () => {
+		let m = new Mat4(new Point3D(1, 2, 3, 4), new Point3D(-1, -9, 5, 2), new Point3D(3, 0, 1, -2), new Point3D(5, 1, -3, 1));
+		let q = Quat2.fromRotationMatrix(m);
+
+		expect(q.r).toBeCloseTo(1.5811388300841898, 5);
+		expect(q.i).toBeCloseTo(0.15811388300841897, 5);
+		expect(q.j).toBeCloseTo(0.9486832980505138, 5);
+		expect(q.k).toBeCloseTo(0.7905694150420948, 5);
+	});
+
+	it("fromRotationMatrix throws TypeError when parameter is not Mat4", () => {
+		expect(() => Quat2.fromRotationMatrix("a")).toThrowError(TypeError);
+		expect(() => Quat2.fromRotationMatrix()).toThrowError(TypeError);
+	});
+
+	it("fromEulerAngle works as expected", () => {
+		let q = Quat2.fromEulerAngle(45, 0.5, 1, 0);
+
+		expect(q.r).toBeCloseTo(-0.8733046400935156, 5);
+		expect(q.i).toBeCloseTo(-0.24358725623025476, 5);
+		expect(q.j).toBeCloseTo(-0.4871745124605095, 5);
+		expect(q.k).toBeCloseTo(-0, 5);
+	});
+
+	it("fromEulerAngle throws TypeError when parameters are not numbers", () => {
+		expect(() => Quat2.fromEulerAngle("a", "a", "a", "a")).toThrowError(TypeError);
+		expect(() => Quat2.fromEulerAngle()).toThrowError(TypeError);
+	});
+
+	it("fromEulerAngles works as expected", () => {
+		let q = Quat2.fromEulerAngles(45, 60, 125);
+
+		expect(q.r).toBeCloseTo(-0.28417852247107306, 5);
+		expect(q.i).toBeCloseTo(0.21006619016961586, 5);
+		expect(q.j).toBeCloseTo(0.8402582556996262, 5);
+		expect(q.k).toBeCloseTo(-0.4111943905775006, 5);
+	});
+
+	it("fromEulerAngles throws TypeError when parameters are numbers", () => {
+		expect(() => Quat2.fromEulerAngles("a", "a", "a")).toThrowError(TypeError);
+		expect(() => Quat2.fromEulerAngles()).toThrowError(TypeError);
+	});
+
+});
