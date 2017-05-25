@@ -500,10 +500,46 @@ var Quat = function(r, i, j, k){
 		this.k = r.k;
 		this.r = r.r;
 	} else {
-		this.i = (typeof i !== "undefined") ? i : 0.0;
-		this.j = (typeof j !== "undefined") ? j : 0.0;
-		this.k = (typeof k !== "undefined") ? k : 0.0;
-		this.r = (typeof r !== "undefined") ? r : 0.0;
+		// i
+		if (typeof i !== "undefined") {
+			if (typeof i === "number") {
+				this.i = i;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr i: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.i = 0.0;
+		}
+		// j
+		if (typeof j !== "undefined") {
+			if (typeof j === "number") {
+				this.j = j;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr j: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.j = 0.0;
+		}
+		// k
+		if (typeof k !== "undefined") {
+			if (typeof k === "number") {
+				this.k = k;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr k: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.k = 0.0;
+		}
+		// r
+		if (typeof r !== "undefined") {
+			if (typeof r === "number") {
+				this.r = r;
+			} else {
+				throw new TypeError("Vec3D: Neplatný parametr r: musí být Vec3D, Point3D nebo number")
+			}
+		} else {
+			this.r = 0.0;
+		}
 	}
 };
 
@@ -749,7 +785,7 @@ Quat2.fromRotationMatrix = function(mat) {
 };
 
 /**
- * Vraci kvaternion na zákaldě úhlu rotace kolem jednotlivých os
+ * Vrací kvaternion na základě úhlu rotace kolem jednotlivých os
  * @param  {number} a úhel rotace kolem osy x
  * @param  {number} b úhel rotace kolem osy y
  * @param  {number} c úhel rotace kolem osy z
