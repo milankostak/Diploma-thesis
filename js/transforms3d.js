@@ -94,7 +94,7 @@ Vec1D.prototype.mul = function(m) {
  * @return {Vec1D} reference na volanou instanci
  */
 Vec1D.prototype.c = function() {
-	console.log(this.x);
+	console.log(this);
 	return this;
 };
 
@@ -198,7 +198,7 @@ Vec2D.prototype.normalized = function() {
  * @return {Vec2D} reference na volanou instanci
  */
 Vec2D.prototype.c = function() {
-	console.log(this.x + ", " + this.y);
+	console.log(this);
 	return this;
 };
 
@@ -340,7 +340,7 @@ Vec3D.prototype.normalized = function() {
  * @return {Vec3D} reference na volanou instanci
  */
 Vec3D.prototype.c = function() {
-	console.log(this.x + ", " + this.y + ", " + this.z);
+	console.log(this);
 	return this;
 };
 
@@ -481,7 +481,7 @@ Point3D.prototype.ignoreW = function() {
  * @return {Point3D} reference na volanou instanci
  */
 Point3D.prototype.c = function() {
-	console.log(this.x + ", " + this.y + ", " + this.z + ", " + this.w);
+	console.log(this);
 	return this;
 };
 
@@ -969,7 +969,7 @@ Quat.prototype.squad2 = function(q1, q2, q3, t) {
  * @return {Quat} reference na volanou instanci
  */
 Quat.prototype.c = function() {
-	console.log(this.r+", "+this.i+", "+this.j+", "+this.k);
+	console.log(this);
 	return this;
 };
 
@@ -1182,9 +1182,9 @@ Mat3.prototype.inverse = function() {
  */
 Mat3.prototype.c = function() {
 	var x = "";
-	for (var i = 0; i < 3; i++){
-		for (var j = 0; j < 3; j++){
-			x += this.mat[i][j]+", ";
+	for (var i = 0; i < 3; i++) {
+		for (var j = 0; j < 3; j++) {
+			x += this.mat[i][j] + ", ";
 		}
 		console.log(x);
 		x = "";
@@ -1571,9 +1571,9 @@ Mat4.prototype.toMat3 = function() {
  */
 Mat4.prototype.c = function() {
 	var x = "";
-	for (var i = 0; i < 4; i++){
-		for (var j = 0; j < 4; j++){
-			x += this.mat[i][j]+", ";
+	for (var i = 0; i < 4; i++) {
+		for (var j = 0; j < 4; j++) {
+			x += this.mat[i][j] + ", ";
 		}
 		console.log(x);
 		x = "";
@@ -2027,8 +2027,7 @@ Col.prototype.getRGB = function() {
  * @return {number} barva
  */
 Col.prototype.getARGB = function() {
-	return ((this.a * 255.0) << 24) | ((this.r * 255.0) << 16)
-			| ((this.g * 255.0) << 8) | (this.b * 255.0);
+	return ((this.a * 255.0) << 24) | ((this.r * 255.0) << 16) | ((this.g * 255.0) << 8) | (this.b * 255.0);
 };
 
 /**
@@ -2036,7 +2035,8 @@ Col.prototype.getARGB = function() {
  * @return {Col} reference na volanou instanci
  */
 Col.prototype.c = function() {
-	console.log(this.r+", "+this.g+", "+this.b+", "+this.a);
+	console.log(this);
+	return this;
 };
 
 /**
