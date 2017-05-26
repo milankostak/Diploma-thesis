@@ -156,6 +156,8 @@ var Rotation = (function() {
 			window.alert(msg);
 			window.removeEventListener("deviceorientation", deviceOrientationHandler, false);
 			errorShown = true;
+			isSupported = false;
+			isRunning = false;
 		}
 	}
 
