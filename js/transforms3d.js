@@ -1997,8 +1997,12 @@ Col.prototype.mul = function(c) {
  */
 Col.prototype.gamma = function(gamma) {
 	if (typeof c == "number") {
-		return new Col(Math.pow(this.r, gamma), Math.pow(this.g, gamma),
-				Math.pow(this.b, gamma), this.a);
+		return new Col(
+				Math.pow(this.r, gamma),
+				Math.pow(this.g, gamma),
+				Math.pow(this.b, gamma),
+				this.a
+			);
 	} else {
 		throw new TypeError("Col, gamma: Neplatný parametr: musí být číslo");
 	}
@@ -2010,8 +2014,12 @@ Col.prototype.gamma = function(gamma) {
  * @return {Col} nová instance Col
  */
 Col.prototype.saturate = function() {
-	return new Col(Math.max(0,Math.min(this.r, 1)), Math.max(0,Math.min(this.g, 1)),
-			Math.max(0,Math.min(this.b, 1)), this.a);
+	return new Col(
+			Math.max(0, Math.min(this.r, 1)),
+			Math.max(0, Math.min(this.g, 1)),
+			Math.max(0, Math.min(this.b, 1)),
+			this.a
+		);
 };
 
 /**

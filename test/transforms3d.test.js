@@ -23,7 +23,7 @@ describe("ZeroArray", () => {
 
 describe("Vec1D", () => {
 
-	it("constructor can make copy of another Vec1D", () => {
+	it("constructor can make a copy of another Vec1D", () => {
 		let v = new Vec1D(new Vec1D(5));
 		expect(v.x).toBe(5);
 	});
@@ -71,7 +71,7 @@ describe("Vec1D", () => {
 
 describe("Vec2D", () => {
 
-	it("constructor can make copy of another Vec2D", () => {
+	it("constructor can make a copy of another Vec2D", () => {
 		let v = new Vec2D(new Vec2D(5, 6));
 		expect(v.x).toBe(5);
 		expect(v.y).toBe(6);
@@ -160,7 +160,7 @@ describe("Vec2D", () => {
 
 describe("Vec3D", () => {
 
-	it("constructor can make copy of another Vec3D", () => {
+	it("constructor can make a copy of another Vec3D", () => {
 		let v = new Vec3D(new Vec3D(5, 6, 7));
 		expect(v.x).toBe(5);
 		expect(v.y).toBe(6);
@@ -285,7 +285,7 @@ describe("Vec3D", () => {
 
 describe("Point3D", () => {
 
-	it("constructor can make copy of another Point3D", () => {
+	it("constructor can make a copy of another Point3D", () => {
 		let v = new Point3D(new Point3D(5, 6, 7, 8));
 		expect(v.x).toBe(5);
 		expect(v.y).toBe(6);
@@ -293,7 +293,7 @@ describe("Point3D", () => {
 		expect(v.w).toBe(8);
 	});
 
-	it("constructor can make copy of another Vec3D", () => {
+	it("constructor can make a copy of another Vec3D", () => {
 		let v = new Point3D(new Vec3D(5, 7, 8));
 		expect(v.x).toBe(5);
 		expect(v.y).toBe(7);
@@ -408,7 +408,7 @@ describe("Point3D", () => {
 
 describe("Quat", () => {
 
-	it("constructor can make copy of another Quat", () => {
+	it("constructor can make a copy of another Quat", () => {
 		let q = new Quat(new Quat(5, 6, 7, 8));
 		expect(q.r).toBe(5);
 		expect(q.i).toBe(6);
@@ -802,7 +802,7 @@ describe("Quat2", () => {
 		expect(q.k).toBeCloseTo(-0.4111943905775006, 5);
 	});
 
-	it("fromEulerAngles throws TypeError when parameters are numbers", () => {
+	it("fromEulerAngles throws TypeError when parameters are not numbers", () => {
 		expect(() => Quat2.fromEulerAngles("a", "a", "a")).toThrowError(TypeError);
 		expect(() => Quat2.fromEulerAngles()).toThrowError(TypeError);
 	});
