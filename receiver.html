@@ -359,33 +359,11 @@
 
 	var oldRotation = 0;
 	function onWsMessage(data) {
+		//showTime(data);
 
 		if (data.type === "rotation") {
-			//showTime(data);
+			doRotation(data);
 
-			// start or restart
-			if (data.sequence <= 2) {
-				lastReceivedRotationSocketSequence = -1;
-			}
-
-			if (data.sequence > lastReceivedRotationSocketSequence) {
-				lastReceivedRotationSocketSequence = data.sequence;
-
-				let rotDegrees = (Math.sign(data.gamma) > 0) ? 180 - data.beta : data.beta;
-				//console.log(data.beta, data.gamma, rotDegrees);
-
-				// skip big changes, also prevents skipping to 90 degrees when phone cannot precisely tell its rotation
-				if (Math.abs(oldRotation - rotDegrees) < 60) {
-					let radiansB = Math2.toRadians(rotDegrees) - Math.PI/2;
-					rotation = new Mat4RotY(radiansB);
-				} else {
-					//console.log("skipping big rotation change");
-				}
-				oldRotation = rotDegrees;
-
-			} else {
-				//console.log("skipping roration data " + data.sequence);
-			}
 		} else if (data.type === "image") {
 			let img = document.querySelector("img");
 			img.src = data.dataUrl;
@@ -394,27 +372,102 @@
 				refreshTexture(img);
 				console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
 			};
+
 		} else if (data.type === "marker") {
-
-			// start or restart
-			if (data.sequence <= 2) {
-				lastReceivedMarkerSocketSequence = -1;
-			}
-
-			if (data.sequence > lastReceivedMarkerSocketSequence) {
-				lastReceivedMarkerSocketSequence = data.sequence;
-				//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
-				//console.log(data.max, lastMarkerX, data.x, lastMarkerY, data.y);
-				if (data.sequence > 1) {
-					translate(lastMarkerX - data.x, lastMarkerY - data.y, 50);
-				}
-				lastMarkerX = data.x;
-				lastMarkerY = data.y;
-			} else {
-				//console.log("skipping marker data " + data.sequence);
-			}
+			doPosition(data);
 		}
 	}
+
+	function doRotation(data) {
+		// start or restart
+		if (data.sequence <= 2) {
+			lastReceivedRotationSocketSequence = -1;
+		}
+
+		if (data.sequence > lastReceivedRotationSocketSequence) {
+			lastReceivedRotationSocketSequence = data.sequence;
+
+			let rotDegrees = (Math.sign(data.gamma) > 0) ? 180 - data.beta : data.beta;
+			//console.log(data.beta, data.gamma, rotDegrees);
+
+			// skip big changes, also prevents skipping to 90 degrees which is a situation when phone cannot precisely tell its rotation
+			if (Math.abs(oldRotation - rotDegrees) < 60) {
+				let radiansB = Math2.toRadians(rotDegrees) - Math.PI/2;
+				rotation = new Mat4RotY(radiansB);
+			} else {
+				//console.log("skipping big rotation change");
+			}
+			oldRotation = rotDegrees;
+
+		} else {
+			//console.log("skipping roration data " + data.sequence);
+		}
+	}
+
+	function doPosition(data) {
+		// finish
+		if (data.sequence === -1) {
+			// hide list message
+			document.querySelector("#lost").style.top = "-50px";
+			// prevent any late from showing
+			lastReceivedMarkerSocketSequence = Number.MAX_VALUE;
+			return;
+		}
+
+		// start or restart the sequence so we can skip delayed data
+		// wait for two data sets to be sure
+		// first has sequence 1
+		if (data.sequence <= 2) {
+			lastReceivedMarkerSocketSequence = -1;
+			toBeRestarted = true;
+		}
+
+		if (data.sequence > lastReceivedMarkerSocketSequence) {
+			lastReceivedMarkerSocketSequence = data.sequence;
+			//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
+			//console.log(data.max, lastMarkerX, data.x, lastMarkerY, data.y);
+
+			if (data.count > 0) {
+				if (!toBeRestarted) {
+					translate(lastMarkerX - data.x, lastMarkerY - data.y, 50);
+				}
+				toBeRestarted = false;
+				lastMarkerX = data.x;
+				lastMarkerY = data.y;
+
+				document.querySelector("#lost").style.top = "-50px";
+			} else {
+				document.querySelector("#lost").style.top = "0px";
+			}
+
+			//////////
+			//console.log(data.count);
+			let rect = document.querySelector("#marker").getBoundingClientRect();
+			let length = rect.width;
+			if (data.count < 4) {
+				length += 1;
+			} else if (data.count > 7) {
+				length -= 1;
+			}
+			// problems with seeing the marker -> make it fast temporarily bigger
+			if (data.count < 1.5) {
+				length += 2;
+				length = Math2.clamp(length, 20, 80);
+			} else {
+				length = Math2.clamp(length, 20, 60);
+			}
+			let leftTop = "calc(50% - " + (length/2) + "px)";
+			// set it
+			document.querySelector("#marker").style.width = length+"px";
+			document.querySelector("#marker").style.height = length+"px";
+			document.querySelector("#marker").style.left = leftTop;
+			document.querySelector("#marker").style.top = leftTop;
+		} else {
+			//console.log("skipping marker data " + data.sequence);
+		}
+}
+
+	var toBeRestarted = true;
 
 	function refreshTexture(img) {
 		cameraTexture = gl.createTexture();
@@ -477,20 +530,32 @@
 	* {
 		margin: 0;
 		padding: 0;
+		font-family: Calibri, Arial, sans-serif;
 	}
-	div.marker {
-		height: 20px;
-		width: 20px;
+	div#marker {
+		height: 60px;
+		width: 60px;
 		background-color: #00FF00;
 		position: fixed;
-		top: 50%;
-		left: 50%;
+		top: calc(50% - 30px);
+		left: calc(50% - 30px);
+	}
+	div#lost {
+		font-size: 18px;
+		color: #DDD;
+		padding: 5px 20px;
+		background-color: #FF2222;
+		position: fixed;
+		top: -50px; /* always shown but outside wiewport, shown by zeroing top */
+		left: 45%;
+		transition: all .4s ease-in;
 	}
 </style>
 </head>
 <body>
 <img src="">
 <canvas></canvas>
-<div class="marker"></div>
+<div id="marker"></div>
+<div id="lost">Marker is lost.</div>
 </body>
 </html>

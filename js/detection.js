@@ -282,7 +282,18 @@ var Detection = (function() {
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
 //**********************************************************
-		// read pixels
+		readData();
+		// draw the output into canvas
+		gl.useProgram(programDraw);
+		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+		gl.bindTexture(gl.TEXTURE_2D, texture1);
+		gl.viewport(0, 0, width, height);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+	};
+
+	function readData() {
 		//if (count++ < 100) {
 			//let time = new Date().getTime();
 			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
@@ -302,31 +313,26 @@ var Detection = (function() {
 				}
 			}*/
 
-			let max = 0, x, y;
+			let max = 0, x, y, count = 0;
 			for (let i = 0; i < readBuffer.length; i+=4) {
-				if (readBuffer[i] >= max) {
+				if (readBuffer[i] > max) {
 					max = readBuffer[i];
 					x = readBuffer[i+1];
 					y = readBuffer[i+2];
 				}
+				if (readBuffer[i] > 1) {
+					count++;
+				}
 			}
 			if (max > 1) {
-				dataToSend.push(max, x, y);
+				dataToSend.push({max: max, x: x, y: y, count: count});
 			}
 			//console.log("MAX")
 			//console.log(max, x, y);
 		//}
 
 //**********************************************************
-		// draw the output into canvas
-		gl.useProgram(programDraw);
-		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
-		gl.bindTexture(gl.TEXTURE_2D, texture1);
-		gl.viewport(0, 0, width, height);
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-	};
+	}
 
 	/**
 	 * Update cameraTexture from video feed
@@ -358,6 +364,12 @@ var Detection = (function() {
 	Detection.finish = function() {
 		clearInterval(sendPositionInterval);
 		sendPosition();
+		let obj = {
+			type: "marker",
+			time: new Date().getTime(),
+			sequence: -1
+		};
+		send(obj);
 	};
 
 	/**
@@ -365,33 +377,51 @@ var Detection = (function() {
 	 * @private
 	 */
 	function sendPosition() {
-		if (dataToSend.length === 0) return;
+		if (dataToSend.length === 0) {
+			let obj = {
+				type: "marker",
+				time: new Date().getTime(),
+				sequence: ++positionSequence,
+				max: 0,
+				x: 0,
+				y: 0,
+				count: 0
+			};
+			send(obj);
+		} else {
+			let sumMax = 0, sumX = 0, sumY = 0, sumCount = 0;
+			for (let i = 0; i < dataToSend.length; i++) {
+				sumMax += dataToSend[i].max;
+				sumX += dataToSend[i].x;
+				sumY += dataToSend[i].y;
+				sumCount += dataToSend[i].count;
+			}
+			// send mean of data
+			let max = sumMax / dataToSend.length;
+			let coordX = sumX / dataToSend.length;
+			let coordY = sumY / dataToSend.length;
+			let count = sumCount / dataToSend.length;
+			// clear dataToSend
+			dataToSend.length = 0;
 
-		let sumMax = 0, sumX = 0, sumY = 0;
-		for (let i = 0; i < dataToSend.length; i+=3) {
-			sumMax += dataToSend[i];
-			sumX += dataToSend[i+1];
-			sumY += dataToSend[i+2];
+			let obj = {
+				type: "marker",
+				time: new Date().getTime(),
+				sequence: ++positionSequence,
+				max: max,
+				x: coordX,
+				y: coordY,
+				count: count
+			};
+			send(obj);
 		}
-		let max = sumMax / (dataToSend.length / 3);
-		let coordX = sumX / (dataToSend.length / 3);
-		let coordY = sumY / (dataToSend.length / 3);
-		// clear dataToSend
-		dataToSend.length = 0;
+	}
 
+	function send(objectToSend) {
 		let request = new XMLHttpRequest();
 		request.open("POST", "/ajax/marker");
 		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-
-		let obj = {
-			type: "marker",
-			time: new Date().getTime(),
-			sequence: ++positionSequence,
-			max: max,
-			x: coordX,
-			y: coordY
-		};
-		request.send(JSON.stringify(obj));
+		request.send(JSON.stringify(objectToSend));
 	}
 
 	return Detection;
