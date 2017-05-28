@@ -72,6 +72,8 @@
 	var lastMarkerX = 0, lastMarkerY = 0;
 	// numbers, holding last sequence number for skipping delayed packets
 	var lastReceivedRotationSocketSequence = -1, lastReceivedMarkerSocketSequence = -1;
+	// if position data sequence should be restarted
+	var toBeRestarted = true;
 
 	/**
 	 * Init scene and buffers
@@ -224,7 +226,7 @@
 					camera.setAzimuth(Math2.toRadians(azimuth));
 					
 					zenith -= step * y / canvas.height;
-					if (Math.abs(zenith) > 90) zenith = 90*Math2.sign(zenith);
+					if (Math.abs(zenith) > 90) zenith = 90*Math.sign(zenith);
 					camera.setZenith(Math2.toRadians(zenith));
 				}
 				// scroll button
@@ -354,7 +356,7 @@
 	}
 
 	function scaleF(x, y) {
-		scale = scale.mul(new Mat4Scale(1+Math2.sign(x)*0.02, 1, 1-Math2.sign(y)*0.02));
+		scale = scale.mul(new Mat4Scale(1+Math.sign(x)*0.02, 1, 1-Math.sign(y)*0.02));
 	}
 
 	var oldRotation = 0;
@@ -465,9 +467,7 @@
 		} else {
 			//console.log("skipping marker data " + data.sequence);
 		}
-}
-
-	var toBeRestarted = true;
+	}
 
 	function refreshTexture(img) {
 		cameraTexture = gl.createTexture();
@@ -518,6 +518,7 @@
 					console.log("Change of basic time for synchronization ("+diff+")");
 					basicTime = tt - data.time;
 				}
+				console.log("----")
 				console.log(tt - data.time - basicTime);
 				console.log("SEQ: " + data.sequence);
 			}
