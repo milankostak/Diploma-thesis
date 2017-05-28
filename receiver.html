@@ -51,11 +51,9 @@
 	// WebGLProgram
 	var program;
 	// WebGLBuffer
-	var vertexBuffer, indexBuffer, colorBuffer;
+	var vertexBuffer, indexBuffer, colorBuffer, textureBuffer;
 	// Mat4PerspRH
 	var projection;
-	// WebGLBuffer
-	var textureBuffer;
 	// WebGLTexture
 	var cameraTexture;
 	// Mat4
@@ -68,11 +66,13 @@
 	var forward, backward, right, left, up, down;
 	// number, holds indices count of block object without face object
 	var blockIndices;
+	// number, hoding last received rotation
+	var lastRotation = 0;
 	// numbers, holding last recived data for computing relative change
 	var lastMarkerX = 0, lastMarkerY = 0;
 	// numbers, holding last sequence number for skipping delayed packets
 	var lastReceivedRotationSocketSequence = -1, lastReceivedMarkerSocketSequence = -1;
-	// if position data sequence should be restarted
+	// boolean, if position data sequence should be restarted
 	var toBeRestarted = true;
 
 	/**
@@ -256,30 +256,30 @@
 			switch(e.which) {
 				case 87: //w
 				case 38: //↑
-					if (backward) backward = false;
+					backward = false;
 					forward = true;
 					break;
 				case 83: //s
 				case 40: //↓
-					if (forward) forward = false;
+					forward = false;
 					backward = true;
 					break;
 				case 68: //d
 				case 39: //→
-					if (left) left = false;
+					left = false;
 					right = true;
 					break;
 				case 65: //a
 				case 37: //←
-					if (right) right = false;
+					right = false;
 					left = true;
 					break;
 				case 82://r
-					if (down) down = false;
+					down = false;
 					up = true;
 					break;
 				case 70://f
-					if (up) up = false;
+					up = false;
 					down = true;
 					break;
 			}
@@ -359,7 +359,6 @@
 		scale = scale.mul(new Mat4Scale(1+Math.sign(x)*0.02, 1, 1-Math.sign(y)*0.02));
 	}
 
-	var oldRotation = 0;
 	function onWsMessage(data) {
 		//showTime(data);
 
@@ -393,13 +392,13 @@
 			//console.log(data.beta, data.gamma, rotDegrees);
 
 			// skip big changes, also prevents skipping to 90 degrees which is a situation when phone cannot precisely tell its rotation
-			if (Math.abs(oldRotation - rotDegrees) < 60) {
+			if (Math.abs(lastRotation - rotDegrees) < 60) {
 				let radiansB = Math2.toRadians(rotDegrees) - Math.PI/2;
 				rotation = new Mat4RotY(radiansB);
 			} else {
 				//console.log("skipping big rotation change");
 			}
-			oldRotation = rotDegrees;
+			lastRotation = rotDegrees;
 
 		} else {
 			//console.log("skipping roration data " + data.sequence);
