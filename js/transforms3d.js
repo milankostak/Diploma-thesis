@@ -1996,7 +1996,7 @@ Col.prototype.mul = function(c) {
  * @throws {TypeError} If gamma není číslo
  */
 Col.prototype.gamma = function(gamma) {
-	if (typeof c == "number") {
+	if (typeof gamma == "number") {
 		return new Col(
 				Math.pow(this.r, gamma),
 				Math.pow(this.g, gamma),

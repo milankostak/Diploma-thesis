@@ -808,3 +808,193 @@ describe("Quat2", () => {
 	});
 
 });
+
+
+describe("Mat3", () => {
+
+});
+
+
+describe("Mat4", () => {
+
+});
+
+
+describe("Camera", () => {
+
+});
+
+
+describe("Col", () => {
+		it("constructor can make a copy of another Col", () => {
+		let v = new Col(new Col(0.1, 0.2, 0.3, 1));
+		expect(v.r).toBe(0.1);
+		expect(v.g).toBe(0.2);
+		expect(v.b).toBe(0.3);
+		expect(v.a).toBe(1);
+	});
+
+	it("constructor can make a copy of a Point3D", () => {
+		let v = new Col(new Point3D(5, 7, 8, 9));
+		expect(v.r).toBe(5);
+		expect(v.g).toBe(7);
+		expect(v.b).toBe(8);
+		expect(v.a).toBe(9);
+	});
+
+	it("constructor with integer parameters works", () => {
+		let v1 = new Col(50, 100, 150, 200);
+		expect(v1.r).toBe(50/255);
+		expect(v1.g).toBe(100/255);
+		expect(v1.b).toBe(150/255);
+		expect(v1.a).toBe(200/255);
+
+		let v2 = new Col(50, 100, 150);
+		expect(v2.r).toBe(50/255);
+		expect(v2.g).toBe(100/255);
+		expect(v2.b).toBe(150/255);
+		expect(v2.a).toBe(1);
+	});
+
+	it("constructor with float parameters works", () => {
+		let v1 = new Col(0.1, 0.2, 0.3, 0.4);
+		expect(v1.r).toBe(0.1);
+		expect(v1.g).toBe(0.2);
+		expect(v1.b).toBe(0.3);
+		expect(v1.a).toBe(0.4);
+
+		let v2 = new Col(0.1, 0.2, 0.3);
+		expect(v2.r).toBe(0.1);
+		expect(v2.g).toBe(0.2);
+		expect(v2.b).toBe(0.3);
+		expect(v2.a).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameters are wrong", () => {
+		expect(() => new Col("a")).toThrowError(TypeError);
+		expect(() => new Col(20, 20)).toThrowError(TypeError);
+		expect(() => new Col()).toThrowError(TypeError);
+	});
+
+	it("addna prototype works as expected", () => {
+		let v1 = new Col(0.1, 0.2, 0.3, 100);
+		let v2 = new Col(0.2, 0.4, 0.6, 100);
+		let v3 = v1.addna(v2);
+		expect(v3.r).toBeCloseTo(0.3, 5);
+		expect(v3.g).toBeCloseTo(0.6, 5);
+		expect(v3.b).toBeCloseTo(0.9, 5);
+		expect(v3.a).toBeCloseTo(1, 5);
+	});
+
+	it("addna prototype throws TypeError when parameter is not Col", () => {
+		expect(() => new Col(1, 2, 3, 4).addna()).toThrowError(TypeError);
+		expect(() => new Col(1, 2, 3, 4).addna(1)).toThrowError(TypeError);
+	});
+
+	it("mulna prototype works as expected", () => {
+		let v1 = new Col(0.1, 0.2, 0.3, 100);
+		let v3 = v1.mulna(2);
+		expect(v3.r).toBeCloseTo(0.2, 5);
+		expect(v3.g).toBeCloseTo(0.4, 5);
+		expect(v3.b).toBeCloseTo(0.6, 5);
+		expect(v3.a).toBeCloseTo(1, 5);
+	});
+
+	it("mulna prototype throws TypeError when parameter is not number", () => {
+		expect(() => new Col(1, 2, 3, 4).mulna()).toThrowError(TypeError);
+		expect(() => new Col(1, 2, 3, 4).mulna("a")).toThrowError(TypeError);
+	});
+
+	it("add prototype works as expected", () => {
+		let v1 = new Col(0.1, 0.2, 0.3, 100);
+		let v2 = new Col(0.2, 0.4, 0.6, 100);
+		let v3 = v1.add(v2);
+		expect(v3.r).toBeCloseTo(0.3, 5);
+		expect(v3.g).toBeCloseTo(0.6, 5);
+		expect(v3.b).toBeCloseTo(0.9, 5);
+		expect(v3.a).toBeCloseTo(200, 5);
+	});
+
+	it("add prototype throws TypeError when parameter is not Col", () => {
+		expect(() => new Col(1, 2, 3, 4).add()).toThrowError(TypeError);
+		expect(() => new Col(1, 2, 3, 4).add(1)).toThrowError(TypeError);
+	});
+
+	it("mul prototype works as expected", () => {
+		let v1 = new Col(0.1, 0.2, 0.3, 100);
+		let v2 = new Col(0.2, 0.4, 0.6, 100);
+		let v3 = v1.mul(v2);
+		expect(v3.r).toBeCloseTo(0.02, 5);
+		expect(v3.g).toBeCloseTo(0.08, 5);
+		expect(v3.b).toBeCloseTo(0.18, 5);
+		expect(v3.a).toBeCloseTo(10000, 5);
+
+		let v4 = v2.mul(2.5);
+		expect(v4.r).toBeCloseTo(0.5, 5);
+		expect(v4.g).toBeCloseTo(1.0, 5);
+		expect(v4.b).toBeCloseTo(1.5, 5);
+		expect(v4.a).toBeCloseTo(250, 5);
+	});
+
+	it("mul prototype throws TypeError when parameter is not Col or number", () => {
+		expect(() => new Col(1, 2, 3, 4).mul()).toThrowError(TypeError);
+		expect(() => new Col(1, 2, 3, 4).mul("a")).toThrowError(TypeError);
+	});
+
+	it("gamma prototype works as expected", () => {
+		let v1 = new Col(0.1, 0.2, 0.3, 100);
+		let v2 = v1.gamma(3);
+		expect(v2.r).toBeCloseTo(0.001, 5);
+		expect(v2.g).toBeCloseTo(0.008, 5);
+		expect(v2.b).toBeCloseTo(0.027, 5);
+		expect(v2.a).toBeCloseTo(100, 5);
+	});
+
+	it("gamma prototype throws TypeError when parameter is not number", () => {
+		expect(() => new Col(1, 2, 3, 4).gamma()).toThrowError(TypeError);
+		expect(() => new Col(1, 2, 3, 4).gamma("a")).toThrowError(TypeError);
+	});
+
+	it("saturate prototype works as expected", () => {
+		let v1 = new Col(1000, -1000, 10, 100);
+		let v2 = v1.saturate();
+		expect(v2.r).toBe(1);
+		expect(v2.g).toBe(0);
+		expect(v2.b).toBe(10/255);
+		expect(v2.a).toBe(100/255);
+	});
+
+	it("getRGB prototype works as expected", () => {
+		let v1 = new Col(10, 20, 30, 40);
+		let rgb1 = v1.getRGB();
+		expect(rgb1).toBe(660510);
+
+		let v2 = new Col(0.5, 0, 1, 0);
+		let rgb2 = v2.getRGB();
+		expect(rgb2).toBe(8323327);
+	});
+
+	it("getARGB prototype works as expected", () => {
+		let v1 = new Col(10, 20, 30, 40);
+		let rgb1 = v1.getARGB();
+		expect(rgb1).toBe(671749150);
+
+		let v2 = new Col(0.5, 0, 1, 0.1);
+		let rgb2 = v2.getARGB();
+		expect(rgb2).toBe(427753727);
+	});
+
+	it("c function returns itself", () => {
+		expect(new Col(1, 1, 1, 1).c() instanceof Col).toBe(true);
+	});
+});
+
+
+describe("Kubika", () => {
+
+});
+
+
+describe("Bikubika", () => {
+
+});
