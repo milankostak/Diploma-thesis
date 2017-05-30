@@ -2006,7 +2006,6 @@ Col.prototype.gamma = function(gamma) {
 	} else {
 		throw new TypeError("Col, gamma: Neplatný parametr: musí být číslo");
 	}
-		
 };
 
 /**
@@ -2049,19 +2048,19 @@ Col.prototype.c = function() {
 
 /**
  * Objekt pro práci s kubikami - fergusonovy, beziérovy a coonsovy
- * @param {number} typ 1-> ferguson, 2-> coons, ostatní->beziér
+ * @param {number} type 1-> ferguson, 2-> coons, ostatní->beziér
  * @constructor
  */
-var Kubika = function(typ) {
+var Kubika = function(type) {
 	//bazova matice
 	this.bm = new Mat4();
 	//matice ridicich bodu
 	this.rb;
 
-	this.typ = typ;
-
-	switch (typeof typ == "number" ? typ : 0) {
+	switch (typeof type == "number" ? type : 0) {
 		case 1:// ferguson
+			this.type = 1;
+
 			this.bm.mat[0][0] = 2;
 			this.bm.mat[0][1] = -2;
 			this.bm.mat[0][2] = 1;
@@ -2084,6 +2083,8 @@ var Kubika = function(typ) {
 			break;
 
 		case 2:// coons
+			this.type = 2;
+
 			this.bm.mat[0][0] = -1;
 			this.bm.mat[0][1] = 3;
 			this.bm.mat[0][2] = -3;
@@ -2109,6 +2110,8 @@ var Kubika = function(typ) {
 
 		case 0:// bezier
 		default:
+			this.type = 0;
+
 			this.bm.mat[0][0] = -1;
 			this.bm.mat[0][1] = 3;
 			this.bm.mat[0][2] = -3;
@@ -2143,7 +2146,7 @@ Kubika.prototype.init = function(b1, b2, b3, b4) {
 	if (arguments.length != 4) {
 		throw new TypeError("Kubika, init: Neplatný počet parametrů: musí být 4");
 	} else if (b1 instanceof Point3D && b2 instanceof Point3D && b3 instanceof Point3D && b4 instanceof Point3D) {
-		if (this.typ == 1)
+		if (this.type == 1)
 			this.rb = new Mat4(b1, b4, b2.sub(b1), b4.sub(b3));
 		else
 			this.rb = new Mat4(b1, b2, b3, b4);
@@ -2176,18 +2179,18 @@ Kubika.prototype.compute = function(t) {
 
 /**
  * Objekt pro práci s bikubikami
- * @param {number} typ 1-> ferguson, 2-> coons, ostatní->beziér
+ * @param {number} type 1-> ferguson, 2-> coons, ostatní->beziér
  * @constructor
  */
-var Bikubika = function(typ) {
+var Bikubika = function(type) {
 	//Point3D
 	this.u1; this.u2; this.u3; this.u4;
 
-	this.k1 = new Kubika(typ);
-	this.k2 = new Kubika(typ);
-	this.k3 = new Kubika(typ);
-	this.k4 = new Kubika(typ);
-	this.k5 = new Kubika(typ);
+	this.k1 = new Kubika(type);
+	this.k2 = new Kubika(type);
+	this.k3 = new Kubika(type);
+	this.k4 = new Kubika(type);
+	this.k5 = new Kubika(type);
 };
 
 /**
