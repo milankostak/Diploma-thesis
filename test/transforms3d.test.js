@@ -992,6 +992,94 @@ describe("Col", () => {
 
 describe("Kubika", () => {
 
+	it("constructor works with all types", () => {
+		let k1 = new Kubika(0);
+		expect(k1.bm.mat[0][0]).toBe(-1);
+		expect(k1.bm.mat[2][2]).toBe(0);
+		expect(k1.type).toBe(0);
+
+		let k2 = new Kubika(1);
+		expect(k2.bm.mat[0][0]).toBe(2);
+		expect(k2.bm.mat[2][2]).toBe(1);
+		expect(k2.type).toBe(1);
+
+		let k3 = new Kubika(2);
+		expect(k3.bm.mat[0][0]).toBeCloseTo(-1/6, 5);
+		expect(k3.bm.mat[2][2]).toBeCloseTo(3/6, 5);
+		expect(k3.type).toBe(2);
+
+		let k4 = new Kubika();
+		expect(k4.bm.mat[0][0]).toBe(-1);
+		expect(k4.bm.mat[2][2]).toBe(0);
+		expect(k4.type).toBe(0);
+	});
+
+	it("init prototype works as expected", () => {
+		let p1 = new Point3D(1, 2, 3, 4);
+		let p2 = new Point3D(-4, -2, 0, 7);
+		let p3 = new Point3D(5, -1, 4, -1);
+		let p4 = new Point3D(0, 1.5, 4.5, -3);
+
+		let k1 = new Kubika(0);
+		k1.init(p1, p2, p3, p4);
+		expect(k1.rb instanceof Mat4).toBe(true);
+		expect(k1.rb.mat[0][0]).toBe(-28);
+		expect(k1.rb.mat[2][1]).toBe(-12);
+		expect(k1.rb.mat[1][3]).toBe(-33);
+
+		let k2 = new Kubika(1);
+		k2.init(p1, p2, p3, p4);
+		expect(k2.rb instanceof Mat4).toBe(true);
+		expect(k2.rb.mat[0][0]).toBe(-8);
+		expect(k2.rb.mat[2][1]).toBe(-4);
+		expect(k2.rb.mat[1][3]).toBe(-25);
+
+		let k3 = new Kubika(2);
+		k3.init(p1, p2, p3, p4);
+		expect(k3.rb instanceof Mat4).toBe(true);
+		expect(k3.rb.mat[0][0]).toBeCloseTo(-28/6, 5);
+		expect(k3.rb.mat[2][1]).toBeCloseTo(-9/6, 5);
+		expect(k3.rb.mat[1][3]).toBeCloseTo(-33/6, 5);
+	});
+
+	it("init prototype throws TypeError when parameters are not Point3D", () => {
+		expect(() => new Kubika(0).init()).toThrowError(TypeError);
+		expect(() => new Kubika(0).init("a", "a", "a", "a")).toThrowError(TypeError);
+	});
+
+	it("compute prototype works as expected", () => {
+		let p1 = new Point3D(1, 2, 3, 4);
+		let p2 = new Point3D(-4, -2, 0, 7);
+		let p3 = new Point3D(5, -1, 4, -1);
+		let p4 = new Point3D(0, 1.5, 4.5, -3);
+
+		let k1 = new Kubika(0);
+		k1.init(p1, p2, p3, p4);
+		let pp1 = k1.compute(-1);
+		let pp2 = k1.compute(0);
+		expect(pp1.x).toBe(pp2.x);
+		expect(pp1.y).toBe(pp2.y);
+		expect(pp1.z).toBe(pp2.z);
+		expect(pp1.w).toBe(pp2.w);
+
+		let pp3 = k1.compute(2);
+		let pp4 = k1.compute(1);
+		expect(pp3.x).toBe(pp4.x);
+		expect(pp3.y).toBe(pp4.y);
+		expect(pp3.z).toBe(pp4.z);
+		expect(pp3.w).toBe(pp4.w);
+
+		let pp5 = k1.compute(0.4);
+		expect(pp5.x).toBeCloseTo(-0.072, 5);
+		expect(pp5.y).toBeCloseTo(-0.624, 5);
+		expect(pp5.z).toBeCloseTo(2.088, 5);
+		expect(pp5.w).toBe(1);
+	});
+
+	it("compute prototype throws TypeError when parameter is not number", () => {
+		expect(() => new Kubika(0).compute()).toThrowError(TypeError);
+		expect(() => new Kubika(0).compute("a")).toThrowError(TypeError);
+	});
 });
 
 
