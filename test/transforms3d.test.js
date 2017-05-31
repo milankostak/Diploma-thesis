@@ -822,11 +822,375 @@ describe("Mat4", () => {
 
 describe("Camera", () => {
 
+	it("constructor sets all variables correctly", () => {
+		let cam = new Camera();
+		expect(cam.azimuth).toBe(0);
+		expect(cam.zenith).toBe(0);
+		expect(cam.radius).toBe(1);
+		expect(cam.xy).toBe(true);
+		expect(cam.pos instanceof Vec3D).toBe(true);
+		expect(cam.firstPerson).toBe(true);
+		expect(cam.eye instanceof Vec3D).toBe(true);
+		expect(cam.eyeVector instanceof Vec3D).toBe(true);
+		expect(cam.view instanceof Mat4).toBe(true);
+	});
+
+	it("computeMatrix prototype works correctly with firstPerson==true", () => {
+		let cam = new Camera();
+		cam.setAzimuth(0.5);
+		cam.setZenith(-0.1);
+		cam.setRadius(1.1);
+		cam.setPosition(new Vec3D(1, 5, -4.5));
+		cam.setFirstPerson(true);
+
+		expect(cam.eyeVector.x).toBeCloseTo(-0.4770304078518429, 5);
+		expect(cam.eyeVector.y).toBeCloseTo(0.8731983044562817, 5);
+		expect(cam.eyeVector.z).toBeCloseTo(-0.09983341664682815, 5);
+
+		expect(cam.eye.x).toBe(1);
+		expect(cam.eye.y).toBe(5);
+		expect(cam.eye.z).toBe(-4.5);
+
+		expect(cam.view.mat[0][0]).toBeCloseTo(0.8775825618903728, 5);
+		expect(cam.view.mat[0][1]).toBeCloseTo(-0.04786268954660339, 5);
+		expect(cam.view.mat[0][2]).toBeCloseTo(0.47703040785184286, 5);
+		expect(cam.view.mat[0][3]).toBe(0);
+
+		expect(cam.view.mat[1][0]).toBeCloseTo(0.47942553860420295, 5);
+		expect(cam.view.mat[1][1]).toBeCloseTo(0.08761206554319244, 5);
+		expect(cam.view.mat[1][2]).toBeCloseTo(-0.8731983044562817, 5);
+		expect(cam.view.mat[1][3]).toBe(0);
+
+		expect(cam.view.mat[2][0]).toBeCloseTo(0, 5);
+		expect(cam.view.mat[2][1]).toBeCloseTo(0.9950041652780257, 5);
+		expect(cam.view.mat[2][2]).toBeCloseTo(0.09983341664682815, 5);
+		expect(cam.view.mat[2][3]).toBe(0);
+
+		expect(cam.view.mat[3][0]).toBeCloseTo(-3.2747102549113873, 5);
+		expect(cam.view.mat[3][1]).toBeCloseTo(4.087321105581757, 5);
+		expect(cam.view.mat[3][2]).toBeCloseTo(4.338211489340292, 5);
+		expect(cam.view.mat[3][3]).toBe(1);
+	});
+
+	it("computeMatrix prototype works correctly with firstPerson==false", () => {
+		let cam = new Camera();
+		cam.setAzimuth(0.5);
+		cam.setZenith(-0.1);
+		cam.setRadius(1.1);
+		cam.setPosition(new Vec3D(1, 5, -4.5));
+		cam.setFirstPerson(false);
+
+		expect(cam.eyeVector.x).toBeCloseTo(-0.4770304078518429, 5);
+		expect(cam.eyeVector.y).toBeCloseTo(0.8731983044562817, 5);
+		expect(cam.eyeVector.z).toBeCloseTo(-0.09983341664682815, 5);
+
+		expect(cam.eye.x).toBeCloseTo(1.5247334486370272, 5);
+		expect(cam.eye.y).toBeCloseTo(4.03948186509809, 5);
+		expect(cam.eye.z).toBeCloseTo(-4.390183241688489, 5);
+
+		expect(cam.view.mat[0][0]).toBeCloseTo(0.8775825618903728, 5);
+		expect(cam.view.mat[0][1]).toBeCloseTo(-0.04786268954660339, 5);
+		expect(cam.view.mat[0][2]).toBeCloseTo(0.47703040785184286, 5);
+		expect(cam.view.mat[0][3]).toBe(0);
+
+		expect(cam.view.mat[1][0]).toBeCloseTo(0.47942553860420295, 5);
+		expect(cam.view.mat[1][1]).toBeCloseTo(0.08761206554319244, 5);
+		expect(cam.view.mat[1][2]).toBeCloseTo(-0.8731983044562817, 5);
+		expect(cam.view.mat[1][3]).toBe(0);
+
+		expect(cam.view.mat[2][0]).toBeCloseTo(0, 5);
+		expect(cam.view.mat[2][1]).toBeCloseTo(0.9950041652780257, 5);
+		expect(cam.view.mat[2][2]).toBeCloseTo(0.09983341664682815, 5);
+		expect(cam.view.mat[2][3]).toBe(0);
+
+		expect(cam.view.mat[3][0]).toBeCloseTo(-3.2747102549113873, 5);
+		expect(cam.view.mat[3][1]).toBeCloseTo(4.087321105581757, 5);
+		expect(cam.view.mat[3][2]).toBeCloseTo(3.238211489340292, 5);
+		expect(cam.view.mat[3][3]).toBe(1);
+	});
+
+	it("addAzimuth prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.addAzimuth(2);
+		cam.addAzimuth(5);
+		expect(cam.azimuth).toBe(7);
+
+		expect(cam.eyeVector.x).toBeCloseTo(-0.6569865987187891, 5);
+	});
+
+	it("addAzimuth prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().addAzimuth("a")).toThrowError(TypeError);
+		expect(() => new Camera().addAzimuth()).toThrowError(TypeError);
+	});
+
+	it("setAzimuth prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.setAzimuth(2);
+		expect(cam.azimuth).toBe(2);
+		cam.setAzimuth(5);
+		expect(cam.azimuth).toBe(5);
+
+		expect(cam.eyeVector.x).toBeCloseTo(0.9589242746631385 , 5);
+	});
+
+	it("setAzimuth prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().setAzimuth("a")).toThrowError(TypeError);
+		expect(() => new Camera().setAzimuth()).toThrowError(TypeError);
+	});
+
+	it("addZenith prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.addZenith(2);
+		expect(cam.zenith).toBe(0);
+		expect(cam.eyeVector.y).toBe(1);
+		cam.addZenith(Math.PI / 2);
+		expect(cam.zenith).toBe(Math.PI / 2);
+	});
+
+	it("addZenith prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().addZenith("a")).toThrowError(TypeError);
+		expect(() => new Camera().addZenith()).toThrowError(TypeError);
+	});
+
+	it("setZenith prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.setZenith(2);
+		expect(cam.zenith).toBe(2);
+		cam.setZenith(5);
+		expect(cam.zenith).toBe(5);
+
+		expect(cam.eyeVector.y).toBeCloseTo(0.28366218546322625, 5);
+	});
+
+	it("setZenith prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().setZenith("a")).toThrowError(TypeError);
+		expect(() => new Camera().setZenith()).toThrowError(TypeError);
+	});
+
+	it("addRadius prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.addRadius(2);
+		cam.addRadius(5);
+		expect(cam.radius).toBe(8);
+		cam.addRadius(-8);
+		expect(cam.radius).toBe(0.1);
+
+		cam.setFirstPerson(false);
+		cam.addRadius(0.3);
+		expect(cam.eye.y).toBe(-0.4);
+	});
+
+	it("addRadius prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().addRadius("a")).toThrowError(TypeError);
+		expect(() => new Camera().addRadius()).toThrowError(TypeError);
+	});
+
+	it("setRadius prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.setRadius(2);
+		expect(cam.radius).toBe(2);
+		cam.setRadius(5);
+		expect(cam.radius).toBe(5);
+
+		cam.setFirstPerson(false);
+		cam.setRadius(7);
+		expect(cam.eye.y).toBe(-7);
+	});
+
+	it("setRadius prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().setRadius("a")).toThrowError(TypeError);
+		expect(() => new Camera().setRadius()).toThrowError(TypeError);
+	});
+
+	it("mulRadius prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.mulRadius(2);
+		cam.mulRadius(5);
+		expect(cam.radius).toBe(10);
+		cam.mulRadius(0);
+		expect(cam.radius).toBe(0.1);
+
+		cam.setFirstPerson(false);
+		cam.mulRadius(1.1);
+		expect(cam.eye.y).toBeCloseTo(-0.11, 5);
+	});
+
+	it("mulRadius prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().mulRadius("a")).toThrowError(TypeError);
+		expect(() => new Camera().mulRadius()).toThrowError(TypeError);
+	});
+
+	it("forward prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.setAzimuth(0.5);
+		cam.forward(2);
+		expect(cam.pos.x).toBeCloseTo(-0.9588510772084061, 5);
+		expect(cam.pos.y).toBeCloseTo(1.7551651237807453, 5);
+		expect(cam.pos.z).toBe(0);
+
+		cam.setFirstPerson(false);
+		cam.forward(1.5);
+		expect(cam.pos.x).toBeCloseTo(-1.6779893851147107, 5);
+		expect(cam.pos.y).toBeCloseTo(3.071538966616304, 5);
+		expect(cam.pos.z).toBe(0);
+
+		cam.setFirstPerson(true);
+		cam.forward(1.5);
+		expect(cam.pos.x).toBe(cam.eye.x);
+		expect(cam.pos.y).toBe(cam.eye.y);
+		expect(cam.pos.z).toBe(cam.eye.z);
+	});
+
+	it("forward prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().forward("a")).toThrowError(TypeError);
+		expect(() => new Camera().forward()).toThrowError(TypeError);
+	});
+
+	it("backward prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.setAzimuth(0.5);
+		cam.backward(2);
+		expect(cam.pos.x).toBeCloseTo(0.9588510772084061, 5);
+		expect(cam.pos.y).toBeCloseTo(-1.7551651237807453, 5);
+		expect(cam.pos.z).toBe(0);
+
+		cam.setFirstPerson(false);
+		cam.backward(1.5);
+		expect(cam.pos.x).toBeCloseTo(1.6779893851147107, 5);
+		expect(cam.pos.y).toBeCloseTo(-3.071538966616304, 5);
+		expect(cam.pos.z).toBe(0);
+
+		cam.setFirstPerson(true);
+		cam.backward(1.5);
+		expect(cam.pos.x).toBe(cam.eye.x);
+		expect(cam.pos.y).toBe(cam.eye.y);
+		expect(cam.pos.z).toBe(cam.eye.z);
+	});
+
+	it("backward prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().backward("a")).toThrowError(TypeError);
+		expect(() => new Camera().backward()).toThrowError(TypeError);
+	});
+
+	it("right prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.setAzimuth(0.5);
+		cam.right(2);
+		expect(cam.pos.x).toBeCloseTo(1.7551651237807455, 5);
+		expect(cam.pos.y).toBeCloseTo(0.958851077208406, 5);
+		expect(cam.pos.z).toBe(0);
+
+		expect(cam.pos.x).toBe(cam.eye.x);
+		expect(cam.pos.y).toBe(cam.eye.y);
+		expect(cam.pos.z).toBe(cam.eye.z);
+	});
+
+	it("right prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().right("a")).toThrowError(TypeError);
+		expect(() => new Camera().right()).toThrowError(TypeError);
+	});
+
+	it("left prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.setAzimuth(0.5);
+		cam.left(2);
+		expect(cam.pos.x).toBeCloseTo(-1.7551651237807455, 5);
+		expect(cam.pos.y).toBeCloseTo(-0.958851077208406, 5);
+		expect(cam.pos.z).toBe(0);
+
+		expect(cam.pos.x).toBe(cam.eye.x);
+		expect(cam.pos.y).toBe(cam.eye.y);
+		expect(cam.pos.z).toBe(cam.eye.z);
+	});
+
+	it("left prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().left("a")).toThrowError(TypeError);
+		expect(() => new Camera().left()).toThrowError(TypeError);
+	});
+
+	it("down prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.down(2);
+		expect(cam.pos.x).toBe(0);
+		expect(cam.pos.y).toBe(0);
+		expect(cam.pos.z).toBe(-2);
+
+		expect(cam.pos.z).toBe(cam.eye.z);
+	});
+
+	it("down prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().down("a")).toThrowError(TypeError);
+		expect(() => new Camera().down()).toThrowError(TypeError);
+	});
+
+	it("up prototype works with number as parameter", () => {
+		let cam = new Camera();
+		cam.up(2);
+		expect(cam.pos.x).toBe(0);
+		expect(cam.pos.y).toBe(0);
+		expect(cam.pos.z).toBe(2);
+
+		expect(cam.pos.z).toBe(cam.eye.z);
+	});
+
+	it("up prototype throws TypeError when parameter is not a number", () => {
+		expect(() => new Camera().up("a")).toThrowError(TypeError);
+		expect(() => new Camera().up()).toThrowError(TypeError);
+	});
+
+	it("move prototype works with Vec3D as parameter", () => {
+		let cam = new Camera();
+		cam.move(new Vec3D(1, 2, 3));
+		cam.move(new Vec3D(1.5, -2, -1));
+		expect(cam.pos.x).toBe(2.5);
+		expect(cam.pos.y).toBe(0);
+		expect(cam.pos.z).toBe(2);
+
+		expect(cam.pos.x).toBe(cam.eye.x);
+		expect(cam.pos.y).toBe(cam.eye.y);
+		expect(cam.pos.z).toBe(cam.eye.z);
+	});
+
+	it("move prototype throws TypeError when parameter is not a Vec3D", () => {
+		expect(() => new Camera().move("a")).toThrowError(TypeError);
+		expect(() => new Camera().move()).toThrowError(TypeError);
+	});
+
+	it("setPosition prototype works with Vec3D as parameter", () => {
+		let cam = new Camera();
+		cam.setPosition(new Vec3D(1.5, -2, -1));
+		expect(cam.pos.x).toBe(1.5);
+		expect(cam.pos.y).toBe(-2);
+		expect(cam.pos.z).toBe(-1);
+
+		expect(cam.pos.x).toBe(cam.eye.x);
+		expect(cam.pos.y).toBe(cam.eye.y);
+		expect(cam.pos.z).toBe(cam.eye.z);
+	});
+
+	it("setPosition prototype throws TypeError when parameter is not a Vec3D", () => {
+		expect(() => new Camera().setPosition("a")).toThrowError(TypeError);
+		expect(() => new Camera().setPosition()).toThrowError(TypeError);
+	});
+
+	it("setFirstPerson prototype works with boolean as parameter", () => {
+		let cam = new Camera();
+		cam.setFirstPerson(false);
+		expect(cam.firstPerson).toBe(false);
+		cam.setFirstPerson(true);
+		expect(cam.firstPerson).toBe(true);
+	});
+
+	it("setFirstPerson prototype throws TypeError when parameter is not a boolean", () => {
+		expect(() => new Camera().setFirstPerson("a")).toThrowError(TypeError);
+		expect(() => new Camera().setFirstPerson()).toThrowError(TypeError);
+	});
 });
 
 
 describe("Col", () => {
-		it("constructor can make a copy of another Col", () => {
+
+	it("constructor can make a copy of another Col", () => {
 		let v = new Col(new Col(0.1, 0.2, 0.3, 1));
 		expect(v.r).toBe(0.1);
 		expect(v.g).toBe(0.2);
@@ -991,6 +1355,10 @@ describe("Col", () => {
 
 
 describe("Kubika", () => {
+	let p1 = new Point3D(1, 2, 3, 4);
+	let p2 = new Point3D(-4, -2, 0, 7);
+	let p3 = new Point3D(5, -1, 4, -1);
+	let p4 = new Point3D(0, 1.5, 4.5, -3);
 
 	it("constructor works with all types", () => {
 		let k1 = new Kubika(0);
@@ -1015,11 +1383,6 @@ describe("Kubika", () => {
 	});
 
 	it("init prototype works as expected", () => {
-		let p1 = new Point3D(1, 2, 3, 4);
-		let p2 = new Point3D(-4, -2, 0, 7);
-		let p3 = new Point3D(5, -1, 4, -1);
-		let p4 = new Point3D(0, 1.5, 4.5, -3);
-
 		let k1 = new Kubika(0);
 		k1.init(p1, p2, p3, p4);
 		expect(k1.rb instanceof Mat4).toBe(true);
@@ -1048,11 +1411,6 @@ describe("Kubika", () => {
 	});
 
 	it("compute prototype works as expected", () => {
-		let p1 = new Point3D(1, 2, 3, 4);
-		let p2 = new Point3D(-4, -2, 0, 7);
-		let p3 = new Point3D(5, -1, 4, -1);
-		let p4 = new Point3D(0, 1.5, 4.5, -3);
-
 		let k1 = new Kubika(0);
 		k1.init(p1, p2, p3, p4);
 		let pp1 = k1.compute(-1);
@@ -1084,5 +1442,69 @@ describe("Kubika", () => {
 
 
 describe("Bikubika", () => {
+	let p11 = new Point3D(1, 2, -3, 4);
+	let p12 = new Point3D(-4, -2, 0, 7);
+	let p13 = new Point3D(5, -1, 4, -1);
+	let p14 = new Point3D(2, 5.5, 4.5, -3);
+	let p21 = new Point3D(1, 2, 3, 4);
+	let p22 = new Point3D(-4, -2, 1, 7);
+	let p23 = new Point3D(5, -1, 4, -1);
+	let p24 = new Point3D(0, 1.5, 4.5, -3);
+	let p31 = new Point3D(1, 3, 3, 4);
+	let p32 = new Point3D(0, -2, 0, 7);
+	let p33 = new Point3D(5, -1, 4, -1);
+	let p34 = new Point3D(3, 1.5, 4.5, -3);
+	let p41 = new Point3D(1, 4, 3, 7);
+	let p42 = new Point3D(-4, -2, 0, 7);
+	let p43 = new Point3D(5, -5, 4, -1);
+	let p44 = new Point3D(-2, 1.5, 0.5, -3);
 
+	it("constructor sets all variables correctly", () => {
+		let b1 = new Bikubika(0);
+		expect(b1.u1).not.toBe("undefined");
+		expect(b1.u2).not.toBe("undefined");
+		expect(b1.u3).not.toBe("undefined");
+		expect(b1.u4).not.toBe("undefined");
+		expect(b1.k1 instanceof Kubika).toBe(true);
+		expect(b1.k2 instanceof Kubika).toBe(true);
+		expect(b1.k3 instanceof Kubika).toBe(true);
+		expect(b1.k4 instanceof Kubika).toBe(true);
+		expect(b1.k5 instanceof Kubika).toBe(true);
+	});
+
+	it("init prototype works as expected", () => {
+		let b1 = new Bikubika(2);
+		b1.init(p11, p12, p13, p14, p21, p22, p23, p24, p31, p32, p33, p34, p41, p42, p43, p44);
+		expect(b1.k1.rb.mat[0][0]).toBeCloseTo(-26/6, 5);
+	});
+
+	it("compute prototype works as expected", () => {
+		let b1 = new Bikubika(2);
+		b1.init(p11, p12, p13, p14, p21, p22, p23, p24, p31, p32, p33, p34, p41, p42, p43, p44);
+
+		let pp1 = b1.compute(-1, 0.5);
+		let pp2 = b1.compute(0, 0.5);
+		expect(pp1.x).toBe(pp2.x);
+		expect(pp1.y).toBe(pp2.y);
+		expect(pp1.z).toBe(pp2.z);
+		expect(pp1.w).toBe(pp2.w);
+
+		let pp3 = b1.compute(0.5, 2);
+		let pp4 = b1.compute(0.5, 1);
+		expect(pp3.x).toBe(pp4.x);
+		expect(pp3.y).toBe(pp4.y);
+		expect(pp3.z).toBe(pp4.z);
+		expect(pp3.w).toBe(pp4.w);
+
+		let pp5 = b1.compute(0.4, 0.7);
+		expect(pp5.x).toBeCloseTo(1.2440408888888888, 5);
+		expect(pp5.y).toBeCloseTo(-1.4732664444444443, 5);
+		expect(pp5.z).toBeCloseTo(1.9988013333333332, 5);
+		expect(pp5.w).toBe(1);
+	});
+
+	it("compute prototype throws TypeError when parameter is not number", () => {
+		expect(() => new Kubika(0).compute()).toThrowError(TypeError);
+		expect(() => new Kubika(0).compute("a", 1)).toThrowError(TypeError);
+	});
 });
