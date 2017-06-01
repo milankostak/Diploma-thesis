@@ -219,7 +219,7 @@
 			video.srcObject = stream;
 		}).catch(function(error) {
 			if (error.name === "ConstraintNotSatisfiedError" || error.name === "NotFoundError") {
-				alert("Your camera does not meet required resolution for this appplication to work.")
+				alert("Your camera does not meet required resolution for this appplication to work.");
 			}
 			console.log("%cVideo Error: " + error, 'color: red');
 			console.log(error);
