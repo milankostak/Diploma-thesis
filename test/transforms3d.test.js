@@ -909,7 +909,7 @@ describe("Camera", () => {
 		expect(cam.view.mat[3][3]).toBe(1);
 	});
 
-	it("addAzimuth prototype works with number as parameter", () => {
+	it("addAzimuth prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.addAzimuth(2);
 		cam.addAzimuth(5);
@@ -923,7 +923,7 @@ describe("Camera", () => {
 		expect(() => new Camera().addAzimuth()).toThrowError(TypeError);
 	});
 
-	it("setAzimuth prototype works with number as parameter", () => {
+	it("setAzimuth prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.setAzimuth(2);
 		expect(cam.azimuth).toBe(2);
@@ -938,7 +938,7 @@ describe("Camera", () => {
 		expect(() => new Camera().setAzimuth()).toThrowError(TypeError);
 	});
 
-	it("addZenith prototype works with number as parameter", () => {
+	it("addZenith prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.addZenith(2);
 		expect(cam.zenith).toBe(0);
@@ -952,7 +952,7 @@ describe("Camera", () => {
 		expect(() => new Camera().addZenith()).toThrowError(TypeError);
 	});
 
-	it("setZenith prototype works with number as parameter", () => {
+	it("setZenith prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.setZenith(2);
 		expect(cam.zenith).toBe(2);
@@ -967,7 +967,7 @@ describe("Camera", () => {
 		expect(() => new Camera().setZenith()).toThrowError(TypeError);
 	});
 
-	it("addRadius prototype works with number as parameter", () => {
+	it("addRadius prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.addRadius(2);
 		cam.addRadius(5);
@@ -985,7 +985,7 @@ describe("Camera", () => {
 		expect(() => new Camera().addRadius()).toThrowError(TypeError);
 	});
 
-	it("setRadius prototype works with number as parameter", () => {
+	it("setRadius prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.setRadius(2);
 		expect(cam.radius).toBe(2);
@@ -1002,7 +1002,7 @@ describe("Camera", () => {
 		expect(() => new Camera().setRadius()).toThrowError(TypeError);
 	});
 
-	it("mulRadius prototype works with number as parameter", () => {
+	it("mulRadius prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.mulRadius(2);
 		cam.mulRadius(5);
@@ -1020,7 +1020,7 @@ describe("Camera", () => {
 		expect(() => new Camera().mulRadius()).toThrowError(TypeError);
 	});
 
-	it("forward prototype works with number as parameter", () => {
+	it("forward prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.setAzimuth(0.5);
 		cam.forward(2);
@@ -1046,7 +1046,7 @@ describe("Camera", () => {
 		expect(() => new Camera().forward()).toThrowError(TypeError);
 	});
 
-	it("backward prototype works with number as parameter", () => {
+	it("backward prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.setAzimuth(0.5);
 		cam.backward(2);
@@ -1072,7 +1072,7 @@ describe("Camera", () => {
 		expect(() => new Camera().backward()).toThrowError(TypeError);
 	});
 
-	it("right prototype works with number as parameter", () => {
+	it("right prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.setAzimuth(0.5);
 		cam.right(2);
@@ -1090,7 +1090,7 @@ describe("Camera", () => {
 		expect(() => new Camera().right()).toThrowError(TypeError);
 	});
 
-	it("left prototype works with number as parameter", () => {
+	it("left prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.setAzimuth(0.5);
 		cam.left(2);
@@ -1108,7 +1108,7 @@ describe("Camera", () => {
 		expect(() => new Camera().left()).toThrowError(TypeError);
 	});
 
-	it("down prototype works with number as parameter", () => {
+	it("down prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.down(2);
 		expect(cam.pos.x).toBe(0);
@@ -1123,7 +1123,7 @@ describe("Camera", () => {
 		expect(() => new Camera().down()).toThrowError(TypeError);
 	});
 
-	it("up prototype works with number as parameter", () => {
+	it("up prototype works with number as a parameter", () => {
 		let cam = new Camera();
 		cam.up(2);
 		expect(cam.pos.x).toBe(0);
@@ -1138,7 +1138,7 @@ describe("Camera", () => {
 		expect(() => new Camera().up()).toThrowError(TypeError);
 	});
 
-	it("move prototype works with Vec3D as parameter", () => {
+	it("move prototype works with Vec3D as a parameter", () => {
 		let cam = new Camera();
 		cam.move(new Vec3D(1, 2, 3));
 		cam.move(new Vec3D(1.5, -2, -1));
@@ -1156,7 +1156,7 @@ describe("Camera", () => {
 		expect(() => new Camera().move()).toThrowError(TypeError);
 	});
 
-	it("setPosition prototype works with Vec3D as parameter", () => {
+	it("setPosition prototype works with Vec3D as a parameter", () => {
 		let cam = new Camera();
 		cam.setPosition(new Vec3D(1.5, -2, -1));
 		expect(cam.pos.x).toBe(1.5);
@@ -1173,7 +1173,7 @@ describe("Camera", () => {
 		expect(() => new Camera().setPosition()).toThrowError(TypeError);
 	});
 
-	it("setFirstPerson prototype works with boolean as parameter", () => {
+	it("setFirstPerson prototype works with boolean as a parameter", () => {
 		let cam = new Camera();
 		cam.setFirstPerson(false);
 		expect(cam.firstPerson).toBe(false);
@@ -1264,7 +1264,7 @@ describe("Col", () => {
 		expect(v3.a).toBeCloseTo(1, 5);
 	});
 
-	it("mulna prototype throws TypeError when parameter is not number", () => {
+	it("mulna prototype throws TypeError when parameter is not a number", () => {
 		expect(() => new Col(1, 2, 3, 4).mulna()).toThrowError(TypeError);
 		expect(() => new Col(1, 2, 3, 4).mulna("a")).toThrowError(TypeError);
 	});
@@ -1314,7 +1314,7 @@ describe("Col", () => {
 		expect(v2.a).toBeCloseTo(100, 5);
 	});
 
-	it("gamma prototype throws TypeError when parameter is not number", () => {
+	it("gamma prototype throws TypeError when parameter is not a number", () => {
 		expect(() => new Col(1, 2, 3, 4).gamma()).toThrowError(TypeError);
 		expect(() => new Col(1, 2, 3, 4).gamma("a")).toThrowError(TypeError);
 	});
@@ -1360,7 +1360,7 @@ describe("Kubika", () => {
 	let p3 = new Point3D(5, -1, 4, -1);
 	let p4 = new Point3D(0, 1.5, 4.5, -3);
 
-	it("constructor works with all types", () => {
+	it("constructor works with all types of Kubika", () => {
 		let k1 = new Kubika(0);
 		expect(k1.bm.mat[0][0]).toBe(-1);
 		expect(k1.bm.mat[2][2]).toBe(0);
@@ -1434,7 +1434,7 @@ describe("Kubika", () => {
 		expect(pp5.w).toBe(1);
 	});
 
-	it("compute prototype throws TypeError when parameter is not number", () => {
+	it("compute prototype throws TypeError when parameter is not a number", () => {
 		expect(() => new Kubika(0).compute()).toThrowError(TypeError);
 		expect(() => new Kubika(0).compute("a")).toThrowError(TypeError);
 	});
@@ -1503,7 +1503,7 @@ describe("Bikubika", () => {
 		expect(pp5.w).toBe(1);
 	});
 
-	it("compute prototype throws TypeError when parameter is not number", () => {
+	it("compute prototype throws TypeError when parameters are not numbers", () => {
 		expect(() => new Kubika(0).compute()).toThrowError(TypeError);
 		expect(() => new Kubika(0).compute("a", 1)).toThrowError(TypeError);
 	});
