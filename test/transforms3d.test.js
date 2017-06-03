@@ -812,6 +812,72 @@ describe("Quat2", () => {
 
 describe("Mat3", () => {
 
+	it("constructor works correctly with Vec3D as parameters", () => {
+		let v1 = new Vec3D(4, -2, 3);
+		let v2 = new Vec3D(1, 2, -3);
+		let v3 = new Vec3D(0, -1, 7);
+		let m = new Mat3(v1, v2, v3);
+
+		expect(m.mat[0][0]).toBe(4);
+		expect(m.mat[0][1]).toBe(-2);
+		expect(m.mat[0][2]).toBe(3);
+		expect(m.mat[1][0]).toBe(1);
+		expect(m.mat[1][1]).toBe(2);
+		expect(m.mat[1][2]).toBe(-3);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(-1);
+		expect(m.mat[2][2]).toBe(7);
+	});
+
+	it("constructor works correctly with Mat3 as parameter", () => {
+		let v1 = new Vec3D(4, -2, 3);
+		let v2 = new Vec3D(1, 2, -3);
+		let v3 = new Vec3D(0, -1, 7);
+		let m1 = new Mat3(v1, v2, v3);
+		let m2 = new Mat3(m1);
+
+		expect(m2.mat[0][0]).toBe(4);
+		expect(m2.mat[0][1]).toBe(-2);
+		expect(m2.mat[0][2]).toBe(3);
+		expect(m2.mat[1][0]).toBe(1);
+		expect(m2.mat[1][1]).toBe(2);
+		expect(m2.mat[1][2]).toBe(-3);
+		expect(m2.mat[2][0]).toBe(0);
+		expect(m2.mat[2][1]).toBe(-1);
+		expect(m2.mat[2][2]).toBe(7);
+	});
+
+	it("constructor works correctly with Mat4 as parameter", () => {
+		let v1 = new Vec3D(4, -2, 3);
+		let v2 = new Vec3D(1, 2, -3);
+		let v3 = new Vec3D(0, -1, 7);
+		let m1 = new Mat4Identity();
+		let m2 = new Mat3(m1);
+
+		expect(m2.mat[0][0]).toBe(1);
+		expect(m2.mat[0][1]).toBe(0);
+		expect(m2.mat[0][2]).toBe(0);
+		expect(m2.mat[1][0]).toBe(0);
+		expect(m2.mat[1][1]).toBe(1);
+		expect(m2.mat[1][2]).toBe(0);
+		expect(m2.mat[2][0]).toBe(0);
+		expect(m2.mat[2][1]).toBe(0);
+		expect(m2.mat[2][2]).toBe(1);
+	});
+
+	it("constructor works correctly w/o parameters", () => {
+		let m = new Mat3();
+
+		expect(m.mat[0][0]).toBe(0);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBe(0);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBe(0);
+	});
 });
 
 
