@@ -806,7 +806,6 @@ describe("Quat2", () => {
 		expect(() => Quat2.fromEulerAngles("a", "a", "a")).toThrowError(TypeError);
 		expect(() => Quat2.fromEulerAngles()).toThrowError(TypeError);
 	});
-
 });
 
 
@@ -848,9 +847,6 @@ describe("Mat3", () => {
 	});
 
 	it("constructor works correctly with Mat4 as parameter", () => {
-		let v1 = new Vec3D(4, -2, 3);
-		let v2 = new Vec3D(1, 2, -3);
-		let v3 = new Vec3D(0, -1, 7);
 		let m1 = new Mat4Identity();
 		let m2 = new Mat3(m1);
 
@@ -877,6 +873,56 @@ describe("Mat3", () => {
 		expect(m.mat[2][0]).toBe(0);
 		expect(m.mat[2][1]).toBe(0);
 		expect(m.mat[2][2]).toBe(0);
+	});
+});
+
+describe("Mat3Identity", () => {
+
+	it("constructor works", () => {
+		let m = new Mat3Identity();
+
+		expect(m.mat[0][0]).toBe(1);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBe(1);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBe(1);
+	});
+
+	it("prototype is set correctly", () => {
+		let m = new Mat3Identity();
+		expect(m instanceof Mat3).toBe(true);
+
+		expect(typeof Mat3Identity.prototype.constructor).toBe("function");
+		expect(typeof Mat3Identity.prototype.parent).toBe("function");
+	});
+});
+
+describe("Mat3RotX", () => {
+
+	it("constructor works", () => {
+		let m = new Mat3RotX(40);
+
+		expect(m.mat[0][0]).toBe(1);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBeCloseTo(-0.6669380616522619, 5);
+		expect(m.mat[1][2]).toBeCloseTo(0.7451131604793488, 5);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBeCloseTo(-0.7451131604793488, 5);
+		expect(m.mat[2][2]).toBeCloseTo(-0.6669380616522619, 5);
+	});
+
+	it("prototype is set correctly", () => {
+		let m = new Mat3RotX(10);
+		expect(m instanceof Mat3).toBe(true);
+
+		expect(typeof Mat3RotX.prototype.constructor).toBe("function");
+		expect(typeof Mat3RotX.prototype.parent).toBe("function");
 	});
 });
 
