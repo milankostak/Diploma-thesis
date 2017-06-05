@@ -40,9 +40,6 @@ var Detection = (function() {
 	// id of interval
 	let sendPositionInterval;
 
-	let times = [];
-	let count = 0;
-
 	/**
 	 * Public intialization function. Sets all necessary variables.
 	 * @public
@@ -146,7 +143,7 @@ var Detection = (function() {
 
 	/**
 	 * Init all WebGL textures
-	 * @return {[type]} [description]
+	 * @private
 	 */
 	function initTextures() {
 		texture1 = gl.createTexture();
@@ -217,6 +214,7 @@ var Detection = (function() {
 		h12 = h4/3;
 
 		// allocate readBuffer for reading pixels
+		// do it now, because it is time consuming operation
 		let arraySize = Math.ceil(w12 * h12 * 4);
 		readBuffer = new Float32Array(arraySize);
 	};
@@ -226,77 +224,123 @@ var Detection = (function() {
 	 * Runs the key algorithm
 	 * @public
 	 */
+	var finishCount = 100;
+	var count = 0;
+	var times = [];
+	times[0] = [];
+	times[1] = [];
+	times[2] = [];
+	times[3] = [];
+	times[4] = [];
 	Detection.repaint = function() {
+		if (count++ < finishCount && count > 2) {
+			window.performance.clearMarks()
+			window.performance.mark("a");
+			// bind vertex data
+			gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+			gl.vertexAttribPointer(program1.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+			gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+			gl.vertexAttribPointer(program1.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-		// bind vertex data
-		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-		gl.vertexAttribPointer(program1.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
-		gl.vertexAttribPointer(program1.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+			// bind framebuffer
+			gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
 
-		// bind framebuffer
-		gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+			window.performance.mark("a");
+	//**********************************************************
+			gl.useProgram(program1);
 
-//**********************************************************
-		gl.useProgram(program1);
+			gl.uniformMatrix4fv(program1.rotation, false, Utils.convert(new Mat4Identity()));
+			gl.uniform1f(program1.width, width);
+			gl.uniform1f(program1.height, height);
 
-		gl.uniformMatrix4fv(program1.rotation, false, Utils.convert(new Mat4Identity()));
-		gl.uniform1f(program1.width, width);
-		gl.uniform1f(program1.height, height);
+			gl.bindTexture(gl.TEXTURE_2D, texture2);
+			// target, level, internalformat, width, height, border, format, type, ArrayBufferView? pixels)
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w4, h4, 0, gl.RGBA, texturePrecision, null);
+			gl.viewport(0, 0, w4, h4);
 
-		gl.bindTexture(gl.TEXTURE_2D, texture2);
-		// target, level, internalformat, width, height, border, format, type, ArrayBufferView? pixels)
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w4, h4, 0, gl.RGBA, texturePrecision, null);
-		gl.viewport(0, 0, w4, h4);
+			// ... and draw to it
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2, 0);
 
-		// ... and draw to it
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2, 0);
+			// bind input texture
+			gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
 
-		// bind input texture
-		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+			// draw
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+			window.performance.mark("a");
 
-		// draw
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+	//**********************************************************
+			gl.useProgram(program2);
 
-//**********************************************************
-		gl.useProgram(program2);
+			gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+			gl.uniform1f(program2.width, w4);
+			gl.uniform1f(program2.height, h4);
 
-		gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
-		gl.uniform1f(program2.width, w4);
-		gl.uniform1f(program2.height, h4);
+			gl.bindTexture(gl.TEXTURE_2D, texture1);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w12, h12, 0, gl.RGBA, texturePrecision, null);
+			gl.viewport(0, 0, w12, h12);
 
-		gl.bindTexture(gl.TEXTURE_2D, texture1);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w12, h12, 0, gl.RGBA, texturePrecision, null);
-		gl.viewport(0, 0, w12, h12);
+			// ... and draw to it
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture1, 0);
 
-		// ... and draw to it
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture1, 0);
+			// bind input texture
+			gl.bindTexture(gl.TEXTURE_2D, texture2);
 
-		// bind input texture
-		gl.bindTexture(gl.TEXTURE_2D, texture2);
+			// draw
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+			window.performance.mark("a");
 
-		// draw
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+	//**********************************************************
+			readData();
+			// draw the output into canvas
+			/*gl.useProgram(programDraw);
+			gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
+			gl.bindTexture(gl.TEXTURE_2D, texture1);
+			gl.viewport(0, 0, width, height);
+			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);*/
 
-//**********************************************************
-		readData();
-		// draw the output into canvas
-		gl.useProgram(programDraw);
-		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
-		gl.bindTexture(gl.TEXTURE_2D, texture1);
-		gl.viewport(0, 0, width, height);
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+	//**********************************************************
+			let times2 = performance.getEntriesByName("a");
+
+			/*console.log(
+				(times2[1].startTime - times2[0].startTime).toFixed(2),
+				(times2[2].startTime - times2[1].startTime).toFixed(2),
+				(times2[3].startTime - times2[2].startTime).toFixed(2),
+				(times2[4].startTime - times2[3].startTime).toFixed(2),
+				(times2[5].startTime - times2[4].startTime).toFixed(2)
+			);*/
+
+			times[0].push(times2[1].startTime - times2[0].startTime);
+			times[1].push(times2[2].startTime - times2[1].startTime);
+			times[2].push(times2[3].startTime - times2[2].startTime);
+			times[3].push(times2[4].startTime - times2[3].startTime);
+			times[4].push(times2[5].startTime - times2[4].startTime);
+
+		} else if (count === finishCount + 1) {
+			let t0 = times[0].reduce((a, b) => (a + b)) / times[0].length;
+			let t1 = times[1].reduce((a, b) => (a + b)) / times[1].length;
+			let t2 = times[2].reduce((a, b) => (a + b)) / times[2].length;
+			let t3 = times[3].reduce((a, b) => (a + b)) / times[3].length;
+			let t4 = times[4].reduce((a, b) => (a + b)) / times[4].length;
+			console.log(t0.toFixed(2), t1.toFixed(2), t2.toFixed(2), t3.toFixed(2), t4.toFixed(2));
+
+			count = 0;
+			times = [];
+			times[0] = [];
+			times[1] = [];
+			times[2] = [];
+			times[3] = [];
+			times[4] = [];
+		}
 	};
 
 	function readData() {
-		//if (count++ < 100) {
-			//let time = new Date().getTime();
 			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
+			window.performance.mark("a");
 			/*times.push(new Date().getTime() - time);
 			if (times.length % 60 == 0) {
 				let sum = 0;
@@ -327,6 +371,7 @@ var Detection = (function() {
 			if (max > 1) {
 				dataToSend.push({max: max, x: x, y: y, count: count});
 			}
+			window.performance.mark("a");
 			//console.log("MAX")
 			//console.log(max, x, y);
 		//}
