@@ -1181,13 +1181,13 @@ Mat3.prototype.inverse = function() {
  * @return {Mat3} reference na volanou instanci
  */
 Mat3.prototype.c = function() {
-	var x = "";
-	for (var i = 0; i < 3; i++) {
-		for (var j = 0; j < 3; j++) {
+	console.log("%cMat3", 'font-style: italic; font-weight: bold');
+	for (let i = 0; i < 3; i++) {
+		let x = "";
+		for (let j = 0; j < 3; j++) {
 			x += this.mat[i][j] + ", ";
 		}
-		console.log(x);
-		x = "";
+		console.log(x.substring(0, x.length-2));
 	}
 	return this;
 };
@@ -1570,15 +1570,15 @@ Mat4.prototype.toMat3 = function() {
  * @return {Mat4} reference na volanou instanci
  */
 Mat4.prototype.c = function() {
-	var x = "";
-	for (var i = 0; i < 4; i++) {
-		for (var j = 0; j < 4; j++) {
+	console.log("%cMat4", 'font-style: italic; font-weight: bold');
+	for (let i = 0; i < 4; i++) {
+		let x = "";
+		for (let j = 0; j < 4; j++) {
 			x += this.mat[i][j] + ", ";
 		}
-		console.log(x);
-		x = "";
+		console.log(x.substring(0, x.length-2));
 	}
-	console.log(x);
+	return this;
 };
 
 
