@@ -91,7 +91,7 @@ Vec1D.prototype.mul = function(m) {
 
 /**
  * Výpis hodnoty do konzole
- * @return {Vec1D} reference na volanou instanci
+ * @return {Vec1D} reference na volanou instanci pro možné další řetězení
  */
 Vec1D.prototype.c = function() {
 	console.log(this);
@@ -154,7 +154,7 @@ Vec2D.prototype.add = function(v) {
 Vec2D.prototype.mul = function(m) {
 	if (typeof m == "number") {
 		return new Vec2D(this.x * m, this.y * m);
-	} else if (m instanceof Vec2D){
+	} else if (m instanceof Vec2D) {
 		return new Vec2D(this.x * m.x, this.y * m.y);
 	} else {
 		throw new TypeError("Vec2D, mul: Neplatný parametr: musí být číslo nebo Vec2D");
@@ -168,7 +168,7 @@ Vec2D.prototype.mul = function(m) {
  * @throws {TypeError} If v není Vec2D
  */
 Vec2D.prototype.dot = function(v) {
-	if (v instanceof Vec2D){
+	if (v instanceof Vec2D) {
 		return this.x * v.x + this.y * v.y;
 	} else {
 		throw new TypeError("Vec2D, dot: Neplatný parametr: musí být Vec2D");
@@ -195,7 +195,7 @@ Vec2D.prototype.normalized = function() {
 
 /**
  * Výpis hodnoty do konzole
- * @return {Vec2D} reference na volanou instanci
+ * @return {Vec2D} reference na volanou instanci pro možné další řetězení
  */
 Vec2D.prototype.c = function() {
 	console.log(this);
@@ -272,7 +272,7 @@ Vec3D.prototype.add = function(v) {
 Vec3D.prototype.mul = function(m) {
 	if (typeof m == "number") {
 		return new Vec3D(this.x * m, this.y * m, this.z * m);
-	} else if (m instanceof Mat3){
+	} else if (m instanceof Mat3) {
 		var res = new Vec3D();
 		res.x = m.mat[0][0] * this.x + m.mat[1][0] * this.y + m.mat[2][0] * this.z;
 		res.y = m.mat[0][1] * this.x + m.mat[1][1] * this.y + m.mat[2][1] * this.z;
@@ -337,7 +337,7 @@ Vec3D.prototype.normalized = function() {
 
 /**
  * Výpis hodnoty do konzole
- * @return {Vec3D} reference na volanou instanci
+ * @return {Vec3D} reference na volanou instanci pro možné další řetězení
  */
 Vec3D.prototype.c = function() {
 	console.log(this);
@@ -478,7 +478,7 @@ Point3D.prototype.ignoreW = function() {
 
 /**
  * Výpis hodnoty do konzole
- * @return {Point3D} reference na volanou instanci
+ * @return {Point3D} reference na volanou instanci pro možné další řetězení
  */
 Point3D.prototype.c = function() {
 	console.log(this);
@@ -493,7 +493,7 @@ Point3D.prototype.c = function() {
  * @param {number} k volitelný argument, pokud není zadán, tak 0
  * @constructor
  */
-var Quat = function(r, i, j, k){
+var Quat = function(r, i, j, k) {
 	if (r instanceof Quat) {
 		this.i = r.i;
 		this.j = r.j;
@@ -966,7 +966,7 @@ Quat.prototype.squad2 = function(q1, q2, q3, t) {
 
 /**
  * Výpis hodnot do konzole
- * @return {Quat} reference na volanou instanci
+ * @return {Quat} reference na volanou instanci pro možné další řetězení
  */
 Quat.prototype.c = function() {
 	console.log(this);
@@ -1187,7 +1187,7 @@ Mat3.prototype.inverse = function() {
 
 /**
  * Výpis matice do konzole
- * @return {Mat3} reference na volanou instanci
+ * @return {Mat3} reference na volanou instanci pro možné další řetězení
  */
 Mat3.prototype.c = function() {
 	console.log("%cMat3", 'font-style: italic; font-weight: bold');
@@ -1500,7 +1500,7 @@ Mat4ViewRH.prototype.parent = Mat4;
  * @throws {TypeError} If m není Mat4
  */
 Mat4.prototype.add = function(m) {
-	if (m instanceof Mat4){
+	if (m instanceof Mat4) {
 		var hlp = new Mat4();
 		for (var i = 0; i < 4; i++) {
 			for (var j = 0; j < 4; j++) {
@@ -1575,7 +1575,7 @@ Mat4.prototype.toMat3 = function() {
 
 /**
  * Výpis matice do konzole
- * @return {Mat4} reference na volanou instanci
+ * @return {Mat4} reference na volanou instanci pro možné další řetězení
  */
 Mat4.prototype.c = function() {
 	console.log("%cMat4", 'font-style: italic; font-weight: bold');
@@ -2047,7 +2047,7 @@ Col.prototype.getARGB = function() {
 
 /**
  * Výpis barvy do konzole
- * @return {Col} reference na volanou instanci
+ * @return {Col} reference na volanou instanci pro možné další řetězení
  */
 Col.prototype.c = function() {
 	console.log(this);
