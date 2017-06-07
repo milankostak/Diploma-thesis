@@ -1269,20 +1269,20 @@ Mat4Identity.prototype.parent = Mat4;
  * @throws {TypeError} If některý z parametrů není zadán nebo není číslem
  */
 var Mat4OrthoRH = function (w, h, zn, zf) {
-	if (arguments.length != 4) {
+	if (arguments.length !== 4) {
 		throw new TypeError("Mat4OrthoRH: Neplatný počet parametrů: musí být 4");
-	} else if (typeof w != "number" || typeof h != "number" ||
-			typeof zn != "number" || typeof zf != "number") {
-		throw new TypeError("Mat4OrthoRH: Neplatný parametr: musí být číslo");
-	} else {
-		this.mat = new Mat4Identity().mat;
-		this.mat[0][0] = 2.0 / w;
-		this.mat[1][1] = 2.0 / h;
-		this.mat[2][2] = 1.0 / (zn - zf);
-			this.mat[3][0]= -1;
-			this.mat[3][1] = -1;
-		this.mat[3][2] = zn / (zn - zf);
 	}
+	if (typeof w !== "number" || typeof h !== "number" || typeof zn !== "number" || typeof zf !== "number") {
+		throw new TypeError("Mat4OrthoRH: Neplatný parametr: musí být číslo");
+	}
+
+	this.mat = new Mat4Identity().mat;
+	this.mat[0][0] = 2.0 / w;
+	this.mat[1][1] = 2.0 / h;
+	this.mat[2][2] = 1.0 / (zn - zf);
+	this.mat[3][0]= -1;
+	this.mat[3][1] = -1;
+	this.mat[3][2] = zn / (zn - zf);
 };
 Mat4OrthoRH.prototype = Object.create(Mat4.prototype);
 Mat4OrthoRH.prototype.constructor = Mat4OrthoRH;
@@ -1298,21 +1298,22 @@ Mat4OrthoRH.prototype.parent = Mat4;
  * @throws {TypeError} If některý z parametrů není zadán nebo není číslem
  */
 var Mat4PerspRH = function (alpha, k, zn, zf) {
-	if (arguments.length != 4) {
+	if (arguments.length !== 4) {
 		throw new TypeError("Mat4PerspRH: Neplatný počet parametrů: musí být 4");
-	} else if (typeof alpha != "number" || typeof k != "number" ||
-			typeof zn != "number" || typeof zf != "number") {
-		throw new TypeError("Mat4PerspRH: Neplatný parametr: musí být číslo");
-	} else {
-		var h = (1.0 / Math.tan(alpha / 2.0));
-		var w = k * h;
-		this.mat = new Mat4Identity().mat;
-		this.mat[0][0] = w;
-		this.mat[1][1] = h;
-		this.mat[2][2] = zf / (zn - zf);
-		this.mat[3][2] = zn * zf / (zn - zf);
-		this.mat[2][3] = -1.0;
 	}
+	if (typeof alpha !== "number" || typeof k !== "number" || typeof zn !== "number" || typeof zf !== "number") {
+		throw new TypeError("Mat4PerspRH: Neplatný parametr: musí být číslo");
+	}
+
+	var h = (1.0 / Math.tan(alpha / 2.0));
+	var w = k * h;
+	this.mat = new Mat4Identity().mat;
+	this.mat[0][0] = w;
+	this.mat[1][1] = h;
+	this.mat[2][2] = zf / (zn - zf);
+	this.mat[3][2] = zn * zf / (zn - zf);
+	this.mat[2][3] = -1.0;
+
 };
 Mat4PerspRH.prototype = Object.create(Mat4.prototype);
 Mat4PerspRH.prototype.constructor = Mat4PerspRH;
@@ -1328,13 +1329,13 @@ Mat4PerspRH.prototype.parent = Mat4;
 var Mat4RotX = function (alpha) {
 	if (typeof alpha != "number") {
 		throw new TypeError("Mat4RotX: Neplatný parametr: musí být číslo");
-	} else {
-		this.mat = new Mat4Identity().mat;
-		this.mat[1][1] = Math.cos(alpha);
-		this.mat[2][2] = Math.cos(alpha);
-		this.mat[2][1] = -Math.sin(alpha);
-		this.mat[1][2] = Math.sin(alpha);
 	}
+
+	this.mat = new Mat4Identity().mat;
+	this.mat[1][1] = Math.cos(alpha);
+	this.mat[2][2] = Math.cos(alpha);
+	this.mat[2][1] = -Math.sin(alpha);
+	this.mat[1][2] = Math.sin(alpha);
 };
 Mat4RotX.prototype = Object.create(Mat4.prototype);
 Mat4RotX.prototype.constructor = Mat4RotX;
@@ -1349,13 +1350,13 @@ Mat4RotX.prototype.parent = Mat4;
 var Mat4RotY = function (alpha) {
 	if (typeof alpha != "number") {
 		throw new TypeError("Mat4RotY: Neplatný parametr: musí být číslo");
-	} else {
-		this.mat = new Mat4Identity().mat;
-		this.mat[0][0] = Math.cos(alpha);
-		this.mat[2][2] = Math.cos(alpha);
-		this.mat[2][0] = Math.sin(alpha);
-		this.mat[0][2] = -Math.sin(alpha);
 	}
+
+	this.mat = new Mat4Identity().mat;
+	this.mat[0][0] = Math.cos(alpha);
+	this.mat[2][2] = Math.cos(alpha);
+	this.mat[2][0] = Math.sin(alpha);
+	this.mat[0][2] = -Math.sin(alpha);
 };
 Mat4RotY.prototype = Object.create(Mat4.prototype);
 Mat4RotY.prototype.constructor = Mat4RotY;
@@ -1370,13 +1371,13 @@ Mat4RotY.prototype.parent = Mat4;
 var Mat4RotZ = function (alpha) {
 	if (typeof alpha != "number") {
 		throw new TypeError("Mat4RotZ: Neplatný parametr: musí být číslo");
-	} else {
-		this.mat = new Mat4Identity().mat;
-		this.mat[0][0] = Math.cos(alpha);
-		this.mat[1][1] = Math.cos(alpha);
-		this.mat[1][0] = -Math.sin(alpha);
-		this.mat[0][1] = Math.sin(alpha);
 	}
+
+	this.mat = new Mat4Identity().mat;
+	this.mat[0][0] = Math.cos(alpha);
+	this.mat[1][1] = Math.cos(alpha);
+	this.mat[1][0] = -Math.sin(alpha);
+	this.mat[0][1] = Math.sin(alpha);
 };
 Mat4RotZ.prototype = Object.create(Mat4.prototype);
 Mat4RotZ.prototype.constructor = Mat4RotZ;
@@ -1391,19 +1392,14 @@ Mat4RotZ.prototype.parent = Mat4;
  * @throws {TypeError} If některý z argumentů není zadán nebo není číslem
  */
 var Mat4RotXYZ = function (alpha, beta, gama) {
-	if (arguments.length != 3) {
+	if (arguments.length !== 3) {
 		throw new TypeError("Mat4RotXYZ: Neplatný počet parametrů: musí být 3");
-	} else if (typeof alpha != "number" || typeof beta != "number" || typeof gama != "number") {
-		throw new TypeError("Mat4RotXYZ: Neplatný parametr: musí být číslo");
-	} else {
-		this.mat = new Mat4Identity().mat;
-		var M = new Mat4RotX(alpha).mul(new Mat4RotY(beta)).mul(new Mat4RotZ(gama));
-		for (var i = 0; i < 4; i++) {
-			for (var j = 0; j < 4; j++) {
-				this.mat[i][j] = M.mat[i][j];
-			}
-		}
 	}
+	if (typeof alpha !== "number" || typeof beta !== "number" || typeof gama !== "number") {
+		throw new TypeError("Mat4RotXYZ: Neplatný parametr: musí být číslo");
+	}
+
+	this.mat = new Mat4RotX(alpha).mul(new Mat4RotY(beta)).mul(new Mat4RotZ(gama)).mat;
 };
 Mat4RotXYZ.prototype = Object.create(Mat4.prototype);
 Mat4RotXYZ.prototype.constructor = Mat4RotXYZ;
@@ -1418,16 +1414,17 @@ Mat4RotXYZ.prototype.parent = Mat4;
  * @throws {TypeError} If některý z argumentů není zadán nebo není číslem
  */
 var Mat4Scale = function (x, y, z) {
-	if (arguments.length != 3) {
+	if (arguments.length !== 3) {
 		throw new TypeError("Mat4Scale: Neplatný počet parametrů: musí být 3");
-	} else if (typeof x != "number" || typeof y != "number" || typeof z != "number") {
-		throw new TypeError("Mat4Scale: Neplatný parametr: musí být číslo");
-	} else {
-		this.mat = new Mat4Identity().mat;
-		this.mat[0][0] = x;
-		this.mat[1][1] = y;
-		this.mat[2][2] = z;
 	}
+	if (typeof x !== "number" || typeof y !== "number" || typeof z !== "number") {
+		throw new TypeError("Mat4Scale: Neplatný parametr: musí být číslo");
+	}
+
+	this.mat = new Mat4Identity().mat;
+	this.mat[0][0] = x;
+	this.mat[1][1] = y;
+	this.mat[2][2] = z;
 };
 Mat4Scale.prototype = Object.create(Mat4.prototype);
 Mat4Scale.prototype.constructor = Mat4Scale;
@@ -1442,16 +1439,17 @@ Mat4Scale.prototype.parent = Mat4;
  * @throws {TypeError} If některý z argumentů není zadán nebo není číslem
  */
 var Mat4Transl = function (x, y, z) {
-	if (arguments.length != 3) {
+	if (arguments.length !== 3) {
 		throw new TypeError("Mat4Transl: Neplatný počet parametrů: musí být 3");
-	} else if (typeof x != "number" || typeof y != "number" || typeof z != "number") {
-		throw new TypeError("Mat4Transl: Neplatný parametr: musí být číslo");
-	} else {
-		this.mat = new Mat4Identity().mat;
-		this.mat[3][0] = x;
-		this.mat[3][1] = y;
-		this.mat[3][2] = z;
 	}
+	if (typeof x !== "number" || typeof y !== "number" || typeof z !== "number") {
+		throw new TypeError("Mat4Transl: Neplatný parametr: musí být číslo");
+	}
+
+	this.mat = new Mat4Identity().mat;
+	this.mat[3][0] = x;
+	this.mat[3][1] = y;
+	this.mat[3][2] = z;
 };
 Mat4Transl.prototype = Object.create(Mat4.prototype);
 Mat4Transl.prototype.constructor = Mat4Transl;
@@ -1468,27 +1466,28 @@ Mat4Transl.prototype.parent = Mat4;
 var Mat4ViewRH = function (e, v, u) {
 	if (arguments.length != 3) {
 		throw new TypeError("Mat4ViewRH: Neplatný počet parametrů: musí být 3");
-	} else if (!(e instanceof Vec3D) || !(v instanceof Vec3D) || !(u instanceof Vec3D)) {
-		throw new TypeError("Mat4ViewRH: Neplatný parametr: musí být Vec3D");
-	} else {
-		this.mat = new Mat4Identity().mat;
-		var z = v.mul(-1.0).normalized();
-		var x = u.cross(z).normalized();
-		var y = z.cross(x);
-		
-		this.mat[0][0] = x.x;
-		this.mat[1][0] = x.y;
-		this.mat[2][0] = x.z;
-		this.mat[3][0] = -e.dot(x);
-		this.mat[0][1] = y.x;
-		this.mat[1][1] = y.y;
-		this.mat[2][1] = y.z;
-		this.mat[3][1] = -e.dot(y);
-		this.mat[0][2] = z.x;
-		this.mat[1][2] = z.y;
-		this.mat[2][2] = z.z;
-		this.mat[3][2] = -e.dot(z);
 	}
+	if (!(e instanceof Vec3D) || !(v instanceof Vec3D) || !(u instanceof Vec3D)) {
+		throw new TypeError("Mat4ViewRH: Neplatný parametr: musí být Vec3D");
+	}
+
+	this.mat = new Mat4Identity().mat;
+	var z = v.mul(-1.0).normalized();
+	var x = u.cross(z).normalized();
+	var y = z.cross(x);
+
+	this.mat[0][0] = x.x;
+	this.mat[1][0] = x.y;
+	this.mat[2][0] = x.z;
+	this.mat[3][0] = -e.dot(x);
+	this.mat[0][1] = y.x;
+	this.mat[1][1] = y.y;
+	this.mat[2][1] = y.z;
+	this.mat[3][1] = -e.dot(y);
+	this.mat[0][2] = z.x;
+	this.mat[1][2] = z.y;
+	this.mat[2][2] = z.z;
+	this.mat[3][2] = -e.dot(z);
 };
 Mat4ViewRH.prototype = Object.create(Mat4.prototype);
 Mat4ViewRH.prototype.constructor = Mat4ViewRH;
