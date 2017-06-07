@@ -1036,6 +1036,9 @@ Mat3Identity.prototype.parent = Mat3;
  * @param {number} alpha úhel rotace v radiánech
  */
 var Mat3RotX = function(alpha) {
+	if (typeof alpha !== "number") {
+		throw new TypeError("Mat3RotX: Neplatný parametr: musí být číslo");
+	}
 	this.mat = new Mat3Identity().mat;
 	this.mat[1][1] = Math.cos(alpha);
 	this.mat[2][2] = Math.cos(alpha);
@@ -1052,6 +1055,9 @@ Mat3RotX.prototype.parent = Mat3;
  * @param {number} alpha úhel rotace v radiánech
  */
 var Mat3RotY = function(alpha) {
+	if (typeof alpha !== "number") {
+		throw new TypeError("Mat3RotY: Neplatný parametr: musí být číslo");
+	}
 	this.mat = new Mat3Identity().mat;
 	this.mat[0][0] = Math.cos(alpha);
 	this.mat[2][2] = Math.cos(alpha);
@@ -1068,6 +1074,9 @@ Mat3RotY.prototype.parent = Mat3;
  * @param {number} alpha úhel rotace v radiánech
  */
 var Mat3RotZ = function(alpha) {
+	if (typeof alpha !== "number") {
+		throw new TypeError("Mat3RotZ: Neplatný parametr: musí být číslo");
+	}
 	this.mat = new Mat3Identity().mat;
 	this.mat[0][0] = Math.cos(alpha);
 	this.mat[1][1] = Math.cos(alpha);
