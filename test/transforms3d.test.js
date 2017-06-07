@@ -966,11 +966,11 @@ describe("Mat3", () => {
 
 });
 
+
 describe("Mat3Identity", () => {
+	let m = new Mat3Identity();
 
 	it("constructor works", () => {
-		let m = new Mat3Identity();
-
 		expect(m.mat[0][0]).toBe(1);
 		expect(m.mat[0][1]).toBe(0);
 		expect(m.mat[0][2]).toBe(0);
@@ -983,19 +983,17 @@ describe("Mat3Identity", () => {
 	});
 
 	it("prototype is set correctly", () => {
-		let m = new Mat3Identity();
 		expect(m instanceof Mat3).toBe(true);
-
 		expect(typeof Mat3Identity.prototype.constructor).toBe("function");
 		expect(typeof Mat3Identity.prototype.parent).toBe("function");
 	});
 });
 
+
 describe("Mat3RotX", () => {
+	let m = new Mat3RotX(40);
 
 	it("constructor works", () => {
-		let m = new Mat3RotX(40);
-
 		expect(m.mat[0][0]).toBe(1);
 		expect(m.mat[0][1]).toBe(0);
 		expect(m.mat[0][2]).toBe(0);
@@ -1007,10 +1005,13 @@ describe("Mat3RotX", () => {
 		expect(m.mat[2][2]).toBeCloseTo(-0.6669380616522619, 5);
 	});
 
-	it("prototype is set correctly", () => {
-		let m = new Mat3RotX(10);
-		expect(m instanceof Mat3).toBe(true);
+	it("constructor throws TypeError when parameter is not a number", () => {
+		expect(() => new Mat3RotX()).toThrowError(TypeError);
+		expect(() => new Mat3RotX("a")).toThrowError(TypeError);
+	});
 
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat3).toBe(true);
 		expect(typeof Mat3RotX.prototype.constructor).toBe("function");
 		expect(typeof Mat3RotX.prototype.parent).toBe("function");
 	});
@@ -1018,10 +1019,9 @@ describe("Mat3RotX", () => {
 
 
 describe("Mat3RotY", () => {
+	let m = new Mat3RotY(40);
 
 	it("constructor works", () => {
-		let m = new Mat3RotY(40);
-
 		expect(m.mat[0][0]).toBeCloseTo(-0.6669380616522619, 5);
 		expect(m.mat[0][1]).toBe(0);
 		expect(m.mat[0][2]).toBeCloseTo(-0.7451131604793488, 5);
@@ -1033,10 +1033,13 @@ describe("Mat3RotY", () => {
 		expect(m.mat[2][2]).toBeCloseTo(-0.6669380616522619, 5);
 	});
 
-	it("prototype is set correctly", () => {
-		let m = new Mat3RotY(10);
-		expect(m instanceof Mat3).toBe(true);
+	it("constructor throws TypeError when parameter is not a number", () => {
+		expect(() => new Mat3RotY()).toThrowError(TypeError);
+		expect(() => new Mat3RotY("a")).toThrowError(TypeError);
+	});
 
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat3).toBe(true);
 		expect(typeof Mat3RotY.prototype.constructor).toBe("function");
 		expect(typeof Mat3RotY.prototype.parent).toBe("function");
 	});
@@ -1044,10 +1047,9 @@ describe("Mat3RotY", () => {
 
 
 describe("Mat3RotZ", () => {
+	let m = new Mat3RotZ(40);
 
 	it("constructor works", () => {
-		let m = new Mat3RotZ(40);
-
 		expect(m.mat[0][0]).toBeCloseTo(-0.6669380616522619, 5);
 		expect(m.mat[0][1]).toBeCloseTo(0.7451131604793488, 5);
 		expect(m.mat[0][2]).toBe(0);
@@ -1059,10 +1061,13 @@ describe("Mat3RotZ", () => {
 		expect(m.mat[2][2]).toBe(1);
 	});
 
-	it("prototype is set correctly", () => {
-		let m = new Mat3RotZ(10);
-		expect(m instanceof Mat3).toBe(true);
+	it("constructor throws TypeError when parameter is not a number", () => {
+		expect(() => new Mat3RotZ()).toThrowError(TypeError);
+		expect(() => new Mat3RotZ("a")).toThrowError(TypeError);
+	});
 
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat3).toBe(true);
 		expect(typeof Mat3RotZ.prototype.constructor).toBe("function");
 		expect(typeof Mat3RotZ.prototype.parent).toBe("function");
 	});
@@ -1071,6 +1076,354 @@ describe("Mat3RotZ", () => {
 
 describe("Mat4", () => {
 
+});
+
+
+describe("Mat4Identity", () => {
+	let m = new Mat4Identity();
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBe(1);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBe(1);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBe(1);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBe(0);
+		expect(m.mat[3][1]).toBe(0);
+		expect(m.mat[3][2]).toBe(0);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4Identity.prototype.constructor).toBe("function");
+		expect(typeof Mat4Identity.prototype.parent).toBe("function");
+	});
+});
+
+
+describe("Mat4OrthoRH", () => {
+	let m = new Mat4OrthoRH(800, 600, 0.1, 100);
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBe(0.0025);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBeCloseTo(0.0033333333333333335, 5);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBeCloseTo(-0.01001001001001001, 5);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBe(-1);
+		expect(m.mat[3][1]).toBe(-1);
+		expect(m.mat[3][2]).toBeCloseTo(-0.001001001001001001, 5);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameters are wrong", () => {
+		expect(() => new Mat4OrthoRH(1, 2, 3)).toThrowError(TypeError);
+		expect(() => new Mat4OrthoRH(1, 2, 3, "a")).toThrowError(TypeError);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4OrthoRH.prototype.constructor).toBe("function");
+		expect(typeof Mat4OrthoRH.prototype.parent).toBe("function");
+	});
+});
+
+
+describe("Mat4PerspRH", () => {
+	let m = new Mat4PerspRH(60, 800/600, 0.1, 100);
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBeCloseTo(-0.20815993621554563, 5);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBeCloseTo(-0.15611995216165922, 5);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBeCloseTo(-1.0010010010010009, 5);
+		expect(m.mat[2][3]).toBe(-1);
+		expect(m.mat[3][0]).toBe(0);
+		expect(m.mat[3][1]).toBe(0);
+		expect(m.mat[3][2]).toBeCloseTo(-0.10010010010010009, 5);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameters are wrong", () => {
+		expect(() => new Mat4PerspRH(1, 2, 3)).toThrowError(TypeError);
+		expect(() => new Mat4PerspRH(1, 2, 3, "a")).toThrowError(TypeError);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4PerspRH.prototype.constructor).toBe("function");
+		expect(typeof Mat4PerspRH.prototype.parent).toBe("function");
+	});
+});
+
+
+describe("Mat4RotX", () => {
+	let m = new Mat4RotX(40);
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBe(1);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBeCloseTo(-0.6669380616522619, 5);
+		expect(m.mat[1][2]).toBeCloseTo(0.7451131604793488, 5);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBeCloseTo(-0.7451131604793488, 5);
+		expect(m.mat[2][2]).toBeCloseTo(-0.6669380616522619, 5);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBe(0);
+		expect(m.mat[3][1]).toBe(0);
+		expect(m.mat[3][2]).toBe(0);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameter is not a number", () => {
+		expect(() => new Mat4RotX()).toThrowError(TypeError);
+		expect(() => new Mat4RotX("a")).toThrowError(TypeError);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4RotX.prototype.constructor).toBe("function");
+		expect(typeof Mat4RotX.prototype.parent).toBe("function");
+	});
+});
+
+
+describe("Mat4RotY", () => {
+	let m = new Mat4RotY(40);
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBeCloseTo(-0.6669380616522619, 5);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[0][2]).toBeCloseTo(-0.7451131604793488, 5);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBe(1);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBeCloseTo(0.7451131604793488, 5);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBeCloseTo(-0.6669380616522619, 5);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBe(0);
+		expect(m.mat[3][1]).toBe(0);
+		expect(m.mat[3][2]).toBe(0);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameter is not a number", () => {
+		expect(() => new Mat4RotY()).toThrowError(TypeError);
+		expect(() => new Mat4RotY("a")).toThrowError(TypeError);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4RotY.prototype.constructor).toBe("function");
+		expect(typeof Mat4RotY.prototype.parent).toBe("function");
+	});
+});
+
+
+describe("Mat4RotZ", () => {
+	let m = new Mat4RotZ(40);
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBeCloseTo(-0.6669380616522619, 5);
+		expect(m.mat[0][1]).toBeCloseTo(0.7451131604793488, 5);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBeCloseTo(-0.7451131604793488, 5);
+		expect(m.mat[1][1]).toBeCloseTo(-0.6669380616522619, 5);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBe(1);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBe(0);
+		expect(m.mat[3][1]).toBe(0);
+		expect(m.mat[3][2]).toBe(0);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameter is not a number", () => {
+		expect(() => new Mat4RotZ()).toThrowError(TypeError);
+		expect(() => new Mat4RotZ("a")).toThrowError(TypeError);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4RotZ.prototype.constructor).toBe("function");
+		expect(typeof Mat4RotZ.prototype.parent).toBe("function");
+	});
+});
+
+
+describe("Mat4RotXYZ", () => {
+	let m = new Mat4RotXYZ(40, 50, 110);
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBeCloseTo(-0.9640211466051968, 5);
+		expect(m.mat[0][1]).toBeCloseTo(-0.042692681361605984, 5);
+		expect(m.mat[0][2]).toBeCloseTo(0.26237485370392877, 5);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBeCloseTo(0.16580040053409972, 5);
+		expect(m.mat[1][1]).toBeCloseTo(0.6749344021795681, 5);
+		expect(m.mat[1][2]).toBeCloseTo(0.7190088872449639, 5);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBeCloseTo(-0.20778223235092494, 5);
+		expect(m.mat[2][1]).toBeCloseTo(0.736641627735404, 5);
+		expect(m.mat[2][2]).toBeCloseTo(-0.6435725726028114, 5);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBe(0);
+		expect(m.mat[3][1]).toBe(0);
+		expect(m.mat[3][2]).toBe(0);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameters are wrong", () => {
+		expect(() => new Mat4RotXYZ(1, 2)).toThrowError(TypeError);
+		expect(() => new Mat4RotXYZ(1, 2, "a")).toThrowError(TypeError);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4RotXYZ.prototype.constructor).toBe("function");
+		expect(typeof Mat4RotXYZ.prototype.parent).toBe("function");
+	});
+});
+
+
+describe("Mat4Scale", () => {
+	let m = new Mat4Scale(1.5, 2, -1);
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBe(1.5);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBe(2);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBe(-1);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBe(0);
+		expect(m.mat[3][1]).toBe(0);
+		expect(m.mat[3][2]).toBe(0);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameters are wrong", () => {
+		expect(() => new Mat4Scale(1, 2)).toThrowError(TypeError);
+		expect(() => new Mat4Scale(1, 2, "a")).toThrowError(TypeError);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4Scale.prototype.constructor).toBe("function");
+		expect(typeof Mat4Scale.prototype.parent).toBe("function");
+	});
+});
+
+
+describe("Mat4Transl", () => {
+	let m = new Mat4Transl(1.5, 2, -1);
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBe(1);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBe(1);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBe(1);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBe(1.5);
+		expect(m.mat[3][1]).toBe(2);
+		expect(m.mat[3][2]).toBe(-1);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameters are wrong", () => {
+		expect(() => new Mat4Transl(1, 2)).toThrowError(TypeError);
+		expect(() => new Mat4Transl(1, 2, "a")).toThrowError(TypeError);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4Transl.prototype.constructor).toBe("function");
+		expect(typeof Mat4Transl.prototype.parent).toBe("function");
+	});
+});
+
+
+describe("Mat4ViewRH", () => {
+	let v1 = new Vec3D(1, 2, 3);
+	let v2 = new Vec3D(-4, 2, -3);
+	let v3 = new Vec3D(1.5, 7, -1);
+	let m = new Mat4ViewRH(v1, v2, v3);
+
+	it("constructor works", () => {
+		expect(m.mat[0][0]).toBeCloseTo(0.5088423789474245, 5);
+		expect(m.mat[0][1]).toBeCloseTo(0.4351497391198703, 5);
+		expect(m.mat[0][2]).toBeCloseTo(0.7427813527082074, 5);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBeCloseTo(-0.22764001163437408, 5);
+		expect(m.mat[1][1]).toBeCloseTo(0.9001383174936746, 5);
+		expect(m.mat[1][2]).toBeCloseTo(-0.3713906763541037, 5);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBeCloseTo(-0.8302165130194821, 5);
+		expect(m.mat[2][1]).toBeCloseTo(0.01989255950262267, 5);
+		expect(m.mat[2][2]).toBeCloseTo(0.5570860145311556, 5);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBeCloseTo(2.43708718337977, 5);
+		expect(m.mat[3][1]).toBeCloseTo(-2.295104052615087 , 5);
+		expect(m.mat[3][2]).toBeCloseTo(-1.6712580435934667, 5);
+		expect(m.mat[3][3]).toBe(1);
+	});
+
+	it("constructor throws TypeError when parameters are wrong", () => {
+		expect(() => new Mat4ViewRH(v1, v2)).toThrowError(TypeError);
+		expect(() => new Mat4ViewRH(v1, v2, "a")).toThrowError(TypeError);
+	});
+
+	it("prototype is set correctly", () => {
+		expect(m instanceof Mat4).toBe(true);
+		expect(typeof Mat4ViewRH.prototype.constructor).toBe("function");
+		expect(typeof Mat4ViewRH.prototype.parent).toBe("function");
+	});
 });
 
 
