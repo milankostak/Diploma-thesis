@@ -963,7 +963,6 @@ describe("Mat3", () => {
 	it("c function returns itself", () => {
 		expect(new Mat3().c() instanceof Mat3).toBe(true);
 	});
-
 });
 
 
@@ -1075,7 +1074,188 @@ describe("Mat3RotZ", () => {
 
 
 describe("Mat4", () => {
+	let p1 = new Point3D(4, -2, 3, 4);
+	let p2 = new Point3D(1, 2, -3, -1);
+	let p3 = new Point3D(6, 3, 2, -3);
+	let p4 = new Point3D(0, -1, 7, 1);
+	let m1 = new Mat4(p1, p2, p3, p4);
+	let p5 = new Point3D(1, -5, 1, 0);
+	let p6 = new Point3D(-2, 2, 4, 1);
+	let p7 = new Point3D(3, -5, 1, -2);
+	let p8 = new Point3D(2, -4, 5, 5);
+	let m2 = new Mat4(p5, p6, p7, p8);
 
+	it("constructor works correctly with Point3D as parameters", () => {
+		expect(m1.mat[0][0]).toBe(4);
+		expect(m1.mat[0][1]).toBe(-2);
+		expect(m1.mat[0][2]).toBe(3);
+		expect(m1.mat[0][3]).toBe(4);
+		expect(m1.mat[1][0]).toBe(1);
+		expect(m1.mat[1][1]).toBe(2);
+		expect(m1.mat[1][2]).toBe(-3);
+		expect(m1.mat[1][3]).toBe(-1);
+		expect(m1.mat[2][0]).toBe(6);
+		expect(m1.mat[2][1]).toBe(3);
+		expect(m1.mat[2][2]).toBe(2);
+		expect(m1.mat[2][3]).toBe(-3);
+		expect(m1.mat[3][0]).toBe(0);
+		expect(m1.mat[3][1]).toBe(-1);
+		expect(m1.mat[3][2]).toBe(7);
+		expect(m1.mat[3][3]).toBe(1);
+	});
+
+	it("constructor works correctly with Mat4 as parameter", () => {
+		let m3 = new Mat4(m1);
+
+		expect(m1.mat[0][0]).toBe(4);
+		expect(m1.mat[0][1]).toBe(-2);
+		expect(m1.mat[0][2]).toBe(3);
+		expect(m1.mat[0][3]).toBe(4);
+		expect(m1.mat[1][0]).toBe(1);
+		expect(m1.mat[1][1]).toBe(2);
+		expect(m1.mat[1][2]).toBe(-3);
+		expect(m1.mat[1][3]).toBe(-1);
+		expect(m1.mat[2][0]).toBe(6);
+		expect(m1.mat[2][1]).toBe(3);
+		expect(m1.mat[2][2]).toBe(2);
+		expect(m1.mat[2][3]).toBe(-3);
+		expect(m1.mat[3][0]).toBe(0);
+		expect(m1.mat[3][1]).toBe(-1);
+		expect(m1.mat[3][2]).toBe(7);
+		expect(m1.mat[3][3]).toBe(1);
+	});
+
+	it("constructor works correctly w/o parameters", () => {
+		let m = new Mat4();
+
+		expect(m.mat[0][0]).toBe(0);
+		expect(m.mat[0][1]).toBe(0);
+		expect(m.mat[0][2]).toBe(0);
+		expect(m.mat[0][3]).toBe(0);
+		expect(m.mat[1][0]).toBe(0);
+		expect(m.mat[1][1]).toBe(0);
+		expect(m.mat[1][2]).toBe(0);
+		expect(m.mat[1][3]).toBe(0);
+		expect(m.mat[2][0]).toBe(0);
+		expect(m.mat[2][1]).toBe(0);
+		expect(m.mat[2][2]).toBe(0);
+		expect(m.mat[2][3]).toBe(0);
+		expect(m.mat[3][0]).toBe(0);
+		expect(m.mat[3][1]).toBe(0);
+		expect(m.mat[3][2]).toBe(0);
+		expect(m.mat[3][3]).toBe(0);
+	});
+
+	it("add prototype works with Mat4 as parameter", () => {
+		let m3 = m1.add(m2);
+
+		expect(m3.mat[0][0]).toBe(5);
+		expect(m3.mat[0][1]).toBe(-7);
+		expect(m3.mat[0][2]).toBe(4);
+		expect(m3.mat[0][3]).toBe(4);
+		expect(m3.mat[1][0]).toBe(-1);
+		expect(m3.mat[1][1]).toBe(4);
+		expect(m3.mat[1][2]).toBe(1);
+		expect(m3.mat[1][3]).toBe(0);
+		expect(m3.mat[2][0]).toBe(9);
+		expect(m3.mat[2][1]).toBe(-2);
+		expect(m3.mat[2][2]).toBe(3);
+		expect(m3.mat[2][3]).toBe(-5);
+		expect(m3.mat[3][0]).toBe(2);
+		expect(m3.mat[3][1]).toBe(-5);
+		expect(m3.mat[3][2]).toBe(12);
+		expect(m3.mat[3][3]).toBe(6);
+	});
+
+	it("add prototype throws TypeError when parameter is not a Mat4", () => {
+		expect(() => new Mat4().add("a")).toThrowError(TypeError);
+		expect(() => new Mat4().add()).toThrowError(TypeError);
+	});
+
+	it("mul prototype works with Mat4 as parameter", () => {
+		let m3 = m1.mul(m2);
+
+		expect(m3.mat[0][0]).toBe(25);
+		expect(m3.mat[0][1]).toBe(-55);
+		expect(m3.mat[0][2]).toBe(19);
+		expect(m3.mat[0][3]).toBe(12);
+		expect(m3.mat[1][0]).toBe(-14);
+		expect(m3.mat[1][1]).toBe(18);
+		expect(m3.mat[1][2]).toBe(1);
+		expect(m3.mat[1][3]).toBe(3);
+		expect(m3.mat[2][0]).toBe(0);
+		expect(m3.mat[2][1]).toBe(-22);
+		expect(m3.mat[2][2]).toBe(5);
+		expect(m3.mat[2][3]).toBe(-16);
+		expect(m3.mat[3][0]).toBe(25);
+		expect(m3.mat[3][1]).toBe(-41);
+		expect(m3.mat[3][2]).toBe(8);
+		expect(m3.mat[3][3]).toBe(-10);
+	});
+
+	it("mul prototype works with number as parameter", () => {
+		let m3 = m1.mul(2);
+
+		expect(m3.mat[0][0]).toBe(8);
+		expect(m3.mat[0][1]).toBe(-4);
+		expect(m3.mat[0][2]).toBe(6);
+		expect(m3.mat[0][3]).toBe(8);
+		expect(m3.mat[1][0]).toBe(2);
+		expect(m3.mat[1][1]).toBe(4);
+		expect(m3.mat[1][2]).toBe(-6);
+		expect(m3.mat[1][3]).toBe(-2);
+		expect(m3.mat[2][0]).toBe(12);
+		expect(m3.mat[2][1]).toBe(6);
+		expect(m3.mat[2][2]).toBe(4);
+		expect(m3.mat[2][3]).toBe(-6);
+		expect(m3.mat[3][0]).toBe(0);
+		expect(m3.mat[3][1]).toBe(-2);
+		expect(m3.mat[3][2]).toBe(14);
+		expect(m3.mat[3][3]).toBe(2);
+	});
+
+	it("mul prototype throws TypeError when parameter is not a number or Mat4", () => {
+		expect(() => new Mat4().mul("a")).toThrowError(TypeError);
+		expect(() => new Mat4().mul()).toThrowError(TypeError);
+	});
+
+	it("transpose prototype works as expected", () => {
+		let m3 = m1.transpose();
+
+		expect(m3.mat[0][0]).toBe(4);
+		expect(m3.mat[0][1]).toBe(1);
+		expect(m3.mat[0][2]).toBe(6);
+		expect(m3.mat[0][3]).toBe(0);
+		expect(m3.mat[1][0]).toBe(-2);
+		expect(m3.mat[1][1]).toBe(2);
+		expect(m3.mat[1][2]).toBe(3);
+		expect(m3.mat[1][3]).toBe(-1);
+		expect(m3.mat[2][0]).toBe(3);
+		expect(m3.mat[2][1]).toBe(-3);
+		expect(m3.mat[2][2]).toBe(2);
+		expect(m3.mat[2][3]).toBe(7);
+		expect(m3.mat[3][0]).toBe(4);
+		expect(m3.mat[3][1]).toBe(-1);
+		expect(m3.mat[3][2]).toBe(-3);
+		expect(m3.mat[3][3]).toBe(1);
+	});
+
+	it("toMat3 prototype works as expected", () => {
+		let m3 = m1.toMat3();
+		expect(m1.mat[0][0]).toBe(4);
+		expect(m1.mat[0][1]).toBe(-2);
+		expect(m1.mat[0][2]).toBe(3);
+		expect(m1.mat[1][0]).toBe(1);
+		expect(m1.mat[1][1]).toBe(2);
+		expect(m1.mat[1][2]).toBe(-3);
+		expect(m1.mat[2][0]).toBe(6);
+		expect(m1.mat[2][1]).toBe(3);
+		expect(m1.mat[2][2]).toBe(2);
+	});
+
+	it("c function returns itself", () => {
+		expect(new Mat3().c() instanceof Mat3).toBe(true);
+	});
 });
 
 
