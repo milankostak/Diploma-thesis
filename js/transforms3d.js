@@ -981,9 +981,8 @@ Quat.prototype.c = function() {
  * @param {Vec3D} v3
  * @constructor
  */
-var Mat3 = function(v1, v2, v3){
+var Mat3 = function(v1, v2, v3) {
 	this.mat = [];
-	var i, j;
 	if (v1 instanceof Vec3D && v2 instanceof Vec3D && v3 instanceof Vec3D) {
 		this.mat[0] = [];
 		this.mat[0][0] = v1.x;
@@ -998,16 +997,16 @@ var Mat3 = function(v1, v2, v3){
 		this.mat[2][1] = v3.y;
 		this.mat[2][2] = v3.z;
 	} else if (v1 instanceof Mat3) {
-		for (i = 0; i < 3; i++) {
+		for (let i = 0; i < 3; i++) {
 			this.mat[i] = [];
-			for (j = 0; j < 3; j++) {
+			for (let j = 0; j < 3; j++) {
 				this.mat[i][j] = v1.mat[i][j];
 			}
 		}
 	} else if (v1 instanceof Mat4) {
-		for (i = 0; i < 3; i++) {
+		for (let i = 0; i < 3; i++) {
 			this.mat[i] = [];
-			for (j = 0; j < 3; j++) {
+			for (let j = 0; j < 3; j++) {
 				this.mat[i][j] = v1.mat[i][j];
 			}
 		}
@@ -1022,7 +1021,7 @@ var Mat3 = function(v1, v2, v3){
  */
 var Mat3Identity = function() {
 	this.mat = new ZeroArray(3);
-	for (var i = 0; i < 3; i++) {
+	for (let i = 0; i < 3; i++) {
 		this.mat[i][i] = 1;
 	}
 };
@@ -1095,9 +1094,9 @@ Mat3RotZ.prototype.parent = Mat3;
  */
 Mat3.prototype.add = function(m) {
 	if (m instanceof Mat3) {
-		var hlp = new Mat3();
-		for (var i = 0; i < 3; i++) {
-			for (var j = 0; j < 3; j++) {
+		let hlp = new Mat3();
+		for (let i = 0; i < 3; i++) {
+			for (let j = 0; j < 3; j++) {
 				hlp.mat[i][j] = this.mat[i][j] + m.mat[i][j];
 			}
 		}
@@ -1114,23 +1113,22 @@ Mat3.prototype.add = function(m) {
  * @throws {TypeError} If m není číslo ani Mat3
  */
 Mat3.prototype.mul = function(m) {
-	var i, j, k, hlp;
-	if (typeof m == "number") {
-		hlp = new Mat3();
-		for (i = 0; i < 3; i++) {
-			for (j = 0; j < 3; j++) {
+	if (typeof m === "number") {
+		let hlp = new Mat3();
+		for (let i = 0; i < 3; i++) {
+			for (let j = 0; j < 3; j++) {
 				hlp.mat[i][j] = this.mat[i][j] * m;
 			}
 		}
 		return hlp;
 	} else if (m instanceof Mat3) {
-		hlp = new Mat3();
-		var sum;
-		for (i = 0; i < 3; i++) {
-			for (j = 0; j < 3; j++) {
-				sum = 0;
-				for (k = 0; k < 3; k++)
+		let hlp = new Mat3();
+		for (let i = 0; i < 3; i++) {
+			for (let j = 0; j < 3; j++) {
+				let sum = 0;
+				for (let k = 0; k < 3; k++) {
 					sum += this.mat[i][k] * m.mat[k][j];
+				}
 				hlp.mat[i][j] = sum;
 			}
 		}
@@ -1145,9 +1143,9 @@ Mat3.prototype.mul = function(m) {
  * @return {Mat3} nová instance Mat3
  */
 Mat3.prototype.transpose = function() {
-	var hlp = new Mat3();
-	for (var i = 0; i < 3; i++) {
-		for (var j = 0; j < 3; j++) {
+	let hlp = new Mat3();
+	for (let i = 0; i < 3; i++) {
+		for (let j = 0; j < 3; j++) {
 			hlp.mat[i][j] = this.mat[j][i];
 		}
 	}
@@ -1169,8 +1167,8 @@ Mat3.prototype.det = function() {
  * @return {Mat3} nová instance Mat3
  */
 Mat3.prototype.inverse = function() {
-	var hlp = new Mat3();
-	var det = 1.0/this.det();
+	let hlp = new Mat3();
+	let det = 1.0/this.det();
 	hlp.mat[0][0] = det*(this.mat[1][1]*this.mat[2][2] - this.mat[1][2]*this.mat[2][1]);
 	hlp.mat[0][1] = det*(this.mat[0][2]*this.mat[2][1] - this.mat[0][1]*this.mat[2][2]);
 	hlp.mat[0][2] = det*(this.mat[0][1]*this.mat[1][2] - this.mat[0][2]*this.mat[1][1]);
@@ -1234,9 +1232,9 @@ var Mat4 = function(p1, p2, p3, p4) {
 		this.mat[3][2] = p4.z;
 		this.mat[3][3] = p4.w;
 	} else if (p1 instanceof Mat4) {
-		for (var i = 0; i < 4; i++) {
+		for (let i = 0; i < 4; i++) {
 			this.mat[i] = [];
-			for (var j = 0; j < 4; j++) {
+			for (let j = 0; j < 4; j++) {
 				this.mat[i][j] = p1.mat[i][j];
 			}
 		}
@@ -1251,7 +1249,7 @@ var Mat4 = function(p1, p2, p3, p4) {
  */
 var Mat4Identity = function() {
 	this.mat = new ZeroArray(4);
-	for (var i = 0; i < 4; i++) {
+	for (let i = 0; i < 4; i++) {
 		this.mat[i][i] = 1.0;
 	}
 };
@@ -1268,7 +1266,7 @@ Mat4Identity.prototype.parent = Mat4;
  * @param {number} zf vzdálené z
  * @throws {TypeError} If některý z parametrů není zadán nebo není číslem
  */
-var Mat4OrthoRH = function (w, h, zn, zf) {
+var Mat4OrthoRH = function(w, h, zn, zf) {
 	if (arguments.length !== 4) {
 		throw new TypeError("Mat4OrthoRH: Neplatný počet parametrů: musí být 4");
 	}
@@ -1297,7 +1295,7 @@ Mat4OrthoRH.prototype.parent = Mat4;
  * @param {number} zf    vzdálené z
  * @throws {TypeError} If některý z parametrů není zadán nebo není číslem
  */
-var Mat4PerspRH = function (alpha, k, zn, zf) {
+var Mat4PerspRH = function(alpha, k, zn, zf) {
 	if (arguments.length !== 4) {
 		throw new TypeError("Mat4PerspRH: Neplatný počet parametrů: musí být 4");
 	}
@@ -1326,8 +1324,8 @@ Mat4PerspRH.prototype.parent = Mat4;
  * @param {number} alpha úhel rotace v radiánech
  * @throws {TypeError} If alpha není číslo
  */
-var Mat4RotX = function (alpha) {
-	if (typeof alpha != "number") {
+var Mat4RotX = function(alpha) {
+	if (typeof alpha !== "number") {
 		throw new TypeError("Mat4RotX: Neplatný parametr: musí být číslo");
 	}
 
@@ -1347,8 +1345,8 @@ Mat4RotX.prototype.parent = Mat4;
  * @param {number} alpha úhel rotace v radiánech
  * @throws {TypeError} If alpha není číslo
  */
-var Mat4RotY = function (alpha) {
-	if (typeof alpha != "number") {
+var Mat4RotY = function(alpha) {
+	if (typeof alpha !== "number") {
 		throw new TypeError("Mat4RotY: Neplatný parametr: musí být číslo");
 	}
 
@@ -1368,8 +1366,8 @@ Mat4RotY.prototype.parent = Mat4;
  * @param {number} alpha úhel rotace v radiánech
  * @throws {TypeError} If alpha není číslo
  */
-var Mat4RotZ = function (alpha) {
-	if (typeof alpha != "number") {
+var Mat4RotZ = function(alpha) {
+	if (typeof alpha !== "number") {
 		throw new TypeError("Mat4RotZ: Neplatný parametr: musí být číslo");
 	}
 
@@ -1391,7 +1389,7 @@ Mat4RotZ.prototype.parent = Mat4;
  * @param {number} gama  úhel rotace v radiánech
  * @throws {TypeError} If některý z argumentů není zadán nebo není číslem
  */
-var Mat4RotXYZ = function (alpha, beta, gama) {
+var Mat4RotXYZ = function(alpha, beta, gama) {
 	if (arguments.length !== 3) {
 		throw new TypeError("Mat4RotXYZ: Neplatný počet parametrů: musí být 3");
 	}
@@ -1413,7 +1411,7 @@ Mat4RotXYZ.prototype.parent = Mat4;
  * @param {number} z zvětšení/zmenšení na ose z
  * @throws {TypeError} If některý z argumentů není zadán nebo není číslem
  */
-var Mat4Scale = function (x, y, z) {
+var Mat4Scale = function(x, y, z) {
 	if (arguments.length !== 3) {
 		throw new TypeError("Mat4Scale: Neplatný počet parametrů: musí být 3");
 	}
@@ -1438,7 +1436,7 @@ Mat4Scale.prototype.parent = Mat4;
  * @param {number} z posunutí na ose z
  * @throws {TypeError} If některý z argumentů není zadán nebo není číslem
  */
-var Mat4Transl = function (x, y, z) {
+var Mat4Transl = function(x, y, z) {
 	if (arguments.length !== 3) {
 		throw new TypeError("Mat4Transl: Neplatný počet parametrů: musí být 3");
 	}
@@ -1463,7 +1461,7 @@ Mat4Transl.prototype.parent = Mat4;
  * @param {number} u up vektor
  * @throws {TypeError} If některý z argumentů není zadán nebo není číslem
  */
-var Mat4ViewRH = function (e, v, u) {
+var Mat4ViewRH = function(e, v, u) {
 	if (arguments.length != 3) {
 		throw new TypeError("Mat4ViewRH: Neplatný počet parametrů: musí být 3");
 	}
@@ -1501,9 +1499,9 @@ Mat4ViewRH.prototype.parent = Mat4;
  */
 Mat4.prototype.add = function(m) {
 	if (m instanceof Mat4) {
-		var hlp = new Mat4();
-		for (var i = 0; i < 4; i++) {
-			for (var j = 0; j < 4; j++) {
+		let hlp = new Mat4();
+		for (let i = 0; i < 4; i++) {
+			for (let j = 0; j < 4; j++) {
 				hlp.mat[i][j] = this.mat[i][j] + m.mat[i][j];
 			}
 		}
@@ -1520,28 +1518,26 @@ Mat4.prototype.add = function(m) {
  * @throws {TypeError} If m není číslo ani Mat4
  */
 Mat4.prototype.mul = function(m) {
-	var hlp, i, j, k;
-	if (typeof m == "number") {
-		hlp = new Mat4();
-		for (i = 0; i < 4; i++) {
-			for (j = 0; j < 4; j++) {
-				hlp.mat[i][j] = this.mat[i][j] * m;
+	if (typeof m === "number") {
+		let tmp = new Mat4();
+		for (let i = 0; i < 4; i++) {
+			for (let j = 0; j < 4; j++) {
+				tmp.mat[i][j] = this.mat[i][j] * m;
 			}
 		}
-		return hlp;
+		return tmp;
 	} else if (m instanceof Mat4) {
-		hlp = new Mat4();
-		var sum;
-		for (i = 0; i < 4; i++) {
-			for (j = 0; j < 4; j++) {
-				sum = 0.0;
-				for (k = 0; k < 4; k++) {
+		let tmp = new Mat4();
+		for (let i = 0; i < 4; i++) {
+			for (let j = 0; j < 4; j++) {
+				let sum = 0;
+				for (let k = 0; k < 4; k++) {
 					sum += this.mat[i][k] * m.mat[k][j];
 				}
-				hlp.mat[i][j] = sum;
+				tmp.mat[i][j] = sum;
 			}
 		}
-		return hlp;
+		return tmp;
 	} else {
 		throw new TypeError("Mat4, mul: Neplatný parametr: musí být číslo nebo Mat4");
 	}
@@ -1552,25 +1548,27 @@ Mat4.prototype.mul = function(m) {
  * @return {Mat4} nová instance Mat4
  */
 Mat4.prototype.transpose = function() {
-	var hlp = new Mat4();
-	for (var i = 0; i < 4; i++) {
-		for (var j = 0; j < 4; j++) {
-			hlp.mat[i][j] = this.mat[j][i];
+	let tmp = new Mat4();
+	for (let i = 0; i < 4; i++) {
+		for (let j = 0; j < 4; j++) {
+			tmp.mat[i][j] = this.mat[j][i];
 		}
 	}
-	return hlp;
+	return tmp;
 };
 
 /**
- * Převod Mat4 na Mat3, odstanění posledního sloupce a řádku
+ * Převod Mat4 na Mat3, odstranění posledního sloupce a řádku
  * @return {Mat3} nová instance Mat3
  */
 Mat4.prototype.toMat3 = function() {
-	var a = new Mat3();
-	for (var i = 0; i < 3; i++)
-		for (var j = 0; j < 3; j++)
-			a.mat[i][j] = this.mat[i][j];
-	return a;
+	let tmp = new Mat3();
+	for (let i = 0; i < 3; i++) {
+		for (let j = 0; j < 3; j++) {
+			tmp.mat[i][j] = this.mat[i][j];
+		}
+	}
+	return tmp;
 };
 
 /**
