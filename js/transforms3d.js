@@ -25,12 +25,12 @@
  * @constructor
  */
 var ZeroArray = function(x) {
-	var length = (typeof x !== "undefined") ? x : 4;
-	if (typeof length == "number") {
-		var mat = [];
-		for (var i = 0; i < length; i++) {
+	let length = (typeof x !== "undefined") ? x : 4;
+	if (typeof length === "number") {
+		let mat = [];
+		for (let i = 0; i < length; i++) {
 			mat[i] = [];
-			for (var j = 0; j < length; j++) {
+			for (let j = 0; j < length; j++) {
 				mat[i][j] = 0.0;
 			}
 		}
@@ -82,7 +82,7 @@ Vec1D.prototype.add = function(v) {
  * @throws {TypeError} If m není číslo
  */
 Vec1D.prototype.mul = function(m) {
-	if (typeof m == "number") {
+	if (typeof m === "number") {
 		return new Vec1D(this.x * m);
 	} else {
 		throw new TypeError("Vec1D, mul: Neplatný parametr: musí být číslo");
@@ -152,7 +152,7 @@ Vec2D.prototype.add = function(v) {
  * @throws {TypeError} If m nená číslo ani Vec2D
  */
 Vec2D.prototype.mul = function(m) {
-	if (typeof m == "number") {
+	if (typeof m === "number") {
 		return new Vec2D(this.x * m, this.y * m);
 	} else if (m instanceof Vec2D) {
 		return new Vec2D(this.x * m.x, this.y * m.y);
@@ -188,9 +188,9 @@ Vec2D.prototype.length = function() {
  * @return {Vec2D} nová instance Vec2D
  */
 Vec2D.prototype.normalized = function() {
-	var l = this.length();
-	if (l === 0.0) return new Vec2D(0, 0);
-	return new Vec2D(this.x / l, this.y / l);
+	let len = this.length();
+	if (len === 0.0) return new Vec2D(0, 0);
+	return new Vec2D(this.x / len, this.y / len);
 };
 
 /**
@@ -270,10 +270,10 @@ Vec3D.prototype.add = function(v) {
  * @throws {TypeError} If m nemá povolený typ
  */
 Vec3D.prototype.mul = function(m) {
-	if (typeof m == "number") {
+	if (typeof m === "number") {
 		return new Vec3D(this.x * m, this.y * m, this.z * m);
 	} else if (m instanceof Mat3) {
-		var res = new Vec3D();
+		let res = new Vec3D();
 		res.x = m.mat[0][0] * this.x + m.mat[1][0] * this.y + m.mat[2][0] * this.z;
 		res.y = m.mat[0][1] * this.x + m.mat[1][1] * this.y + m.mat[2][1] * this.z;
 		res.z = m.mat[0][2] * this.x + m.mat[1][2] * this.y + m.mat[2][2] * this.z;
@@ -281,7 +281,7 @@ Vec3D.prototype.mul = function(m) {
 	} else if (m instanceof Vec3D) {
 		return new Vec3D(this.x * m.x, this.y * m.y, this.z * m.z);
 	} else if (m instanceof Quat) {
-		var p = new Quat(0,this.x,this.y,this.z);
+		let p = new Quat(0, this.x, this.y, this.z);
 		p = m.mulR(p).mulR(m.inv());
 		return new Vec3D(p.i, p.j, p.k);
 	} else {
@@ -330,7 +330,7 @@ Vec3D.prototype.length = function() {
  * @return {Vec3D} nová instance Vec3D
  */
 Vec3D.prototype.normalized = function() {
-	var len = this.length();
+	let len = this.length();
 	if (len === 0) return new Vec3D(0, 0, 0);
 	return new Vec3D(this.x / len, this.y / len, this.z / len);
 };
@@ -415,10 +415,10 @@ var Point3D = function(ax, ay, az, aw) {
  * @throws {TypeError} If m není číslo, Mat4 ani Quat
  */
 Point3D.prototype.mul = function(m) {
-	if (typeof m == "number") {
+	if (typeof m === "number") {
 		return new Point3D(this.x * m, this.y * m, this.z * m, this.w * m);
 	} else if (m instanceof Mat4) {
-		var res = new Point3D();
+		let res = new Point3D();
 		res.x = m.mat[0][0] * this.x + m.mat[1][0] * this.y + m.mat[2][0] * this.z + m.mat[3][0] * this.w;
 		res.y = m.mat[0][1] * this.x + m.mat[1][1] * this.y + m.mat[2][1] * this.z + m.mat[3][1] * this.w;
 		res.z = m.mat[0][2] * this.x + m.mat[1][2] * this.y + m.mat[2][2] * this.z + m.mat[3][2] * this.w;
@@ -464,7 +464,7 @@ Point3D.prototype.sub = function(p) {
  * @return {Vec3D} nová instance Vec3D
  */
 Point3D.prototype.dehomog = function() {
-	if (this.w === 0) return new Vec3D(0,0,0);
+	if (this.w === 0) return new Vec3D(0, 0, 0);
 	return new Vec3D(this.x / this.w, this.y / this.w, this.z / this.w);
 };
 
@@ -616,7 +616,7 @@ Quat.prototype.mulL = function(q) {
  * @throws {TypeError} If q není Quat ani číslo
  */
 Quat.prototype.mul = function(q) {
-	if (typeof q == "number") {
+	if (typeof q === "number") {
 		return new Quat(q * this.r, q * this.i, q * this.j, q * this.k);
 	}
 	else if (q instanceof Quat) {
@@ -639,7 +639,7 @@ Quat.prototype.norma = function() {
  * @return {Quat} nová instance Quat
  */
 Quat.prototype.inv = function() {
-	var norm = this.norma();
+	let norm = this.norma();
 	norm = norm * norm;
 	if (norm > 0) {
 		return new Quat(this.r / norm, -this.i / norm, -this.j / norm, -this.k / norm);
@@ -653,7 +653,7 @@ Quat.prototype.inv = function() {
  * @return {Quat} nová instance Quat
  */
 Quat.prototype.log = function() {
-	if ((this.i === 0) && (this.j === 0) && (this.k === 0)) {
+	if (this.i === 0 && this.j === 0 && this.k === 0) {
 		if (this.r > 0) {
 			return new Quat(Math.log(this.r), 0, 0, 0);
 		} else if (this.r < 0) {
@@ -662,8 +662,8 @@ Quat.prototype.log = function() {
 			return new Quat();
 		}
 	} else {
-		var s = Math.sqrt(this.i * this.i + this.j * this.j + this.k * this.k);
-		var a = Math.atan2(s, this.r) / s;
+		let s = Math.sqrt(this.i * this.i + this.j * this.j + this.k * this.k);
+		let a = Math.atan2(s, this.r) / s;
 		return new Quat(Math.log(this.norma()), a * this.i, a * this.j, a * this.k);
 	}
 };
@@ -673,11 +673,11 @@ Quat.prototype.log = function() {
  * @return {Quat} nová instance Quat
  */
 Quat.prototype.exp = function() {
-	if ((this.i === 0) && (this.j === 0) && (this.k === 0)) {
+	if (this.i === 0 && this.j === 0 && this.k === 0) {
 		return new Quat(Math.exp(this.r), 0, 0, 0);
 	} else {
-		var s = Math.sqrt(this.i * this.i + this.j * this.j + this.k * this.k);
-		var cos = Math.cos(s);
+		let s = Math.sqrt(this.i * this.i + this.j * this.j + this.k * this.k);
+		let cos = Math.cos(s);
 		s = Math.exp(this.r) * Math.sin(s) / s;
 		return new Quat(Math.exp(this.r) * cos, s * this.i, s * this.j, s * this.k);
 	}
@@ -709,7 +709,7 @@ Quat.prototype.dot = function(q) {
  * @return {Quat} nová instance Quat
  */
 Quat.prototype.renorm = function() {
-	var norm = this.norma();
+	let norm = this.norma();
 	if (norm > 0) {
 		return new Quat(this.r / norm, this.i / norm, this.j / norm, this.k / norm);
 	} else {
@@ -722,18 +722,18 @@ Quat.prototype.renorm = function() {
  * @return {Mat4} nová instance Mat4
  */
 Quat.prototype.toRotationMatrix = function() {
-	var res = new Mat4Identity();
+	let res = new Mat4Identity();
 	this.renorm();
 	res.mat[0][0] = 1 - 2 * (this.j * this.j + this.k * this.k);
-	res.mat[1][0] = 2 * (this.i * this.j - this.r * this.k);
-	res.mat[2][0] = 2 * (this.r * this.j + this.i * this.k);
+	res.mat[1][0] = 	2 * (this.i * this.j - this.r * this.k);
+	res.mat[2][0] = 	2 * (this.r * this.j + this.i * this.k);
 
-	res.mat[0][1] = 2 * (this.i * this.j + this.r * this.k);
+	res.mat[0][1] = 	2 * (this.i * this.j + this.r * this.k);
 	res.mat[1][1] = 1 - 2 * (this.i * this.i + this.k * this.k);
-	res.mat[2][1] = 2 * (this.k * this.j - this.i * this.r);
+	res.mat[2][1] = 	2 * (this.k * this.j - this.i * this.r);
 
-	res.mat[0][2] = 2 * (this.i * this.k - this.r * this.j);
-	res.mat[1][2] = 2 * (this.k * this.j + this.i * this.r);
+	res.mat[0][2] = 	2 * (this.i * this.k - this.r * this.j);
+	res.mat[1][2] = 	2 * (this.k * this.j + this.i * this.r);
 	res.mat[2][2] = 1 - 2 * (this.i * this.i + this.j * this.j);
 	return res;
 };
@@ -752,8 +752,8 @@ var Quat2 = {};
  */
 Quat2.fromRotationMatrix = function(mat) {
 	if (mat instanceof Mat4) {
-		var r, i, j, k;
-		var diagonal = mat.mat[0][0] + mat.mat[1][1] + mat.mat[2][2];
+		let r, i, j, k;
+		let diagonal = mat.mat[0][0] + mat.mat[1][1] + mat.mat[2][2];
 
 		if (diagonal > 0.0) {
 			r = (0.5 * Math.sqrt(diagonal + mat.mat[3][3]));
@@ -761,16 +761,14 @@ Quat2.fromRotationMatrix = function(mat) {
 			j = (mat.mat[0][2] - mat.mat[2][0]) / (4 * r);
 			k = (mat.mat[1][0] - mat.mat[0][1]) / (4 * r);
 		} else {
-			var indices = new Array( 1, 2, 0 );
-			var a = 0, b, c;
+			let indices = [1, 2, 0];
+			let a = 0;
 
-			if (mat.mat[1][1] > mat.mat[0][0])
-				a = 1;
-			if (mat.mat[2][2] > mat.mat[a][a])
-				a = 2;
+			if (mat.mat[1][1] > mat.mat[0][0]) a = 1;
+			if (mat.mat[2][2] > mat.mat[a][a]) a = 2;
 
-			b = indices[a];
-			c = indices[b];
+			let b = indices[a];
+			let c = indices[b];
 
 			diagonal = mat.mat[a][a] - mat.mat[b][b] - mat.mat[c][c] + mat.mat[3][3];
 			r = (0.5 * Math.sqrt(diagonal));
@@ -793,12 +791,12 @@ Quat2.fromRotationMatrix = function(mat) {
  * @throws {TypeError} If některý z parametrů není číslo
  */
 Quat2.fromEulerAngles = function(a, b, c) {
-	if (arguments.length != 3) {
+	if (arguments.length !== 3) {
 		throw new TypeError("Quat, fromEulerAngles: Neplatný počet parametrů: musí být 3");
-	} else if (typeof a == "number" && typeof b == "number" && typeof c == "number") {
-		var Qi = Quat2.fromEulerAngle(a, 1, 0, 0);
-		var Qj = Quat2.fromEulerAngle(b, 0, 1, 0);
-		var Qk = Quat2.fromEulerAngle(c, 0, 0, 1);
+	} else if (typeof a === "number" && typeof b === "number" && typeof c === "number") {
+		let Qi = Quat2.fromEulerAngle(a, 1, 0, 0);
+		let Qj = Quat2.fromEulerAngle(b, 0, 1, 0);
+		let Qk = Quat2.fromEulerAngle(c, 0, 0, 1);
 		return new Quat(Qk.mul(Qj).mul(Qi));
 	} else {
 		throw new TypeError("Quat, fromEulerAngles: Neplatný parametr: musí být číslo");
@@ -815,9 +813,9 @@ Quat2.fromEulerAngles = function(a, b, c) {
  * @throws {TypeError} If některý z parametrů není číslo
  */
 Quat2.fromEulerAngle = function(angle, a, b, c) {
-	if (arguments.length != 4) {
+	if (arguments.length !== 4) {
 		throw new TypeError("Quat, fromEulerAngle: Neplatný počet parametrů: musí být 4");
-	} else if (typeof angle == "number" && typeof a == "number" && typeof b == "number" && typeof c == "number") {
+	} else if (typeof angle === "number" && typeof a === "number" && typeof b === "number" && typeof c === "number") {
 		return new Quat(
 			Math.cos(angle / 2),
 			Math.sin(angle / 2) * a,
@@ -834,12 +832,12 @@ Quat2.fromEulerAngle = function(angle, a, b, c) {
  * @return {Point3D} nová instance Point3D
  */
 Quat.prototype.toEulerAngle = function() {
-	var angle = 2 * Math.acos(this.r);
-	var x = this.i;
-	var y = this.j;
-	var z = this.k;
+	let angle = 2 * Math.acos(this.r);
+	let x = this.i;
+	let y = this.j;
+	let z = this.k;
 
-	var s = Math.sqrt(x * x + y * y + z * z);
+	let s = Math.sqrt(x * x + y * y + z * z);
 	if (s < 0.0001) {
 		return new Point3D(angle, 1.0, 0.0, 0.0);
 	} else {
@@ -855,9 +853,9 @@ Quat.prototype.toEulerAngle = function() {
  * @throws {TypeError} If q není Quat nebo t není číslo
  */
 Quat.prototype.lerp = function(q, t) {
-	if (arguments.length != 2) {
+	if (arguments.length !== 2) {
 		throw new TypeError("Quat, lerp: Neplatný počet parametrů: musí být 2");
-	} else if (q instanceof Quat && typeof t == "number") {
+	} else if (q instanceof Quat && typeof t === "number") {
 		if (t >= 1) {
 			return new Quat(q);
 		} else if (t <= 0) {
@@ -878,27 +876,30 @@ Quat.prototype.lerp = function(q, t) {
  * @throws {TypeError} If q není Quat nebo t není číslo
  */
 Quat.prototype.slerp = function(q, t) {
-	if (arguments.length != 2) {
+	if (arguments.length !== 2) {
 		throw new TypeError("Quat, lerp: Neplatný počet parametrů: musí být 2");
-	} else if (q instanceof Quat && typeof t == "number") {
-		var c = this.dot(q);
+	} else if (q instanceof Quat && typeof t === "number") {
+		let c = this.dot(q);
 		if (c > 1.0) {
 			c = 1.0;
 		} else if (c < -1.0) {
 			c = -1.0;
 		}
-		var uhel = Math.acos(c);
+		let uhel = Math.acos(c);
 		if (Math.abs(uhel) < 1.0e-5) {
 			return new Quat(this);
 		}
-		var s = 1 / Math.sin(uhel);
+		let s = 1 / Math.sin(uhel);
 		if (t >= 1) {
 			return new Quat(this);
 		} else if (t <= 0) {
 			return new Quat(q);
 		} else {
-			return new Quat(this.renorm().mul(Math.sin((1 - t) * uhel) * s)
-					.add(q.renorm().mul(Math.sin(t * uhel) * s))).renorm();
+			return new Quat(
+				this.renorm()
+					.mul(Math.sin((1 - t) * uhel) * s)
+					.add(q.renorm().mul(Math.sin(t * uhel) * s))
+				).renorm();
 		}
 	} else {
 		throw new TypeError("Quat, lerp: Neplatný parametr: musí být Quat a číslo");
@@ -915,9 +916,9 @@ Quat.prototype.slerp = function(q, t) {
  * @throws {TypeError} If q, q1, q2 nejsou Quat nebo t není číslo
  */
 Quat.prototype.squad = function(q, q1, q2, t) {
-	if (arguments.length != 4) {
+	if (arguments.length !== 4) {
 		throw new TypeError("Quat, squad: Neplatný počet parametrů: musí být 4");
-	} else if (q instanceof Quat && q1 instanceof Quat && q2 instanceof Quat && typeof t == "number") {
+	} else if (q instanceof Quat && q1 instanceof Quat && q2 instanceof Quat && typeof t === "number") {
 		return new Quat(this.slerp(q, t).slerp(q1.slerp(q2, t), (2 * t * (1 - t))));
 	} else {
 		throw new TypeError("Quat, squad: Neplatný parametr: musí být Quat a číslo");
@@ -932,11 +933,11 @@ Quat.prototype.squad = function(q, q1, q2, t) {
  * @throws {TypeError} If q1 nebo q2 není Quat
  */
 Quat.prototype.quadrangle = function(q1, q2) {
-	if (arguments.length != 2) {
+	if (arguments.length !== 2) {
 		throw new TypeError("Quat, quadrangle: Neplatný počet parametrů: musí být 2");
 	} else if (q1 instanceof Quat && q2 instanceof Quat) {
-		var s1 = this.inv().mul(q1);
-		var s2 = this.inv().mul(q2);
+		let s1 = this.inv().mul(q1);
+		let s2 = this.inv().mul(q2);
 		return new Quat((s1.log().add(s2.log()).mul(-1 / 4)).exp());
 	} else {
 		throw new TypeError("Quat, quadrangle: Neplatný parametr: musí být Quat");
@@ -953,11 +954,11 @@ Quat.prototype.quadrangle = function(q1, q2) {
  * @throws {TypeError} If q1, q2, q3 nejsou Quat nebo t není číslo
  */
 Quat.prototype.squad2 = function(q1, q2, q3, t) {
-	if (arguments.length != 4) {
+	if (arguments.length !== 4) {
 		throw new TypeError("Quat, squad2: Neplatný počet parametrů: musí být 4");
-	} else if (q1 instanceof Quat && q2 instanceof Quat && q3 instanceof Quat && typeof t == "number") {
-		var s1 = this.quadrangle(q1, q2);
-		var s2 = q2.quadrangle(this, q3);
+	} else if (q1 instanceof Quat && q2 instanceof Quat && q3 instanceof Quat && typeof t === "number") {
+		let s1 = this.quadrangle(q1, q2);
+		let s2 = q2.quadrangle(this, q3);
 		return new Quat(this.slerp(q2, t).slerp(s1.slerp(s2, t), (2 * t * (1 - t))));
 	} else {
 		throw new TypeError("Quat, squad2: Neplatný parametr: musí být Quat a číslo");
@@ -1303,8 +1304,8 @@ var Mat4PerspRH = function(alpha, k, zn, zf) {
 		throw new TypeError("Mat4PerspRH: Neplatný parametr: musí být číslo");
 	}
 
-	var h = (1.0 / Math.tan(alpha / 2.0));
-	var w = k * h;
+	let h = (1.0 / Math.tan(alpha / 2.0));
+	let w = k * h;
 	this.mat = new Mat4Identity().mat;
 	this.mat[0][0] = w;
 	this.mat[1][1] = h;
@@ -1462,7 +1463,7 @@ Mat4Transl.prototype.parent = Mat4;
  * @throws {TypeError} If některý z argumentů není zadán nebo není číslem
  */
 var Mat4ViewRH = function(e, v, u) {
-	if (arguments.length != 3) {
+	if (arguments.length !== 3) {
 		throw new TypeError("Mat4ViewRH: Neplatný počet parametrů: musí být 3");
 	}
 	if (!(e instanceof Vec3D) || !(v instanceof Vec3D) || !(u instanceof Vec3D)) {
@@ -1470,9 +1471,9 @@ var Mat4ViewRH = function(e, v, u) {
 	}
 
 	this.mat = new Mat4Identity().mat;
-	var z = v.mul(-1.0).normalized();
-	var x = u.cross(z).normalized();
-	var y = z.cross(x);
+	let z = v.mul(-1.0).normalized();
+	let x = u.cross(z).normalized();
+	let y = z.cross(x);
 
 	this.mat[0][0] = x.x;
 	this.mat[1][0] = x.y;
