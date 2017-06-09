@@ -1615,7 +1615,8 @@ Camera.prototype.computeMatrix = function() {
 	this.eyeVector = new Vec3D(
 			Math.sin(-this.azimuth) * Math.cos(this.zenith),
 			Math.cos(-this.azimuth) * Math.cos(this.zenith),
-			Math.sin(this.zenith));
+			Math.sin(this.zenith)
+		);
 	if (this.firstPerson) {
 		this.eye = new Vec3D(this.pos);
 		this.view = new Mat4ViewRH(
@@ -1632,12 +1633,12 @@ Camera.prototype.computeMatrix = function() {
 		this.view = new Mat4ViewRH(
 				this.eye,
 				this.eyeVector.mul(this.radius),
-					new Vec3D(
-						Math.sin(-this.azimuth) * Math.cos(this.zenith + Math.PI / 2),
-						Math.cos(-this.azimuth) * Math.cos(this.zenith + Math.PI / 2),
-						Math.sin(this.zenith + Math.PI / 2)
-					)
-				);
+				new Vec3D(
+					Math.sin(-this.azimuth) * Math.cos(this.zenith + Math.PI / 2),
+					Math.cos(-this.azimuth) * Math.cos(this.zenith + Math.PI / 2),
+					Math.sin(this.zenith + Math.PI / 2)
+				)
+			);
 	}
 };
 
@@ -1646,7 +1647,7 @@ Camera.prototype.computeMatrix = function() {
  * @param {number} ang
  */
 Camera.prototype.addAzimuth = function(ang) {
-	if (typeof ang == "number") {
+	if (typeof ang === "number") {
 		this.azimuth += ang;
 		this.computeMatrix();
 	} else {
@@ -1660,7 +1661,7 @@ Camera.prototype.addAzimuth = function(ang) {
  * @throws {TypeError} If ang není číslo
  */
 Camera.prototype.setAzimuth = function(ang) {
-	if (typeof ang == "number") {
+	if (typeof ang === "number") {
 		this.azimuth = ang;
 		this.computeMatrix();
 	} else {
@@ -1674,7 +1675,7 @@ Camera.prototype.setAzimuth = function(ang) {
  * @throws {TypeError} If ang není číslo
  */
 Camera.prototype.addZenith = function(ang) {
-	if (typeof ang == "number") {
+	if (typeof ang === "number") {
 		if (Math.abs(this.zenith + ang) <= Math.PI / 2) {
 			this.zenith += ang;
 			this.computeMatrix();
@@ -1690,7 +1691,7 @@ Camera.prototype.addZenith = function(ang) {
  * @throws {TypeError} If ang není číslo
  */
 Camera.prototype.setZenith = function(ang) {
-	if (typeof ang == "number") {
+	if (typeof ang === "number") {
 		this.zenith = ang;
 		this.computeMatrix();
 	} else {
@@ -1704,9 +1705,9 @@ Camera.prototype.setZenith = function(ang) {
  * @throws {TypeError} If dist není číslo
  */
 Camera.prototype.addRadius = function(dist) {
-	if (typeof dist == "number") {
+	if (typeof dist === "number") {
 		if (this.radius + dist < 0.1) {
-		  this.radius = 0.1;
+			this.radius = 0.1;
 		} else {
 			this.radius += dist;
 			this.computeMatrix();
@@ -1722,7 +1723,7 @@ Camera.prototype.addRadius = function(dist) {
  * @throws {TypeError} If dist není číslo
  */
 Camera.prototype.setRadius = function(dist) {
-	if (typeof dist == "number") {
+	if (typeof dist === "number") {
 		this.radius = dist;
 		this.computeMatrix();
 	} else {
@@ -1736,9 +1737,9 @@ Camera.prototype.setRadius = function(dist) {
  * @throws {TypeError} If scale není číslo
  */
 Camera.prototype.mulRadius = function(scale) {
-	if (typeof scale == "number") {
+	if (typeof scale === "number") {
 		if (this.radius * scale < 0.1) {
-		  this.radius = 0.1;
+			this.radius = 0.1;
 		} else {
 			this.radius *= scale;
 			this.computeMatrix();
@@ -1754,20 +1755,20 @@ Camera.prototype.mulRadius = function(scale) {
  * @throws {TypeError} If speed není číslo
  */
 Camera.prototype.forward = function(speed) {
-	if (typeof speed == "number") {
+	if (typeof speed === "number") {
 		if (!this.xy) {
 			this.pos = this.pos.add(new Vec3D(
 				(Math.cos(this.azimuth - Math.PI / 2) * Math.cos(this.zenith + Math.PI)),
 				(Math.sin(this.azimuth - Math.PI / 2) * Math.cos(this.zenith + Math.PI)),
 				Math.sin(this.zenith)).mul(speed)
-				);
+			);
 		} else {
 			this.pos = this.pos.add(
-					new Vec3D(
-						Math.cos(this.azimuth - Math.PI / 2),
-						Math.sin(this.azimuth - Math.PI / 2),
-						0.0
-					).mul(-speed)
+				new Vec3D(
+					Math.cos(this.azimuth - Math.PI / 2),
+					Math.sin(this.azimuth - Math.PI / 2),
+					0.0
+				).mul(-speed)
 			);
 		}
 		this.computeMatrix();
@@ -1782,7 +1783,7 @@ Camera.prototype.forward = function(speed) {
  * @throws {TypeError} If speed není číslo
  */
 Camera.prototype.backward = function(speed) {
-	if (typeof speed == "number") {
+	if (typeof speed === "number") {
 		this.forward(-speed);
 	} else {
 		throw new TypeError("Camera, backward: Neplatný parametr: musí být číslo");
@@ -1795,7 +1796,7 @@ Camera.prototype.backward = function(speed) {
  * @throws {TypeError} If speed není číslo
  */
 Camera.prototype.right = function(speed) {
-	if (typeof speed == "number") {
+	if (typeof speed === "number") {
 		this.pos = this.pos.add(
 			new Vec3D(Math.cos(this.azimuth), Math.sin(this.azimuth), 0).mul(speed)
 		);
@@ -1811,7 +1812,7 @@ Camera.prototype.right = function(speed) {
  * @throws {TypeError} If speed není číslo
  */
 Camera.prototype.left = function(speed) {
-	if (typeof speed == "number") {
+	if (typeof speed === "number") {
 		this.right(-speed);
 	} else {
 		throw new TypeError("Camera, left: Neplatný parametr: musí být číslo");
@@ -1824,7 +1825,7 @@ Camera.prototype.left = function(speed) {
  * @throws {TypeError} If speed není číslo
  */
 Camera.prototype.down = function(speed) {
-	if (typeof speed == "number") {
+	if (typeof speed === "number") {
 		this.pos.z -= speed;
 		this.computeMatrix();
 	} else {
@@ -1838,7 +1839,7 @@ Camera.prototype.down = function(speed) {
  * @throws {TypeError} If speed není číslo
  */
 Camera.prototype.up = function(speed) {
-	if (typeof speed == "number") {
+	if (typeof speed === "number") {
 		this.pos.z += speed;
 		this.computeMatrix();
 	} else {
@@ -1880,7 +1881,7 @@ Camera.prototype.setPosition = function(apos) {
  * @throws {TypeError} If fp není boolean
  */
 Camera.prototype.setFirstPerson = function(fp) {
-	if (typeof fp == "boolean") {
+	if (typeof fp === "boolean") {
 		this.firstPerson = fp;
 		this.computeMatrix();
 	} else {
@@ -1912,18 +1913,18 @@ var Col = function (ar, ag, ab, aa) {
 		this.a = ar.w;
 	// jsou 3 nebo 4 parametry a jsou to celá čísla, pak se předpokládá interval <0; 255>
 	// !!! pozor např. r=1, g=0, b=1 projde podmínkami
-	} else if ((arguments.length == 3 || arguments.length == 4) &&
+	} else if ((arguments.length === 3 || arguments.length === 4) &&
 			this.isInt(ar) && this.isInt(ag) && this.isInt(ab)) {
 		this.r = ar / 255.0;
 		this.g = ag / 255.0;
 		this.b = ab / 255.0;
 		this.a = (this.isInt(aa)) ? aa / 255.0 : 1.0;
 	// jsou 3 nebo 4 parametry a nejsou to celá čísla, pak se předpokládá interval <0; 1>
-	} else if (arguments.length == 3 || arguments.length == 4) {
-		this.r = (typeof ar == "number") ? ar : 1.0;
-		this.g = (typeof ag == "number") ? ag : 1.0;
-		this.b = (typeof ab == "number") ? ab : 1.0;
-		this.a = (typeof aa !== "undefined" && typeof aa == "number") ? aa : 1.0;
+	} else if (arguments.length === 3 || arguments.length === 4) {
+		this.r = (typeof ar === "number") ? ar : 1.0;
+		this.g = (typeof ag === "number") ? ag : 1.0;
+		this.b = (typeof ab === "number") ? ab : 1.0;
+		this.a = (typeof aa !== "undefined" && typeof aa === "number") ? aa : 1.0;
 	} else {
 		throw new TypeError("Col: Neplatný parametr.");
 	}
@@ -1959,7 +1960,7 @@ Col.prototype.addna = function(c) {
  * @throws {TypeError} If x není číslo
  */
 Col.prototype.mulna = function(x) {
-	if (typeof x == "number") {
+	if (typeof x === "number") {
 		return new Col(this.r * x, this.g * x, this.b * x);
 	} else {
 		throw new TypeError("Col, mulna: Neplatný parametr: musí být číslo");
@@ -1989,7 +1990,7 @@ Col.prototype.add = function(c) {
 Col.prototype.mul = function(c) {
 	if (c instanceof Col) {
 		return new Col(this.r * c.r, this.g * c.g, this.b * c.b, this.a * c.a);
-	} else if (typeof c == "number") {
+	} else if (typeof c === "number") {
 		return new Col(this.r * c, this.g * c, this.b * c, this.a * c);
 	} else {
 		throw new TypeError("Col, mul: Neplatný parametr: musí být Col nebo číslo");
@@ -2003,13 +2004,13 @@ Col.prototype.mul = function(c) {
  * @throws {TypeError} If gamma není číslo
  */
 Col.prototype.gamma = function(gamma) {
-	if (typeof gamma == "number") {
+	if (typeof gamma === "number") {
 		return new Col(
-				Math.pow(this.r, gamma),
-				Math.pow(this.g, gamma),
-				Math.pow(this.b, gamma),
-				this.a
-			);
+			Math.pow(this.r, gamma),
+			Math.pow(this.g, gamma),
+			Math.pow(this.b, gamma),
+			this.a
+		);
 	} else {
 		throw new TypeError("Col, gamma: Neplatný parametr: musí být číslo");
 	}
@@ -2021,11 +2022,11 @@ Col.prototype.gamma = function(gamma) {
  */
 Col.prototype.saturate = function() {
 	return new Col(
-			Math.max(0, Math.min(this.r, 1)),
-			Math.max(0, Math.min(this.g, 1)),
-			Math.max(0, Math.min(this.b, 1)),
-			this.a
-		);
+		Math.max(0, Math.min(this.r, 1)),
+		Math.max(0, Math.min(this.g, 1)),
+		Math.max(0, Math.min(this.b, 1)),
+		this.a
+	);
 };
 
 /**
@@ -2064,7 +2065,7 @@ var Kubika = function(type) {
 	//matice ridicich bodu
 	this.rb;
 
-	switch (typeof type == "number" ? type : 0) {
+	switch (typeof type === "number" ? type : 0) {
 		case 1:// ferguson
 			this.type = 1;
 
@@ -2150,13 +2151,14 @@ var Kubika = function(type) {
  * @throws {TypeError} If některý z paramterů není zadán nebo není Point3D
  */
 Kubika.prototype.init = function(b1, b2, b3, b4) {
-	if (arguments.length != 4) {
+	if (arguments.length !== 4) {
 		throw new TypeError("Kubika, init: Neplatný počet parametrů: musí být 4");
 	} else if (b1 instanceof Point3D && b2 instanceof Point3D && b3 instanceof Point3D && b4 instanceof Point3D) {
-		if (this.type == 1)
+		if (this.type === 1) {
 			this.rb = new Mat4(b1, b4, b2.sub(b1), b4.sub(b3));
-		else
+		} else {
 			this.rb = new Mat4(b1, b2, b3, b4);
+		}
 		this.rb = this.bm.mul(this.rb);
 	} else {
 		throw new TypeError("Kubika, init: Neplatný parametr: musí být Point3D");
@@ -2170,11 +2172,11 @@ Kubika.prototype.init = function(b1, b2, b3, b4) {
  * @throws {TypeError} If t není číslo
  */
 Kubika.prototype.compute = function(t) {
-	if (typeof t == "number") {
+	if (typeof t === "number") {
 		if (t > 1) t = 1;
 		if (t < 0) t = 0;
 
-		var res = new Point3D(t * t * t, t * t, t, 1);
+		let res = new Point3D(t * t * t, t * t, t, 1);
 
 		res = res.mul(this.rb);
 		res.w = 1;
@@ -2236,7 +2238,7 @@ Bikubika.prototype.init = function(
  * @throws {TypeError} If u nebo v není číslo
  */
 Bikubika.prototype.compute = function(u, v) {
-	if (typeof u == "number" && typeof v == "number") {
+	if (typeof u === "number" && typeof v === "number") {
 		if (u > 1) u = 1;
 		if (u < 0) u = 0;
 		if (v > 1) v = 1;
