@@ -98,7 +98,7 @@ var Rotation = (function() {
 	};
 
 	/**
-	 * Function removes DeviceOrientationEvent listener - only of it is supported and added before.
+	 * Function removes DeviceOrientationEvent listener - only if it is supported and added before.
 	 * @public
 	 */
 	Rotation.finish = function() {

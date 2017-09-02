@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @description Tento soubor obsahuje soubor objektů a funkcí umožňující
  *  použivat vektorové a maticové výpočty v JavaScriptu. Navíc obsahuje
@@ -15,8 +17,6 @@
  * 
  * @version 1.1
  */
-
-"use strict";
 
 /**
  * Vytvoření matice o zvoleném rozměru obsahující nuly
