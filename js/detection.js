@@ -434,7 +434,18 @@ var Detection = (function() {
 			};
 			send(obj);
 		} else {
-			let sumMax = 0, sumX = 0, sumY = 0, sumCount = 0;
+			// weighted mean of values
+			// weight is getting lower with age of the value
+			// weight is given by the sequence, last having 100%, first (oldest) the least of given fraction
+			let a = dataToSend;
+			let weight = a.map((val, index) => (1 / a.length) * (index + 1)).reduce((a, b) => a + b);
+			let max = a.map((val, index) => val.max * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
+			let coordX = a.map((val, index) => val.x * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
+			let coordY = a.map((val, index) => val.y * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
+			let count = a.map((val, index) => val.count * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
+
+			//console.log(weight, max, coordX, coordY, count);
+			/*let sumMax = 0, sumX = 0, sumY = 0, sumCount = 0;
 			for (let i = 0; i < dataToSend.length; i++) {
 				sumMax += dataToSend[i].max;
 				sumX += dataToSend[i].x;
@@ -445,9 +456,11 @@ var Detection = (function() {
 			let max = sumMax / dataToSend.length;
 			let coordX = sumX / dataToSend.length;
 			let coordY = sumY / dataToSend.length;
-			let count = sumCount / dataToSend.length;
+			let count = sumCount / dataToSend.length;*/
 			// clear dataToSend
-			dataToSend.length = 0;
+			// dataToSend.length = 0;
+			// leave last 4 values
+			dataToSend = a.slice(a.length - 4)
 
 			let obj = {
 				type: "marker",
