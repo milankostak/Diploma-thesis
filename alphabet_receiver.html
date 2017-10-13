@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Receiver</title>
+<script type="text/javascript" src="/js/transforms3d.js"></script>
+<script type="text/javascript" src="/js/webgl-utils.js"></script>
+<script type="text/javascript" src="/js/math2.js"></script>
+<script type="text/javascript" src="/js/ws.js"></script>
+<script id="shader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+
+	uniform sampler2D texture;
+
+	varying vec4 color;
+	varying vec2 textureCoord;
+	
+	void main(void) {
+		vec4 finalColor = color;
+		finalColor = texture2D(texture, textureCoord);
+		gl_FragColor = finalColor;
+	}
+</script>
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	attribute vec2 aTextureCoord;
+	
+	uniform mat4 projection;
+	uniform mat4 modelview;
+		
+	varying vec4 color;
+	varying vec2 textureCoord;
+
+	void main(void) {
+		textureCoord = aTextureCoord;
+		color = aVertexColor;
+		gl_Position = projection * modelview * vec4(aVertexPosition, 1.0);
+	}
+</script>
+<script type="text/javascript">
+	"use strict";
+
+	// HTMLCanvasElement
+	var canvas;
+	// WebGLRenderingContext
+	var gl;
+	// WebGLProgram
+	var program;
+	// WebGLBuffer
+	var vertexBuffer, indexBuffer, colorBuffer, textureBuffer;
+	// Mat4PerspRH
+	var projection;
+	// WebGLTexture
+	var alphabetTexture, borderTexture;
+	// Mat4
+	var rotation, translation;
+	//  Camera
+	var camera;
+	// number, holds indices count of block object without face object
+	var blockIndices;
+	// number, hoding last received rotation
+	var lastRotation = 0;
+	// numbers, holding last recived data for computing relative change
+	var lastMarkerX = 0, lastMarkerY = 0;
+	// numbers, holding last sequence number for skipping delayed packets
+	var lastReceivedRotationSocketSequence = -1, lastReceivedMarkerSocketSequence = -1;
+	// boolean, if position data sequence should be restarted
+	var toBeRestarted = true;
+
+	/**
+	 * Init scene and buffers
+	 */	
+	function initBuffers() {
+		let scene = new Utils.Scene();
+		let or = new Mat3RotX(Math.PI / 2);
+		scene.add(new Utils.Face(1, 1, 1, -0.1, 0, {color: [0, 0, 0, 0], strip: false, orientation: or}));
+		blockIndices = scene.indices.length;
+		scene.add(new Utils.Face(7, 4, 0, 0, 0, {color: [0, 0, 0, 0], strip: false, orientation: or}));
+
+		vertexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.vertices), gl.STATIC_DRAW);
+		vertexBuffer.itemSize = 3;
+		vertexBuffer.numItems = scene.vertices.length;
+
+		colorBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.colors), gl.STATIC_DRAW);
+		colorBuffer.itemSize = 4;
+		colorBuffer.numItems = scene.colors.length;
+
+		indexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(scene.indices), gl.STATIC_DRAW);
+		indexBuffer.itemSize = 1;
+		indexBuffer.numItems = scene.indices.length;
+
+		textureBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.textureCoords), gl.STATIC_DRAW);
+		textureBuffer.itemSize = 2;
+		textureBuffer.numItems = scene.textureCoords.length;
+	}
+
+	/**
+	 * Main repaint function
+	 */
+	function repaint() {
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		
+		gl.useProgram(program);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.vertexAttribPointer(program.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+		gl.vertexAttribPointer(program.vertexColor, colorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.vertexAttribPointer(program.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+		
+		// draw alphabet
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, alphabetTexture);
+		let modelView = Utils.convert(camera.view);
+		gl.uniformMatrix4fv(program.modelview, false, modelView);
+		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems - blockIndices, gl.UNSIGNED_SHORT, blockIndices * 2);
+
+		// draw border
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, borderTexture);
+		gl.uniformMatrix4fv(program.projection, false, projection);
+		modelView = Utils.convert(
+			rotation.mul(translation).mul(camera.view)
+		);
+		gl.uniformMatrix4fv(program.modelview, false, modelView);
+		gl.drawElements(gl.TRIANGLES, blockIndices, gl.UNSIGNED_SHORT, 0);
+	}
+
+	window.onload = function() {
+		canvas = document.querySelector("canvas");
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight-5;
+		gl = Utils.initWebGL(canvas);
+
+		gl.clearColor(0.1, 0.1, 0.1, 1);
+		gl.disable(gl.DEPTH_TEST);
+
+		gl.enable(gl.BLEND);
+		gl.blendEquation(gl.FUNC_ADD);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+		gl.enable(gl.CULL_FACE);
+		gl.frontFace(gl.CCW);
+		gl.cullFace(gl.BACK);
+
+		program = gl.createProgram();
+		Utils.initShaders(gl, program, "shader-vs", "shader-fs");
+		gl.linkProgram(program);
+		gl.useProgram(program);
+		
+		gl.viewport(0, 0, canvas.width, canvas.height);
+		program.vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
+		gl.enableVertexAttribArray(program.vertexPositionAttribute);
+
+		program.vertexColor = gl.getAttribLocation(program, "aVertexColor");
+		gl.enableVertexAttribArray(program.vertexColor);
+
+		program.vertexTexCoordAttribute = gl.getAttribLocation(program, "aTextureCoord");
+		gl.enableVertexAttribArray(program.vertexTexCoordAttribute);
+
+		program.projection = gl.getUniformLocation(program, "projection");
+		program.modelview = gl.getUniformLocation(program, "modelview");
+		program.texture = gl.getUniformLocation(program, "texture");
+
+		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		rotation = new Mat4RotY(-Math.PI/2)
+		translation = new Mat4Identity();
+		camera = new Camera();
+		camera.setAzimuth(Math2.toRadians(0));
+		camera.setZenith(Math2.toRadians(0));
+		camera.setPosition(new Vec3D(0, -10, 0));
+
+		initBuffers();
+
+		WS.setWebSocket(() => {}, onWsMessage, () => {});
+
+		Utils.initRequestAnimationFrame();
+
+		let img = new Image();
+		img.src = "alphabet.png";
+		img.onload = function () {
+			alphabetTexture = gl.createTexture();
+			refreshTexture(img, alphabetTexture);
+			let img2 = new Image();
+			img2.src = "border.png";
+			img2.onload = function () {
+				borderTexture = gl.createTexture();
+				refreshTexture(img2, borderTexture);
+				animate();
+			};
+		};
+	};
+
+	function animate() {
+		repaint();
+		requestAnimFrame(animate);
+	}
+
+	function translate(x, y, divisor) {
+		translation = translation.mul(new Mat4Transl(x/divisor, 0, -y/divisor));
+	}
+
+	function onWsMessage(data) {
+
+		if (data.type === "rotation") {
+			doRotation(data);
+
+		} else if (data.type === "image") {
+			let img = document.querySelector("img");
+			img.src = data.dataUrl;
+			img.style.display = "none";
+			img.onload = function() {
+				alphabetTexture = gl.createTexture();
+				refreshTexture(img, alphabetTexture);
+				console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
+			};
+
+		} else if (data.type === "marker") {
+			doPosition(data);
+		}
+	}
+
+	function doRotation(data) {
+		// start or restart
+		if (data.sequence <= 2) {
+			lastReceivedRotationSocketSequence = -1;
+		}
+
+		if (data.sequence > lastReceivedRotationSocketSequence) {
+			lastReceivedRotationSocketSequence = data.sequence;
+
+			let rotDegrees = (Math.sign(data.gamma) > 0) ? 180 - data.beta : data.beta;
+			//console.log(data.beta, data.gamma, rotDegrees);
+
+			// skip big changes, also prevents skipping to 90 degrees which is a situation when phone cannot precisely tell its rotation
+			if (Math.abs(lastRotation - rotDegrees) < 60) {
+				let radiansB = Math2.toRadians(rotDegrees) - Math.PI/2;
+				rotation = new Mat4RotY(radiansB);
+			} else {
+				//console.log("skipping big rotation change");
+			}
+			lastRotation = rotDegrees;
+
+		} else {
+			//console.log("skipping roration data " + data.sequence);
+		}
+	}
+
+	function doPosition(data) {
+		// finish
+		if (data.sequence === -1) {
+			// hide list message
+			document.querySelector("#lost").style.top = "-50px";
+			// prevent any late from showing
+			lastReceivedMarkerSocketSequence = Number.MAX_VALUE;
+			return;
+		}
+
+		// start or restart the sequence so we can skip delayed data
+		// wait for two data sets to be sure
+		// first has sequence 1
+		if (data.sequence <= 2) {
+			lastReceivedMarkerSocketSequence = -1;
+			toBeRestarted = true;
+		}
+
+		if (data.sequence > lastReceivedMarkerSocketSequence) {
+			lastReceivedMarkerSocketSequence = data.sequence;
+			console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
+			//console.log(data.max, lastMarkerX, data.x, lastMarkerY, data.y);
+
+			if (data.count > 0) {
+				if (!toBeRestarted) {
+					translate(lastMarkerX - data.x, lastMarkerY - data.y, 50);
+				}
+				toBeRestarted = false;
+				lastMarkerX = data.x;
+				lastMarkerY = data.y;
+
+				document.querySelector("#lost").style.top = "-50px";
+			} else {
+				document.querySelector("#lost").style.top = "0px";
+			}
+		} else {
+			//console.log("skipping marker data " + data.sequence);
+		}
+	}
+
+	function refreshTexture(img, texture) {
+
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+	}
+
+</script>
+<style type="text/css">
+	* {
+		margin: 0;
+		padding: 0;
+		font-family: Calibri, Arial, sans-serif;
+	}
+	div#lost {
+		font-size: 18px;
+		color: #DDD;
+		padding: 5px 20px;
+		background-color: #FF2222;
+		position: fixed;
+		top: -50px; /* always shown but outside wiewport, shown by zeroing top */
+		left: 45%;
+		transition: all .4s ease-in;
+	}
+	img {
+		display: none;
+	}
+</style>
+</head>
+<body>
+<img src="">
+<canvas></canvas>
+<div id="lost">Marker is lost.</div>
+</body>
+</html>
