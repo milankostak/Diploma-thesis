@@ -61,7 +61,7 @@
 		float thresholdRB = 0.4;
 		float count = 0.0;
 
-		// count it as pixel of interest only if green is high enough and if red,blue not too much
+		// count it as pixel of interest only if green is high enough and red & blue not too much
 		if (pix00.g > thresholdG && pix00.r < thresholdRB && pix00.b < thresholdRB) count += 1.0;
 		if (pix10.g > thresholdG && pix10.r < thresholdRB && pix10.b < thresholdRB) count += 1.0;
 		if (pix20.g > thresholdG && pix20.r < thresholdRB && pix20.b < thresholdRB) count += 1.0;

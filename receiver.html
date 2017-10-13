@@ -161,11 +161,7 @@
 		gl.clearDepth(1.0);
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LEQUAL);
-/*
-		gl.enable(gl.CULL_FACE);
-		gl.frontFace(gl.CCW);
-		gl.cullFace(gl.BACK);
-*/
+
 		program = gl.createProgram();
 		Utils.initShaders(gl, program, "shader-vs", "shader-fs");
 		gl.linkProgram(program);
@@ -549,6 +545,9 @@
 		top: -50px; /* always shown but outside wiewport, shown by zeroing top */
 		left: 45%;
 		transition: all .4s ease-in;
+	}
+	img {
+		display: none;
 	}
 </style>
 </head>
