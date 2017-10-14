@@ -41,7 +41,7 @@ var Detection = (function() {
 	let sendPositionInterval;
 
 	/**
-	 * Public intialization function. Sets all necessary variables.
+	 * Public initialization function. Sets all necessary variables.
 	 * @public
 	 */
 	Detection.init = function() {
@@ -53,7 +53,7 @@ var Detection = (function() {
 	};
 
 	/**
-	 * Init canvas, gl and get texure precision from extension
+	 * Init canvas, gl and get texture precision from extension
 	 * @private
 	 */
 	function initBasics() {
@@ -195,7 +195,7 @@ var Detection = (function() {
 	}
 
 	/**
-	 * Set all thigs that need to know the dimension of source video.
+	 * Set all things that need to know the dimension of source video.
 	 * Function is called when this information is available.
 	 * @public
 	 * @param  {Number} videoWidth  width of source video
