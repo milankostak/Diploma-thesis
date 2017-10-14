@@ -26,6 +26,7 @@ const server = express()
 	.use(bodyParser.json({limit: '5mb'}))
 	.post('/ajax/rotation', receiveData)
 	.post('/ajax/marker', receiveData)
+	.post('/ajax/touch', receiveData)
 	.post('/ajax/picture', receivePicture)
 	.listen(PORT, () => console.log(`App server is running.\nPort number: ${ PORT }`));
 
