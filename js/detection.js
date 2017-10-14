@@ -434,33 +434,49 @@ var Detection = (function() {
 			};
 			send(obj);
 		} else {
+			let a = dataToSend;
+/*
 			// weighted mean of values
 			// weight is getting lower with age of the value
 			// weight is given by the sequence, last having 100%, first (oldest) the least of given fraction
-			let a = dataToSend;
 			let weight = a.map((val, index) => (1 / a.length) * (index + 1)).reduce((a, b) => a + b);
 			let max = a.map((val, index) => val.max * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
 			let coordX = a.map((val, index) => val.x * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
 			let coordY = a.map((val, index) => val.y * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
 			let count = a.map((val, index) => val.count * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
 
+			// leave last 4 values
+			if (dataToSend.length > 4) {
+				dataToSend = a.slice(a.length - 4);
+			// or take away one if there is not enough values
+			} else {
+				dataToSend = a.slice(1);
+			}
+*/
+
 			//console.log(weight, max, coordX, coordY, count);
-			/*let sumMax = 0, sumX = 0, sumY = 0, sumCount = 0;
-			for (let i = 0; i < dataToSend.length; i++) {
-				sumMax += dataToSend[i].max;
-				sumX += dataToSend[i].x;
-				sumY += dataToSend[i].y;
-				sumCount += dataToSend[i].count;
+			let sumMax = 0, sumX = 0, sumY = 0, sumCount = 0;
+			for (let i = 0; i < a.length; i++) {
+				sumMax += a[i].max;
+				sumX += a[i].x;
+				sumY += a[i].y;
+				sumCount += a[i].count;
 			}
 			// send mean of data
-			let max = sumMax / dataToSend.length;
-			let coordX = sumX / dataToSend.length;
-			let coordY = sumY / dataToSend.length;
-			let count = sumCount / dataToSend.length;*/
+			let max = sumMax / a.length;
+			let coordX = sumX / a.length;
+			let coordY = sumY / a.length;
+			let count = sumCount / a.length;
 			// clear dataToSend
-			// dataToSend.length = 0;
-			// leave last 4 values
-			dataToSend = a.slice(a.length - 4)
+			dataToSend.length = 0;
+
+			// keep at least 4 last values
+			/*if (dataToSend.length > 4) {
+				dataToSend = a.slice(a.length - 4);
+			// or take away one if there is not enough values
+			} else {
+				dataToSend = a.slice(1);
+			}*/
 
 			let obj = {
 				type: "marker",
@@ -475,6 +491,10 @@ var Detection = (function() {
 		}
 	}
 
+	/**
+	 * Sends data to server
+	 * @param  {object} objectToSend object of data to be sent
+	 */
 	function send(objectToSend) {
 		let request = new XMLHttpRequest();
 		request.open("POST", "/ajax/marker");
