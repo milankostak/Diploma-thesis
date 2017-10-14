@@ -12,29 +12,24 @@
 
 	uniform sampler2D texture;
 
-	varying vec4 color;
 	varying vec2 textureCoord;
 	
 	void main(void) {
-		vec4 finalColor = color;
-		finalColor = texture2D(texture, textureCoord);
+		vec4 finalColor = texture2D(texture, textureCoord);
 		gl_FragColor = finalColor;
 	}
 </script>
 <script id="shader-vs" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
-	attribute vec4 aVertexColor;
 	attribute vec2 aTextureCoord;
-	
+
 	uniform mat4 projection;
 	uniform mat4 modelview;
-		
-	varying vec4 color;
+
 	varying vec2 textureCoord;
 
 	void main(void) {
 		textureCoord = aTextureCoord;
-		color = aVertexColor;
 		gl_Position = projection * modelview * vec4(aVertexPosition, 1.0);
 	}
 </script>
@@ -48,7 +43,7 @@
 	// WebGLProgram
 	var program;
 	// WebGLBuffer
-	var vertexBuffer, indexBuffer, colorBuffer, textureBuffer;
+	var vertexBuffer, indexBuffer, textureBuffer;
 	// Mat4PerspRH
 	var projection;
 	// WebGLTexture
@@ -57,16 +52,24 @@
 	var rotation, translation;
 	//  Camera
 	var camera;
-	// number, holds indices count of block object without face object
-	var blockIndices;
+	// number, holds indices count of block object with alphabet
+	var oneFaceIndicesCount;
 	// number, holding last received rotation
 	var lastRotation = 0;
-	// numbers, holding last received data for computing relative change
-	var lastMarkerX = 0, lastMarkerY = 0;
+	// numbers, holding first received data after restart for computing relative change
+	var firstMarkerX = 0, firstMarkerY = 0;
 	// numbers, holding last sequence number for skipping delayed packets
 	var lastReceivedRotationSocketSequence = -1, lastReceivedMarkerSocketSequence = -1;
 	// boolean, if position data sequence should be restarted
 	var toBeRestarted = true;
+	// HTMLDivElement
+	var lost;
+	// variables for debugging
+	var debug = true, debugTexture, debugTranslation;
+	// alphabet
+	var letters = 'abcdefghijklmnopq rstuvwxyz↑';
+	// char holding current letter
+	var currentLetter;
 
 	/**
 	 * Init scene and buffers
@@ -74,21 +77,22 @@
 	function initBuffers() {
 		let scene = new Utils.Scene();
 		let or = new Mat3RotX(Math.PI / 2);
-		scene.add(new Utils.Face(1, 1, 1, -0.1, 0, {color: [0, 0, 0, 0], strip: false, orientation: or}));
-		blockIndices = scene.indices.length;
-		scene.add(new Utils.Face(7, 4, 0, 0, 0, {color: [0, 0, 0, 0], strip: false, orientation: or}));
+
+		// alphabet face
+		scene.add(new Utils.Face(7, 4, 0, 0, 0, {strip: false, orientation: or}));
+		oneFaceIndicesCount = scene.indices.length;// get the count of indices one face has
+		//border face
+		scene.add(new Utils.Face(1, 1, 0, -0.1, -1, {strip: false, orientation: or}));
+		// debug face
+		if (debug) {
+			scene.add(new Utils.Face(1, 1, 0, -0.1, -1, {strip: false, orientation: or}));
+		}
 
 		vertexBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.vertices), gl.STATIC_DRAW);
 		vertexBuffer.itemSize = 3;
 		vertexBuffer.numItems = scene.vertices.length;
-
-		colorBuffer = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.colors), gl.STATIC_DRAW);
-		colorBuffer.itemSize = 4;
-		colorBuffer.numItems = scene.colors.length;
 
 		indexBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -114,33 +118,39 @@
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 		gl.vertexAttribPointer(program.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-		gl.vertexAttribPointer(program.vertexColor, colorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
 		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
 		gl.vertexAttribPointer(program.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-		
+
 		// draw alphabet
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, alphabetTexture);
-		let modelView = Utils.convert(camera.view);
-		gl.uniformMatrix4fv(program.modelview, false, modelView);
-		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems - blockIndices, gl.UNSIGNED_SHORT, blockIndices * 2);
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(camera.view));
+		// first face frmo the start
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
 
 		// draw border
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, borderTexture);
 		gl.uniformMatrix4fv(program.projection, false, projection);
-		modelView = Utils.convert(
-			rotation.mul(translation).mul(camera.view)
-		);
-		gl.uniformMatrix4fv(program.modelview, false, modelView);
-		gl.drawElements(gl.TRIANGLES, blockIndices, gl.UNSIGNED_SHORT, 0);
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation.mul(camera.view)));
+		// second face from the start
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
+
+		// draw debug border
+		if (debug) {
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, debugTexture);
+			gl.uniformMatrix4fv(program.projection, false, projection);
+			gl.uniformMatrix4fv(program.modelview, false, Utils.convert(debugTranslation.mul(camera.view)));
+			// last face
+			gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 4);
+		}
 	}
 
 	window.onload = function() {
+		lost = document.querySelector("#lost");
 		canvas = document.querySelector("canvas");
 		canvas.width = window.innerWidth;
 		canvas.height = window.innerHeight-5;
@@ -166,9 +176,6 @@
 		program.vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
 		gl.enableVertexAttribArray(program.vertexPositionAttribute);
 
-		program.vertexColor = gl.getAttribLocation(program, "aVertexColor");
-		gl.enableVertexAttribArray(program.vertexColor);
-
 		program.vertexTexCoordAttribute = gl.getAttribLocation(program, "aTextureCoord");
 		gl.enableVertexAttribArray(program.vertexTexCoordAttribute);
 
@@ -179,6 +186,7 @@
 		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
 		rotation = new Mat4RotY(-Math.PI/2)
 		translation = new Mat4Identity();
+		debugTranslation = new Mat4Identity();
 		camera = new Camera();
 		camera.setAzimuth(Math2.toRadians(0));
 		camera.setZenith(Math2.toRadians(0));
@@ -190,17 +198,28 @@
 
 		Utils.initRequestAnimationFrame();
 
+		// load alphabet texture
 		let img = new Image();
 		img.src = "alphabet.png";
-		img.onload = function () {
+		img.onload = function() {
 			alphabetTexture = gl.createTexture();
 			refreshTexture(img, alphabetTexture);
+
+			// load border texture
 			let img2 = new Image();
 			img2.src = "border.png";
-			img2.onload = function () {
+			img2.onload = function() {
 				borderTexture = gl.createTexture();
 				refreshTexture(img2, borderTexture);
-				animate();
+
+				// laod debug border texture
+				let img3 = new Image();
+				img3.src = "border-debug.png";
+				img3.onload = function() {
+					debugTexture = gl.createTexture();
+					refreshTexture(img3, debugTexture);
+					animate();
+				};
 			};
 		};
 	};
@@ -210,27 +229,52 @@
 		requestAnimFrame(animate);
 	}
 
-	function translate(x, y, divisor) {
-		translation = translation.mul(new Mat4Transl(x/divisor, 0, -y/divisor));
+	function translate(x, y) {
+		x = editNumber(x, -6, 6);
+		y = -editNumber(y, -4, 2);
+		setCurrentLetter(x, y);
+		translation = new Mat4Transl(x, 0, y);
+	}
+
+	function editNumber(num, min, max) {
+		// divide by 100 because one square is 100
+		num /= 100;
+		// round down
+		num = Math.round(num);
+		// multiply by two because of the size of face
+		num *= 2;
+		// clamp number
+		num = Math2.clamp(num, min, max);
+		// finally change by one percent of the value because it gets distorted the more further it gets from base position
+		return num - num / 100;
+	}
+
+	function setCurrentLetter(x, y) {
+		x = Math.round(x) / 2;
+		y = Math.round(-y) / 2;
+		// x is in interval <-3;3>
+		// y is in interval <-2;1>
+		// narrow numbers
+		x += 3;
+		y += 2;
+		// 7 letters in a row
+		let seq = x + y * 7;
+		currentLetter = letters[seq];
+	}
+
+	function translateDebug(x, y, divisor) {
+		debugTranslation = new Mat4Transl(x/divisor, 0, -y/divisor);
 	}
 
 	function onWsMessage(data) {
-
 		if (data.type === "rotation") {
 			doRotation(data);
-
 		} else if (data.type === "image") {
-			let img = document.querySelector("img");
-			img.src = data.dataUrl;
-			img.style.display = "none";
-			img.onload = function() {
-				alphabetTexture = gl.createTexture();
-				refreshTexture(img, alphabetTexture);
-				console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
-			};
-
+			receivedImage(data);
 		} else if (data.type === "marker") {
 			doPosition(data);
+		} else if (data.type === "touch") {
+			document.querySelector("#text").innerHTML += currentLetter;
 		}
 	}
 
@@ -256,15 +300,22 @@
 			lastRotation = rotDegrees;
 
 		} else {
-			//console.log("skipping roration data " + data.sequence);
+			//console.log("skipping rotation data " + data.sequence);
 		}
+	}
+
+	function receivedImage(data) {
+		let img = document.querySelector("img");
+		img.style.display = "none";
+		img.src = data.dataUrl;
+		console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
 	}
 
 	function doPosition(data) {
 		// finish
 		if (data.sequence === -1) {
 			// hide list message
-			document.querySelector("#lost").style.top = "-50px";
+			lost.style.top = "-50px";
 			// prevent any late from showing
 			lastReceivedMarkerSocketSequence = Number.MAX_VALUE;
 			return;
@@ -280,20 +331,24 @@
 
 		if (data.sequence > lastReceivedMarkerSocketSequence) {
 			lastReceivedMarkerSocketSequence = data.sequence;
-			console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
+			//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
 			//console.log(data.max, lastMarkerX, data.x, lastMarkerY, data.y);
 
 			if (data.count > 0) {
 				if (!toBeRestarted) {
-					translate(lastMarkerX - data.x, lastMarkerY - data.y, 50);
+					translate(firstMarkerX - data.x, firstMarkerY - data.y);
+					if (debug) {
+						translateDebug(firstMarkerX - data.x, firstMarkerY - data.y, 50);
+					}
+				} else {
+					toBeRestarted = false;
+					firstMarkerX = data.x;
+					firstMarkerY = data.y;
 				}
-				toBeRestarted = false;
-				lastMarkerX = data.x;
-				lastMarkerY = data.y;
 
-				document.querySelector("#lost").style.top = "-50px";
+				lost.style.top = "-50px";
 			} else {
-				document.querySelector("#lost").style.top = "0px";
+				lost.style.top = "0px";
 			}
 		} else {
 			//console.log("skipping marker data " + data.sequence);
@@ -321,6 +376,12 @@
 		padding: 0;
 		font-family: Calibri, Arial, sans-serif;
 	}
+	div#text {
+		position: fixed;
+		color: white;
+		margin-left: 10px;
+		font-size: 30px;
+	}
 	div#lost {
 		font-size: 18px;
 		color: #DDD;
@@ -337,6 +398,7 @@
 </style>
 </head>
 <body>
+<div id="text"></div>
 <img src="">
 <canvas></canvas>
 <div id="lost">Marker is lost.</div>
