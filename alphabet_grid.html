@@ -2,7 +2,7 @@
 <html lang="en-GB" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<title>Aplhabet grid</title>
+<title>Alphabet grid</title>
 </head>
 <body>
 <canvas width="1400" height="800"></canvas>
@@ -32,7 +32,7 @@
 	context.stroke();
 */
 
-	// vylpnit bílým pozadím
+	// fill with white background
 	context.fillStyle = "#FFFFFF";
 	context.fillRect(0, 0, 1400, 800);
 	context.fillStyle = "#000000";
@@ -53,10 +53,10 @@
 		context.stroke();
 	}
 
-	var alphabet = 'abcdefghijklmnopq rstuvwxyz←';
+	//var alphabet = 'abcdefghijklmnopq rstuvwxyz←';
 	//var alphabet = 'ABCDEFGHIJKLMNOPQ RSTUVWXYZ←';
-	//var alphabet = '0123456789áčďéěíň óřšťúůýž←';
-	//var alphabet = '0123456789ÁČĎÉĚÍŇ ÓŘŠŤÚŮÝŽ←';
+	var alphabet = '0123456789áčďéěíň óřšťúůýžü←';
+	//var alphabet = '0123456789ÁČĎÉĚÍŇ ÓŘŠŤÚŮÝŽÜ←';
 	//var alphabet = '.,?!-+_/\\@&#():;% €$"\'|[]{}←';
 	context.font = '120px Consolas';
 	for (var i = 0, j = 0; i < alphabet.length; i++) {
@@ -70,7 +70,7 @@
 
 	function drawSpaceBox() {
 		let lineWidth = context.lineWidth;
-		context.lineWidth = 4;
+		context.lineWidth = 5;
 
 		// space also contains green marker
 		context.fillStyle = "#00FF00";
@@ -78,10 +78,10 @@
 		context.fillStyle = "#000000";
 		// space chat
 		context.beginPath();
-		context.moveTo(650, 540);
-		context.lineTo(650, 580);
-		context.lineTo(750, 580);
-		context.lineTo(750, 540);
+		context.moveTo(655, 545);
+		context.lineTo(655, 580);
+		context.lineTo(745, 580);
+		context.lineTo(745, 545);
 		context.stroke();
 
 		context.lineWidth = lineWidth;
