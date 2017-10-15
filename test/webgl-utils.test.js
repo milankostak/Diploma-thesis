@@ -401,7 +401,7 @@ describe("Utils.loadTexture", function() {
 	let gl = Utils.initWebGL(canvas);
 
 	it("correctly loads textures", function(done) {
-		Utils.loadTexture(gl, ["../waiting.png"], (textures) => {
+		Utils.loadTexture(gl, ["../img/waiting.png"], (textures) => {
 			expect(textures instanceof Array).toBe(true);
 			expect(textures.length).toBe(1);
 			expect(textures[0].image instanceof Image).toBe(true);
