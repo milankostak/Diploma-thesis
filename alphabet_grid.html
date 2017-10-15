@@ -5,12 +5,13 @@
 <title>Aplhabet grid</title>
 </head>
 <body>
-<canvas width="190" height="190"></canvas>
+<canvas width="1400" height="800"></canvas>
 <script type="text/javascript">
 	"use strict";
 	var canvas = document.querySelector("canvas");
 	var context = canvas.getContext('2d');
-	/*context.strokeStyle = "#0000FF";
+/*
+	context.strokeStyle = "#0000FF";
 	context.lineWidth = 10;
 
 	context.beginPath();
@@ -31,10 +32,12 @@
 	context.stroke();
 */
 
+	// vylpnit bílým pozadím
 	context.fillStyle = "#FFFFFF";
 	context.fillRect(0, 0, 1400, 800);
 	context.fillStyle = "#000000";
 
+	// vertical lines
 	for (var i = 0; i <= 7; i++) {
 		context.beginPath();
 		context.moveTo(200 * i, 0);
@@ -42,6 +45,7 @@
 		context.stroke();
 	}
 
+	// horizontal lines
 	for (var i = 0; i <= 4; i++) {
 		context.beginPath();
 		context.moveTo(0, 200 * i);
@@ -49,21 +53,38 @@
 		context.stroke();
 	}
 
-	var alphabet = 'abcdefghijklmnopq rstuvwxyz↑';
-	//var alphabet = 'ABCDEFGHIJKLMNOPQ RSTUVWXYZ↓';
-	//var alphabet = '0123456789áčďéěíň óřšťúůýž↑';
-	//var alphabet = '0123456789ÁČĎÉĚÍŇ ÓŘŠŤÚŮÝŽ↓';
-	//var alphabet = '.,?!-+_/\\@&#():;% €$*"\'|[]{}';
+	var alphabet = 'abcdefghijklmnopq rstuvwxyz←';
+	//var alphabet = 'ABCDEFGHIJKLMNOPQ RSTUVWXYZ←';
+	//var alphabet = '0123456789áčďéěíň óřšťúůýž←';
+	//var alphabet = '0123456789ÁČĎÉĚÍŇ ÓŘŠŤÚŮÝŽ←';
+	//var alphabet = '.,?!-+_/\\@&#():;% €$"\'|[]{}←';
 	context.font = '120px Consolas';
 	for (var i = 0, j = 0; i < alphabet.length; i++) {
-		if (i > 0 && i % 7 == 0) j++;
+		if (i > 0 && i % 7 === 0) j++;
 		if (alphabet[i] === ' ') {
-			context.fillStyle = "#00FF00";
-			context.fillRect(601, 401, 198, 198);
-			context.fillStyle = "#000000";
+			drawSpaceBox();
 		} else {
 			context.fillText(alphabet[i], 70 + 200 * (i%7), 130 + 200 * j);
 		}
+	}
+
+	function drawSpaceBox() {
+		let lineWidth = context.lineWidth;
+		context.lineWidth = 4;
+
+		// space also contains green marker
+		context.fillStyle = "#00FF00";
+		context.fillRect(601, 401, 198, 80);
+		context.fillStyle = "#000000";
+		// space chat
+		context.beginPath();
+		context.moveTo(650, 540);
+		context.lineTo(650, 580);
+		context.lineTo(750, 580);
+		context.lineTo(750, 540);
+		context.stroke();
+
+		context.lineWidth = lineWidth;
 	}
 </script>
 </body>
