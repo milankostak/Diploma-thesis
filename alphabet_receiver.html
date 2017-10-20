@@ -82,10 +82,10 @@
 		scene.add(new Utils.Face(7, 4, 0, 0, 0, {strip: false, orientation: or}));
 		oneFaceIndicesCount = scene.indices.length;// get the count of indices one face has
 		//border face
-		scene.add(new Utils.Face(1, 1, 0, -0.1, -1, {strip: false, orientation: or}));
+		scene.add(new Utils.Face(1, 1, 0, -0.0001, -1, {strip: false, orientation: or}));
 		// debug face
 		if (debug) {
-			scene.add(new Utils.Face(1, 1, 0, -0.1, -1, {strip: false, orientation: or}));
+			scene.add(new Utils.Face(1, 1, 0, -0.0001, -1, {strip: false, orientation: or}));
 		}
 
 		vertexBuffer = gl.createBuffer();
