@@ -177,10 +177,13 @@
 	var video;
 	// constants of methods
 	var DO_NOTHING = 1, DO_POSITION = 2, DO_ROTATION = 3, DO_BOTH = 4;
-	// currenlty running method
+	// currently running method
 	var currentMethod = DO_NOTHING;
-
+	// info if detection is being performed - if animation is running
+	// also is used to make sure that animation is running only once
 	var isAnimating = false;
+	// labels of all buttons
+	let allLabels = ["#nothing", "#position", "#rotation", "#both"];
 
 	window.onload = function() {
 		Detection.init();
@@ -228,6 +231,9 @@
 		});
 	};
 
+	/**
+	 * Main animation function that triggers detection in the image from camera
+	 */
 	function animate() {
 		if (isAnimating) {
 			Detection.updateTexture(video);
@@ -236,6 +242,9 @@
 		}
 	}
 
+	/**
+	 * Event handler when acmera is ready to give pictures
+	 */
 	function setupAfterVideoStreamIsReady() {
 		Detection.setupAfterVideoStreamIsReady(video.videoWidth, video.videoHeight);
 
@@ -247,6 +256,11 @@
 		//sendPositionInterval = setInterval(sendPosition, 50);
 	}
 
+	/**
+	 * Event handler when particular button is clicked
+	 * Ensures Rotation and Detection is finished
+	 * Sets class for GUI modification
+	 */
 	function doNothing() {
 		currentMethod = DO_NOTHING;
 		isAnimating = false;
@@ -258,6 +272,11 @@
 		setActive("nothing");
 	}
 
+	/**
+	 * Event handler when particular button is clicked
+	 * Ensures Rotation is finished and animation is started if it's not running already
+	 * Sets class for GUI modification
+	 */
 	function doPosition() {
 		currentMethod = DO_POSITION;
 
@@ -272,6 +291,11 @@
 		setActive("position");
 	}
 
+	/**
+	 * Event handler when particular button is clicked
+	 * Ensures Detection is finished and Rotation is started
+	 * Sets class for GUI modification
+	 */
 	function doRotation() {
 		currentMethod = DO_ROTATION;
 		isAnimating = false;
@@ -282,6 +306,11 @@
 		setActive("rotation");
 	}
 
+	/**
+	 * Event handler when particular button is clicked
+	 * Ensures that both Rotation and Detection are started
+	 * Sets class for GUI modification
+	 */
 	function doBoth() {
 		currentMethod = DO_BOTH;
 
@@ -296,14 +325,21 @@
 		setActive("both");
 	}
 
+	/**
+	 * Changes classes on buttons in GUI
+	 * @param {string} current class of the button that is active now
+	 */
 	function setActive(current) {
-		let allLabels = ["#nothing", "#position", "#rotation", "#both"];
 		for (let i = 0; i < allLabels.length; i++) {
 			document.querySelector(allLabels[i]).classList.remove("active");
 		}
 		document.querySelector("#" + current).classList.add("active");
 	}
 
+	/**
+	 * Resize event handler
+	 * Changes GUI so that buttons are either left or bottom
+	 */
 	function windowSizeChanged() {
 		if (window.innerHeight < window.innerWidth) {
 			// window is wider than higher
@@ -316,6 +352,10 @@
 		}
 	}
 
+	/**
+	 * Click and touch event handler
+	 * Sends XHR request that the video has been clicked or touched
+	 */
 	function sendTouch() {
 		let request = new XMLHttpRequest();
 		let objectToSend = {
