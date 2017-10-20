@@ -2,7 +2,7 @@
 <html lang="en-GB" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<title>Receiver</title>
+<title>Alphabet Receiver</title>
 <script type="text/javascript" src="/js/transforms3d.js"></script>
 <script type="text/javascript" src="/js/webgl-utils.js"></script>
 <script type="text/javascript" src="/js/math2.js"></script>
@@ -47,9 +47,9 @@
 	// Mat4PerspRH
 	var projection;
 	// WebGLTexture
-	var alphabetTexture, borderTexture;
+	var textures;
 	// Mat4
-	var rotation, translation;
+	var rotation, rotationAlphabet, translation;
 	//  Camera
 	var camera;
 	// number, holds indices count of block object with alphabet
@@ -65,9 +65,9 @@
 	// HTMLDivElement
 	var lost;
 	// variables for debugging
-	var debug = true, debugTexture, debugTranslation;
+	var debug = true, debugTranslation;
 	// alphabet
-	var letters = 'abcdefghijklmnopq rstuvwxyz↑';
+	var letters = 'abcdefghijklmnopq rstuvwxyz←';
 	// char holding current letter
 	var currentLetter;
 
@@ -125,14 +125,14 @@
 
 		// draw alphabet
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, alphabetTexture);
-		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(camera.view));
+		gl.bindTexture(gl.TEXTURE_2D, textures[0]);
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(rotationAlphabet.mul(camera.view)));
 		// first face frmo the start
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
 
 		// draw border
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, borderTexture);
+		gl.bindTexture(gl.TEXTURE_2D, textures[2]);
 		gl.uniformMatrix4fv(program.projection, false, projection);
 		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation.mul(camera.view)));
 		// second face from the start
@@ -141,7 +141,7 @@
 		// draw debug border
 		if (debug) {
 			gl.activeTexture(gl.TEXTURE0);
-			gl.bindTexture(gl.TEXTURE_2D, debugTexture);
+			gl.bindTexture(gl.TEXTURE_2D, textures[3]);
 			gl.uniformMatrix4fv(program.projection, false, projection);
 			gl.uniformMatrix4fv(program.modelview, false, Utils.convert(debugTranslation.mul(camera.view)));
 			// last face
@@ -184,7 +184,8 @@
 		program.texture = gl.getUniformLocation(program, "texture");
 
 		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
-		rotation = new Mat4RotY(-Math.PI/2)
+		rotation = new Mat4RotY(-Math.PI/2);
+		rotationAlphabet = new Mat4Identity();
 		translation = new Mat4Identity();
 		debugTranslation = new Mat4Identity();
 		camera = new Camera();
@@ -198,72 +199,34 @@
 
 		Utils.initRequestAnimationFrame();
 
-		// load alphabet texture
-		let img = new Image();
-		img.src = "alphabet.png";
-		img.onload = function() {
-			alphabetTexture = gl.createTexture();
-			refreshTexture(img, alphabetTexture);
+		// load all textures
+		let images = ["img/alphabet-basic-small.png", "img/alphabet-numerics-small.png", "img/border.png", "img/border-debug.png"];
+		Utils.loadTexture(gl, images, function refreshTexture(imgs) {
+			textures = [];
+			for (let i = 0; i < imgs.length; i++) {
+				textures[i] = imgs[i];
+				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[i].image);
 
-			// load border texture
-			let img2 = new Image();
-			img2.src = "border.png";
-			img2.onload = function() {
-				borderTexture = gl.createTexture();
-				refreshTexture(img2, borderTexture);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
-				// laod debug border texture
-				let img3 = new Image();
-				img3.src = "border-debug.png";
-				img3.onload = function() {
-					debugTexture = gl.createTexture();
-					refreshTexture(img3, debugTexture);
-					animate();
-				};
-			};
-		};
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+			}
+			animate();
+		});
 	};
 
+	var aa = 0;
 	function animate() {
 		repaint();
 		requestAnimFrame(animate);
-	}
-
-	function translate(x, y) {
-		x = editNumber(x, -6, 6);
-		y = -editNumber(y, -4, 2);
-		setCurrentLetter(x, y);
-		translation = new Mat4Transl(x, 0, y);
-	}
-
-	function editNumber(num, min, max) {
-		// divide by 100 because one square is 100
-		num /= 100;
-		// round down
-		num = Math.round(num);
-		// multiply by two because of the size of face
-		num *= 2;
-		// clamp number
-		num = Math2.clamp(num, min, max);
-		// finally change by one percent of the value because it gets distorted the more further it gets from base position
-		return num - num / 100;
-	}
-
-	function setCurrentLetter(x, y) {
-		x = Math.round(x) / 2;
-		y = Math.round(-y) / 2;
-		// x is in interval <-3;3>
-		// y is in interval <-2;1>
-		// narrow numbers
-		x += 3;
-		y += 2;
-		// 7 letters in a row
-		let seq = x + y * 7;
-		currentLetter = letters[seq];
-	}
-
-	function translateDebug(x, y, divisor) {
-		debugTranslation = new Mat4Transl(x/divisor, 0, -y/divisor);
+		aa += 0.05;
+		if (aa > Math.PI * 2) aa = Math.PI * 2;
+		rotationAlphabet = new Mat4RotZ(aa);
 	}
 
 	function onWsMessage(data) {
@@ -274,7 +237,7 @@
 		} else if (data.type === "marker") {
 			doPosition(data);
 		} else if (data.type === "touch") {
-			document.querySelector("#text").innerHTML += currentLetter;
+			addText();
 		}
 	}
 
@@ -355,19 +318,54 @@
 		}
 	}
 
-	function refreshTexture(img, texture) {
-
-		gl.bindTexture(gl.TEXTURE_2D, texture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, texture);
+	function translateDebug(x, y, divisor) {
+		debugTranslation = new Mat4Transl(x/divisor, 0, -y/divisor);
 	}
+
+	function translate(x, y) {
+		x = editNumber(x, -6, 6);
+		y = -editNumber(y, -4, 2);
+		setCurrentLetter(x, y);
+		translation = new Mat4Transl(x, 0, y);
+	}
+
+	function editNumber(num, min, max) {
+		// divide by 100 because one square is 100 units
+		num /= 100;
+		// round the number mathematically
+		num = Math.round(num);
+		// multiply by two because of the size of face
+		num *= 2;
+		// clamp number
+		num = Math2.clamp(num, min, max);
+		return num;
+	}
+
+	function setCurrentLetter(x, y) {
+		// divide by two because it has been multiplied for the size of the face
+		x /= 2;
+		y /= -2;
+		// x is in interval <-3;3>
+		// y is in interval <-2;1>
+		// narrow numbers
+		x += 3;
+		y += 2;
+		// 7 letters in a row
+		let seq = x + y * 7;
+		currentLetter = letters[seq];
+	}
+
+	function addText() {
+		if (currentLetter === '←') {
+			var currentText = document.querySelector("#text").innerHTML;
+			if (currentText.length > 0) {
+				document.querySelector("#text").innerHTML = currentText.substr(0, currentText.length - 1);
+			}
+		} else {
+			document.querySelector("#text").innerHTML += currentLetter;
+		}
+	}
+
 
 </script>
 <style type="text/css">
