@@ -118,7 +118,17 @@ var Rotation = (function() {
 		// alpha is the compass direction the device is facing in degrees
 		// beta is the front-to-back tilt in degrees, where front is positive
 		// gamma is the left-to-right tilt in degrees, where right is positive
+		//
+		// The alpha angle is 0° when top of the device is pointed directly toward the Earth's north pole, and increases as the device is rotated toward the left.
+		//
+		// The beta angle is 0° when the device's top and bottom are the same distance from the Earth's surface,
+		// and increases toward 180° as the device is tipped forward and decreases toward -180° as the device is tipped backward.
+		//
+		// The gamma angle is 0° when the device's left and right sides are the same distance from the surface of the Earth,
+		// and increases toward 90° as the device is tipped toward the right, and toward -90° as the device is tipped toward the left.
+		//
 		let divisor = 2;
+		// https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Orientation_and_motion_data_explained
 		if (sequence++ % divisor === 0) {
 			tmpAlpha = e.alpha;
 			tmpBeta = e.beta;

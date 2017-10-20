@@ -54,8 +54,6 @@
 	var camera;
 	// number, holds indices count of block object with alphabet
 	var oneFaceIndicesCount;
-	// number, holding last received rotation
-	var lastRotation = 0;
 	// numbers, holding first received data after restart for computing relative change
 	var firstMarkerX = 0, firstMarkerY = 0;
 	// numbers, holding last sequence number for skipping delayed packets
@@ -70,6 +68,13 @@
 	var letters = 'abcdefghijklmnopq rstuvwxyz←';
 	// char holding current letter
 	var currentLetter;
+
+	// alphabet rotation
+	var rotationChange = 0;
+	var NO_ROTATION = 0, ROTATE_RIGHT = 1, ROTATE_LEFT = 2;
+	var nowRotating = NO_ROTATION;
+	var startRotation = 0;
+	var currentRotation = 0;
 
 	/**
 	 * Init scene and buffers
@@ -220,13 +225,30 @@
 		});
 	};
 
-	var aa = 0;
 	function animate() {
+		manageRotation();
 		repaint();
 		requestAnimFrame(animate);
-		aa += 0.05;
-		if (aa > Math.PI * 2) aa = Math.PI * 2;
-		rotationAlphabet = new Mat4RotZ(aa);
+	}
+
+	function manageRotation() {
+		if (nowRotating === ROTATE_RIGHT) {
+			currentRotation += 0.05;
+			if (currentRotation > startRotation + Math.PI * 2) {
+				currentRotation = startRotation + Math.PI * 2;
+				rotationChange = 0;
+				nowRotating = NO_ROTATION;
+			}
+			rotationAlphabet = new Mat4RotZ(currentRotation);
+		} else if (nowRotating === ROTATE_LEFT) {
+			currentRotation -= 0.05;
+			if (currentRotation < -startRotation - Math.PI * 2) {
+				currentRotation = -startRotation - Math.PI * 2;
+				rotationChange = 0;
+				nowRotating = NO_ROTATION;
+			}
+			rotationAlphabet = new Mat4RotZ(currentRotation);
+		}
 	}
 
 	function onWsMessage(data) {
@@ -250,17 +272,37 @@
 		if (data.sequence > lastReceivedRotationSocketSequence) {
 			lastReceivedRotationSocketSequence = data.sequence;
 
-			let rotDegrees = (Math.sign(data.gamma) > 0) ? 180 - data.beta : data.beta;
-			//console.log(data.beta, data.gamma, rotDegrees);
+			if (nowRotating === NO_ROTATION) {
+				let rotDegrees = (Math.sign(data.gamma) > 0) ? 180 - data.beta : data.beta;
+				console.log(Math.round(data.beta), Math.round(data.gamma), Math.round(rotDegrees));
+				//console.log(Math.round(data.alpha), Math.round(data.beta), Math.round(data.gamma), rotDegrees);
+				//console.log(data.alpha, rotDegrees);
 
-			// skip big changes, also prevents skipping to 90 degrees which is a situation when phone cannot precisely tell its rotation
-			if (Math.abs(lastRotation - rotDegrees) < 60) {
-				let radiansB = Math2.toRadians(rotDegrees) - Math.PI/2;
-				rotation = new Mat4RotY(radiansB);
-			} else {
-				//console.log("skipping big rotation change");
+				// 20 from base with 15 degrees space
+
+				// rotation ro right
+				if ((rotDegrees > 20 && rotDegrees < 35) || (rotDegrees > 200 && rotDegrees < 215) ||
+					(rotDegrees > 110 && rotDegrees < 125) || (rotDegrees > -160 && rotDegrees < -145)) {
+					// 20 -> 35 (top to left, face up or down) ; 200 -> 215 (top to right, face up) ; 110 -> 125 (top to up) ; -160 -> -145 (top to right, face down)
+					if (rotationChange < 0) rotationChange = 0;
+					rotationChange++;
+
+				// rotation to left
+				} else if ((rotDegrees < -20 && rotDegrees > -35) || (rotDegrees < 160 && rotDegrees > 145)
+					|| (rotDegrees < 70 && rotDegrees > 55) || (rotDegrees < 340 && rotDegrees > 325)) {
+					// -20 -> -35  (top to left, face up) ; 145 -> 160 (top to right, face up or down) ; 50 -> 70 (top to up) ; 340 -> 325 (top to left, face down)
+					if (rotationChange > 0) rotationChange = 0;
+					rotationChange--;
+				}
+
+				if (rotationChange > 3) {
+					nowRotating = ROTATE_RIGHT;
+					startRotation = currentRotation;
+				} else if (rotationChange < -3) {
+					nowRotating = ROTATE_LEFT;
+					startRotation = currentRotation;
+				}
 			}
-			lastRotation = rotDegrees;
 
 		} else {
 			//console.log("skipping rotation data " + data.sequence);
