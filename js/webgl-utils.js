@@ -14,7 +14,7 @@ var Utils = {};
 /**
  * Initialization of WebGL
  * @param  {HTMLCanvasElement} canvas to draw on
- * @param  {Object} args optinal parameter containing arguments for WebGL initialization
+ * @param  {Object} args optional parameter containing arguments for WebGL initialization
  * @return {WebGLRenderingContext} WebGL context
  */
 Utils.initWebGL = function(canvas, args) {
@@ -33,7 +33,7 @@ Utils.initWebGL = function(canvas, args) {
 /**
  * Initialization of repainting loop. Uses window.requestAnimationFrame where available.
  * If fps param is set then uses window.setTimeout function.
- * @param  {number} fps number of frames per sesond to draw, if set then window.setTimeout is used
+ * @param  {number} fps number of frames per second to draw, if set then window.setTimeout is used
  */
 Utils.initRequestAnimationFrame = function(fps) {
 	if (typeof fps === "number") {
@@ -601,7 +601,7 @@ Utils.Face.prototype.createIndices = function(strip) {
  * @param {number} posx      position of the center of the sphere
  * @param {number} posy      position of the center of the sphere
  * @param {number} posz      position of the center of the sphere
- * @param {number} radius    radious of the sphere
+ * @param {number} radius    radius of the sphere
  * @param {number} precision number of steps over the equator and the meridian, must be the same value
  *                           has big impact on resulting number of vertices
  *                           works only for even numbers
@@ -736,7 +736,7 @@ Utils.Sphere.prototype.createTextureCoords = function(precision) {
 /**
  * Generate indices for sphere
  * @param  {number} precision number of steps
- * @param  {boolean} strip    if true then triangle strip, regular triangle otehrwise
+ * @param  {boolean} strip    if true then triangle strip, regular triangle otherwise
  * @return {Array}            array with indices
  */
 Utils.Sphere.prototype.createIndices = function(precision, strip) {
@@ -834,7 +834,7 @@ Utils.getDataFromJSON = function(url, callback) {
 };
 
 /**
- * Replacing czech decimal comma with decimal point making it a number
+ * Replacing Czech decimal comma with decimal point making it a number
  * @param  {String} number input from a form
  * @return {number}        number
  */
@@ -845,12 +845,12 @@ Utils.replaceComma = function(number) {
 /**
  * Helper function for loading textures
  * @param  {WebGLRenderingContext} gl WebGL context
- * @param  {Array} url                array with URLs of textures to load
+ * @param  {Array} urls               array with URLs of textures to load
  * @param  {Function} callback        function to call after loading of all textures is complete, gets array with textures
  */
-Utils.loadTexture = function(gl, url, callback) {
+Utils.loadTexture = function(gl, urls, callback) {
 	let result = [];
-	let total = url.length;
+	let total = urls.length;
 	let loaded = 0;
 
 	let onload = function() {
@@ -858,16 +858,17 @@ Utils.loadTexture = function(gl, url, callback) {
 		loaded++;
 	};
 
-	for (let i = 0; i < url.length; i++) {
+	for (let i = 0; i < urls.length; i++) {
 
 		result[i] = gl.createTexture();
 		result[i].image = new Image();
-		//result[i].image.crossOrigin = "anonymouse";
+		result[i].image.crossOrigin = "anonymous";
 
 		result[i].image.onload = onload;
-		result[i].image.src = url[i];
+		result[i].image.src = urls[i];
 	}
 
+	// once in 50 ms check if all textures were already loaded
 	let interval = function() {
 		if (loaded < total) {
 			setTimeout(interval, 50);
@@ -914,7 +915,7 @@ Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
 };
 
 /**
- * Preparation curosr locking on given element
+ * Preparation cursor locking on given element
  * @see {@link https://developer.mozilla.org/en-US/docs/WebAPI/Pointer_Lock}
  * @param  {HTMLElement} element      element, which is going to have locked cursor
  * @param  {Function} startFullscreen function to call on successful locking cursor
