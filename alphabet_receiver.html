@@ -75,8 +75,8 @@
 	const NO_ROTATION = 0, ROTATE_RIGHT = 1, ROTATE_LEFT = 2;
 	// current state of rotation
 	var nowRotating = NO_ROTATION;
-	var startRotation = 0;
-	var currentRotation = 0;
+	// variables for stepping rotation
+	var startRotation = 0, currentRotation = 0, rotationStep = Math.PI * 2;
 
 	/**
 	 * Init scene and buffers
@@ -244,8 +244,8 @@
 			rotationAlphabet = new Mat4RotZ(currentRotation);
 		} else if (nowRotating === ROTATE_LEFT) {
 			currentRotation -= 0.05;
-			if (currentRotation < -startRotation - Math.PI * 2) {
-				currentRotation = -startRotation - Math.PI * 2;
+			if (currentRotation < startRotation - Math.PI * 2) {
+				currentRotation = startRotation - Math.PI * 2;
 				rotationChange = 0;
 				nowRotating = NO_ROTATION;
 			}
