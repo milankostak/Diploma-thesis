@@ -275,24 +275,23 @@
 			lastReceivedRotationSocketSequence = data.sequence;
 
 			if (nowRotating === NO_ROTATION) {
-				let rotDegrees = (Math.sign(data.gamma) > 0) ? 180 - data.beta : data.beta;
+				let rotDegrees = (data.gamma > 0) ? 180 - data.beta : data.beta;
+				// narovnat data; není pak rozdíl mezi tím, zda je obrazovka dolu nebo nahoru
+				if (rotDegrees < 0) rotDegrees += 360;
 				console.log(Math.round(data.beta), Math.round(data.gamma), Math.round(rotDegrees));
 				//console.log(Math.round(data.alpha), Math.round(data.beta), Math.round(data.gamma), rotDegrees);
-				//console.log(data.alpha, rotDegrees);
 
 				// 20 from base with 15 degrees space
 
 				// rotation ro right
-				if ((rotDegrees > 20 && rotDegrees < 35) || (rotDegrees > 200 && rotDegrees < 215) ||
-					(rotDegrees > 110 && rotDegrees < 125) || (rotDegrees > -160 && rotDegrees < -145)) {
-					// 20 -> 35 (top to left, face up or down) ; 200 -> 215 (top to right, face up) ; 110 -> 125 (top to up) ; -160 -> -145 (top to right, face down)
+				if ((rotDegrees > 20 && rotDegrees < 35) || (rotDegrees > 200 && rotDegrees < 215) || (rotDegrees > 110 && rotDegrees < 125)) {
+					// 20 -> 35 (top to left) ; 200 -> 215 (top to right) ; 110 -> 125 (top to up)
 					if (rotationChange < 0) rotationChange = 0;
 					rotationChange++;
 
 				// rotation to left
-				} else if ((rotDegrees < -20 && rotDegrees > -35) || (rotDegrees < 160 && rotDegrees > 145)
-					|| (rotDegrees < 70 && rotDegrees > 55) || (rotDegrees < 340 && rotDegrees > 325)) {
-					// -20 -> -35  (top to left, face up) ; 145 -> 160 (top to right, face up or down) ; 50 -> 70 (top to up) ; 340 -> 325 (top to left, face down)
+				} else if ((rotDegrees < 340 && rotDegrees > 325) || (rotDegrees < 160 && rotDegrees > 145) || (rotDegrees < 70 && rotDegrees > 55)) {
+					// 340 -> 325 (top to left) ; 145 -> 160 (top to right) ; 50 -> 70 (top to up)
 					if (rotationChange > 0) rotationChange = 0;
 					rotationChange--;
 				}
