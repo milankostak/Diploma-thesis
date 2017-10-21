@@ -1,6 +1,9 @@
 "use strict";
 
 /**
+ * Detection object holds all necessary function for ...
+ * It is assigned by its inner anonymous self-invoking function. By using this approach some variables and functions can remain private.
+ *
  * @public
  * @requires transforms3d.js
  * @requires webgl-utils.js
@@ -53,7 +56,7 @@ var Detection = (function() {
 	};
 
 	/**
-	 * Init canvas, gl and get texture precision from extension
+	 * Init canvas and gl and get texture precision from extension
 	 * @private
 	 */
 	function initBasics() {
@@ -65,6 +68,7 @@ var Detection = (function() {
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LEQUAL);
 
+		// extension that is necessary for loading or reading float data to or from GPU
 		let floatExtension = gl.getExtension("OES_texture_float");
 		if (!floatExtension) {
 			floatExtension = gl.getExtension('OES_texture_half_float');
@@ -265,7 +269,7 @@ var Detection = (function() {
 			// bind input texture
 			gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
 
-			// draw
+			// draw from input texture to FB texture
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 			window.performance.mark("a");
@@ -287,32 +291,26 @@ var Detection = (function() {
 			// bind input texture
 			gl.bindTexture(gl.TEXTURE_2D, texture2);
 
-			// draw
+			// draw from previous output to FB texture
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 			window.performance.mark("a");
 
 	//**********************************************************
 			readData();
-			// draw the output into canvas
-			/*gl.useProgram(programDraw);
+			// draw the output from previous draw cycle into canvas
+/*
+			gl.useProgram(programDraw);
 			gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
 			gl.bindTexture(gl.TEXTURE_2D, texture1);
 			gl.viewport(0, 0, width, height);
 			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-			gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);*/
+			gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+*/
 
 	//**********************************************************
 			let times2 = performance.getEntriesByName("a");
-
-			/*console.log(
-				(times2[1].startTime - times2[0].startTime).toFixed(2),
-				(times2[2].startTime - times2[1].startTime).toFixed(2),
-				(times2[3].startTime - times2[2].startTime).toFixed(2),
-				(times2[4].startTime - times2[3].startTime).toFixed(2),
-				(times2[5].startTime - times2[4].startTime).toFixed(2)
-			);*/
 
 			times[0].push(times2[1].startTime - times2[0].startTime);
 			times[1].push(times2[2].startTime - times2[1].startTime);
@@ -338,6 +336,10 @@ var Detection = (function() {
 		}
 	};
 
+	/**
+	 * Read output data from frame buffer.
+	 * Then find point of interest - point with maximum count of "interesting" pixels.
+	 */
 	function readData() {
 			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
 			window.performance.mark("a");
@@ -376,7 +378,6 @@ var Detection = (function() {
 			//console.log(max, x, y);
 		//}
 
-//**********************************************************
 	}
 
 	/**
