@@ -236,16 +236,16 @@
 	function manageRotation() {
 		if (nowRotating === ROTATE_RIGHT) {
 			currentRotation += 0.05;
-			if (currentRotation > startRotation + Math.PI * 2) {
-				currentRotation = startRotation + Math.PI * 2;
+			if (currentRotation > startRotation + rotationStep) {
+				currentRotation = startRotation + rotationStep;
 				rotationChange = 0;
 				nowRotating = NO_ROTATION;
 			}
 			rotationAlphabet = new Mat4RotZ(currentRotation);
 		} else if (nowRotating === ROTATE_LEFT) {
 			currentRotation -= 0.05;
-			if (currentRotation < startRotation - Math.PI * 2) {
-				currentRotation = startRotation - Math.PI * 2;
+			if (currentRotation < startRotation - rotationStep) {
+				currentRotation = startRotation - rotationStep;
 				rotationChange = 0;
 				nowRotating = NO_ROTATION;
 			}
