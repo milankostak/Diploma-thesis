@@ -175,15 +175,15 @@
 
 	// HTMLVideoElement
 	var video;
-	// constants of methods
-	var DO_NOTHING = 1, DO_POSITION = 2, DO_ROTATION = 3, DO_BOTH = 4;
+	// constants for methods
+	const DO_NOTHING = 1, DO_POSITION = 2, DO_ROTATION = 3, DO_BOTH = 4;
 	// currently running method
 	var currentMethod = DO_NOTHING;
 	// info if detection is being performed - if animation is running
 	// also is used to make sure that animation is running only once
 	var isAnimating = false;
 	// labels of all buttons
-	let allLabels = ["#nothing", "#position", "#rotation", "#both"];
+	var allLabels = ["#nothing", "#position", "#rotation", "#both"];
 
 	window.onload = function() {
 		Detection.init();
