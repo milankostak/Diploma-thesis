@@ -41,13 +41,14 @@ var WS = (function() {
 	let wsClient = null;
 
 	/**
-	 * This method needs to be called at first to check if web scokets are supported
+	 * This method needs to be called at first to check if web sockets are supported
 	 * @public
 	 */
 	WS.init = function() {
 		if ("WebSocket" in window) {
 			console.log("WebSocket: WS is supported by your browser!");
 			isSupported = true;
+			host = location.origin.replace(/^https?/, 'ws');
 		} else {
 			console.log("%cWebSocket is NOT supported by your browser!", 'color: red');
 		}
@@ -67,8 +68,6 @@ var WS = (function() {
 			WS.init();
 			if (!isSupported) return;
 		}
-
-		host = location.origin.replace(/^https?/, 'ws');
 		wsClient = new WebSocket(host);
 
 		// refresh connection every 30 seconds
