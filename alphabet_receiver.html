@@ -65,19 +65,36 @@
 	var lost;
 	// variables for debugging
 	var debug = true, debugTranslation;
-	// alphabet
-	var letters = 'abcdefghijklmnopq rstuvwxyz←';
 	// char holding current letter
-	var currentLetter;
+	var currentLetter = "";
 
 	// alphabet rotation
 	var rotationChange = 0;
+	// alphabet map
+	var alphabet;
+	// current alphabet according to the texture that is currently being displayed
+	var currentAlphabet;
 	// constants for rotation
 	const NO_ROTATION = 0, ROTATE_RIGHT = 1, ROTATE_LEFT = 2;
 	// current state of rotation
 	var nowRotating = NO_ROTATION;
 	// variables for stepping rotation
-	var startRotation = 0, currentRotation = 0, rotationStep = Math.PI * 2;
+	var startRotation = 0, currentRotation = 0, rotationStep = Math.PI * 2 / 4;
+	// basic translation unit because whole face takes 14 units on width
+	const baseTranslUnit = 7;
+
+	/**
+	 * Set alphabet map for obtaining focused letters
+	 */
+	function initAlphabetMap() {
+		currentAlphabet = 0;
+		alphabet = [];
+		alphabet[0] = 'abcdefghijklmnopq rstuvwxyz←';
+		alphabet[1] = 'ABCDEFGHIJKLMNOPQ RSTUVWXYZ←';
+		alphabet[3] = '0123456789áčďéěíň óřšťúůýžü←';
+		alphabet[2] = '.,?!-+_/\\@&#():;% €$"\'|[]{}←';
+		//alphabet[0] = '0123456789ÁČĎÉĚÍŇ ÓŘŠŤÚŮÝŽÜ←';
+	}
 
 	/**
 	 * Init scene and buffers
@@ -91,10 +108,6 @@
 		oneFaceIndicesCount = scene.indices.length;// get the count of indices one face has
 		//border face
 		scene.add(new Utils.Face(1, 1, 0, -0.0001, -1, {strip: false, orientation: or}));
-		// debug face
-		if (debug) {
-			scene.add(new Utils.Face(1, 1, 0, -0.0001, -1, {strip: false, orientation: or}));
-		}
 
 		vertexBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -131,16 +144,39 @@
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-		// draw alphabet
+		// draw basic small alphabet
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[0]);
 		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(rotationAlphabet.mul(camera.view)));
-		// first face frmo the start
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
+
+		// draw basic big alphabet
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, textures[1]);
+		gl.uniformMatrix4fv(program.modelview, false,
+			Utils.convert( new Mat4RotZ(-Math.PI / 2).mul(new Mat4Transl(-baseTranslUnit, baseTranslUnit, 0)).mul(rotationAlphabet).mul(camera.view))
+		);
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
+
+		// draw basic special alphabet
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, textures[2]);
+		gl.uniformMatrix4fv(program.modelview, false,
+			Utils.convert( new Mat4RotZ(Math.PI).mul(new Mat4Transl(0, 2*baseTranslUnit, 0)).mul(rotationAlphabet).mul(camera.view))
+		);
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
+
+		// draw numbers alphabet
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, textures[3]);
+		gl.uniformMatrix4fv(program.modelview, false,
+			Utils.convert( new Mat4RotZ(Math.PI / 2).mul(new Mat4Transl(baseTranslUnit, baseTranslUnit, 0)).mul(rotationAlphabet).mul(camera.view))
+		);
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
 
 		// draw border
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, textures[2]);
+		gl.bindTexture(gl.TEXTURE_2D, textures[4]);
 		gl.uniformMatrix4fv(program.projection, false, projection);
 		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation.mul(camera.view)));
 		// second face from the start
@@ -149,11 +185,11 @@
 		// draw debug border
 		if (debug) {
 			gl.activeTexture(gl.TEXTURE0);
-			gl.bindTexture(gl.TEXTURE_2D, textures[3]);
+			gl.bindTexture(gl.TEXTURE_2D, textures[5]);
 			gl.uniformMatrix4fv(program.projection, false, projection);
 			gl.uniformMatrix4fv(program.modelview, false, Utils.convert(debugTranslation.mul(camera.view)));
 			// last face
-			gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 4);
+			gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
 		}
 	}
 
@@ -202,14 +238,15 @@
 		camera.setPosition(new Vec3D(0, -10, 0));
 
 		initBuffers();
+		initAlphabetMap();
 
 		WS.setWebSocket(() => {}, onWsMessage, () => {});
 
 		Utils.initRequestAnimationFrame();
 
 		// load all textures
-		let images = ["img/alphabet-basic-small.png", "img/alphabet-numerics-small.png", "img/border.png", "img/border-debug.png"];
-		Utils.loadTexture(gl, images, function refreshTexture(imgs) {
+		let images = ["img/alphabet-basic-small.png", "img/alphabet-basic-big.png", "img/alphabet-special.png", "img/alphabet-numerics-small.png", "img/border.png", "img/border-debug.png"];
+		Utils.loadTexture(gl, images, (imgs) => {
 			textures = [];
 			for (let i = 0; i < imgs.length; i++) {
 				textures[i] = imgs[i];
@@ -235,23 +272,31 @@
 	}
 
 	function manageRotation() {
+		if (nowRotating === NO_ROTATION) return;
+
 		if (nowRotating === ROTATE_RIGHT) {
 			currentRotation += 0.05;
 			if (currentRotation > startRotation + rotationStep) {
 				currentRotation = startRotation + rotationStep;
 				rotationChange = 0;
 				nowRotating = NO_ROTATION;
+				currentAlphabet++;
 			}
-			rotationAlphabet = new Mat4RotZ(currentRotation);
 		} else if (nowRotating === ROTATE_LEFT) {
 			currentRotation -= 0.05;
 			if (currentRotation < startRotation - rotationStep) {
 				currentRotation = startRotation - rotationStep;
 				rotationChange = 0;
 				nowRotating = NO_ROTATION;
+				currentAlphabet--;
 			}
-			rotationAlphabet = new Mat4RotZ(currentRotation);
 		}
+		// -1 means rotation to left going from 0 to right alphabet (special chars)
+		if (currentAlphabet < 0) currentAlphabet = 3;
+		// 4 means rotation to right going from  3 to left alphabet (basic small)
+		if (currentAlphabet > 3) currentAlphabet = 0;
+
+		rotationAlphabet = new Mat4Transl(0, -baseTranslUnit, 0).mul(new Mat4RotZ(currentRotation)).mul(new Mat4Transl(0, baseTranslUnit, 0));
 	}
 
 	function onWsMessage(data) {
@@ -399,7 +444,7 @@
 		y += 2;
 		// 7 letters in a row
 		let seq = x + y * 7;
-		currentLetter = letters[seq];
+		currentLetter = alphabet[currentAlphabet][seq];
 	}
 
 	function addText() {
