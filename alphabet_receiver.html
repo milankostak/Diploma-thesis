@@ -275,7 +275,7 @@
 		if (nowRotating === NO_ROTATION) return;
 
 		if (nowRotating === ROTATE_RIGHT) {
-			currentRotation += 0.05;
+			currentRotation += 0.06;
 			if (currentRotation > startRotation + rotationStep) {
 				currentRotation = startRotation + rotationStep;
 				rotationChange = 0;
@@ -283,7 +283,7 @@
 				currentAlphabet++;
 			}
 		} else if (nowRotating === ROTATE_LEFT) {
-			currentRotation -= 0.05;
+			currentRotation -= 0.06;
 			if (currentRotation < startRotation - rotationStep) {
 				currentRotation = startRotation - rotationStep;
 				rotationChange = 0;
@@ -369,7 +369,7 @@
 	function doPosition(data) {
 		// finish
 		if (data.sequence === -1) {
-			// hide list message
+			// hide lost message
 			lost.style.top = "-50px";
 			// prevent any late from showing
 			lastReceivedMarkerSocketSequence = Number.MAX_VALUE;
