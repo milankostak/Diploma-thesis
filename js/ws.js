@@ -44,7 +44,7 @@ var WS = (function() {
 	 * This method needs to be called at first to check if web sockets are supported
 	 * @public
 	 */
-	WS.init = function() {
+	WS.init = () => {
 		if ("WebSocket" in window) {
 			console.log("WebSocket: WS is supported by your browser!");
 			isSupported = true;
@@ -62,12 +62,13 @@ var WS = (function() {
 	 * @param {Function} message function to be called when any data is received, called with parsed JSON data as parameter
 	 * @param {Function} close   function to be called when connection is closed, called before trying to reconnect
 	 */
-	WS.setWebSocket = function(open, message, close) {
+	WS.setWebSocket = (open, message, close) => {
 
 		if (!isSupported) {
 			WS.init();
 			if (!isSupported) return;
 		}
+
 		wsClient = new WebSocket(host);
 
 		// refresh connection every 30 seconds
@@ -76,17 +77,17 @@ var WS = (function() {
 			console.log("WebSocket: refreshing connection");
 		}, 30000);
 
-		wsClient.onopen = function() {
+		wsClient.onopen = () => {
 			console.log("WebSocket: connection is opened.");
 			open();
 		};
 
-		wsClient.onmessage = function(e) {
+		wsClient.onmessage = (e) => {
 			let data = JSON.parse(e.data);
 			message(data);
 		};
 
-		wsClient.onclose = function() {
+		wsClient.onclose = () => {
 			console.log("WebSocket: connection was closed.");
 			console.log("WebSocket: trying to restore the connection...");
 			clearInterval(refreshInterval);
