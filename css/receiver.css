@@ -1,0 +1,38 @@
+* {
+	margin: 0;
+	padding: 0;
+	font-family: Calibri, Arial, sans-serif;
+}
+
+div#lost {
+	font-size: 18px;
+	color: #DDD;
+	padding: 5px 20px;
+	background-color: #FF2222;
+	position: fixed;
+	top: -50px; /* always shown but outside wiewport, shown by zeroing top */
+	left: 45%;
+	transition: all .4s ease-in;
+}
+
+img {
+	display: none;
+}
+
+/* basic receiver */
+div#marker {
+	height: 60px;
+	width: 60px;
+	background-color: #00FF00;
+	position: fixed;
+	top: calc(50% - 30px);
+	left: calc(50% - 30px);
+}
+
+/* alphabet receiver */
+div#text {
+	position: fixed;
+	color: white;
+	margin-left: 10px;
+	font-size: 30px;
+}

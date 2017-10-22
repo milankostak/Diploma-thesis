@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Receiver</title>
+<link rel="stylesheet" type="text/css" href="/css/receiver.css">
 <script type="text/javascript" src="/js/transforms3d.js"></script>
 <script type="text/javascript" src="/js/webgl-utils.js"></script>
 <script type="text/javascript" src="/js/math2.js"></script>
@@ -522,34 +523,6 @@
 	}
 
 </script>
-<style type="text/css">
-	* {
-		margin: 0;
-		padding: 0;
-		font-family: Calibri, Arial, sans-serif;
-	}
-	div#marker {
-		height: 60px;
-		width: 60px;
-		background-color: #00FF00;
-		position: fixed;
-		top: calc(50% - 30px);
-		left: calc(50% - 30px);
-	}
-	div#lost {
-		font-size: 18px;
-		color: #DDD;
-		padding: 5px 20px;
-		background-color: #FF2222;
-		position: fixed;
-		top: -50px; /* always shown but outside wiewport, shown by zeroing top */
-		left: 45%;
-		transition: all .4s ease-in;
-	}
-	img {
-		display: none;
-	}
-</style>
 </head>
 <body>
 <img src="">
