@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Rotation object holds all necessary function for starting and ending of listening for DeviceOrientationEvent.
+ * Rotation object holds all necessary functions for starting and ending of listening for DeviceOrientationEvent.
  * It is assigned by its inner anonymous self-invoking function. By using this approach some variables and functions can remain private.
  *
  * @public

@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Detection object holds all necessary function for ...
+ * Detection object holds all necessary functions for detecting location of marker
  * It is assigned by its inner anonymous self-invoking function. By using this approach some variables and functions can remain private.
  *
  * @public
