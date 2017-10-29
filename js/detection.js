@@ -44,10 +44,18 @@ var Detection = (function() {
 	let sendPositionInterval;
 
 	/**
+	 * Relative address on which the server is listening for motion data.
+	 * It is set by init function.
+	 * @type {String}
+	 */
+	let address;
+
+	/**
 	 * Public initialization function. Sets all necessary variables.
 	 * @public
 	 */
-	Detection.init = function() {
+	Detection.init = function(addr) {
+		address = addr;
 		initBasics();
 		initPrograms();
 		initFB();
@@ -498,7 +506,7 @@ var Detection = (function() {
 	 */
 	function send(objectToSend) {
 		let request = new XMLHttpRequest();
-		request.open("POST", "/ajax/marker");
+		request.open('POST', address);
 		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 		request.send(JSON.stringify(objectToSend));
 	}

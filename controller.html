@@ -186,7 +186,7 @@
 	var allLabels = ["#nothing", "#position", "#rotation", "#both"];
 
 	window.onload = function() {
-		Detection.init();
+		Detection.init("/ajax/marker");
 
 		// set video listener, important for starting animation
 		video = document.querySelector("video");
