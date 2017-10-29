@@ -302,6 +302,8 @@
 	function onWsMessage(data) {
 		if (data.type === "rotation") {
 			doRotation(data);
+		} else if (data.type === "motion") {
+			doMotion(data);
 		} else if (data.type === "image") {
 			receivedImage(data);
 		} else if (data.type === "marker") {
@@ -357,6 +359,10 @@
 		} else {
 			//console.log("skipping rotation data " + data.sequence);
 		}
+	}
+
+	function doMotion(data) {
+		if (data.z > 4) addText();
 	}
 
 	function receivedImage(data) {

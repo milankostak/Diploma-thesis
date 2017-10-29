@@ -9,6 +9,7 @@
 <script type="text/javascript" src="/js/webgl-utils.js"></script>
 <script type="text/javascript" src="/js/detection.js"></script>
 <script type="text/javascript" src="/js/rotation.js"></script>
+<script type="text/javascript" src="/js/motion.js"></script>
 <script id="shader-fs1" type="x-shader/x-fragment">
 	precision mediump float;
 
@@ -210,6 +211,9 @@
 		// init Rotation object with address on which server is listening
 		Rotation.init("/ajax/rotation");
 
+		// init Motion object with address on which server is listening
+		Motion.init("/ajax/motion");
+
 		//https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
 		navigator.mediaDevices.getUserMedia({
 			audio: false,
@@ -268,6 +272,7 @@
 		// finish others
 		Rotation.finish();
 		Detection.finish();
+		Motion.finish();
 
 		setActive("nothing");
 	}
@@ -281,6 +286,7 @@
 		currentMethod = DO_POSITION;
 
 		Rotation.finish();
+		Motion.finish();
 
 		if (!isAnimating) {
 			isAnimating = true;
@@ -302,6 +308,7 @@
 
 		Detection.finish();
 		Rotation.start();
+		Motion.start();
 
 		setActive("rotation");
 	}
@@ -315,6 +322,7 @@
 		currentMethod = DO_BOTH;
 
 		Rotation.start();
+		Motion.start();
 
 		if (!isAnimating) {
 			isAnimating = true;
