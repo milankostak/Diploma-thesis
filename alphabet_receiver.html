@@ -362,7 +362,7 @@
 	}
 
 	function doMotion(data) {
-		if (data.z > 4) addText();
+		if (Math.abs(data.z) > 2.3) addText();
 	}
 
 	function receivedImage(data) {
