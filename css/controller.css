@@ -14,9 +14,16 @@ html {
 	width: 100%;
 }
 
-/* canvas is used for drawing only, video is shown instead */
+/*
+ canvas is used for drawing only
+ video is shown instead as it provides image without any delay and with better performace
+ */
 canvas {
 	display: none;
+}
+
+video {
+	height: 99%;
 }
 
 .center {
@@ -44,8 +51,6 @@ canvas {
 	display: flex;
 	align-items: stretch;
 	justify-content: space-between;
-	height: 100%;
-	width: 100%;
 }
 
 .main.right {
@@ -54,6 +59,7 @@ canvas {
 
 .main.bottom {
 	flex-direction: column;
+	height: 100%;
 }
 
 .controls {
@@ -61,9 +67,8 @@ canvas {
 	font-size: 25px;
 	color: #666;
 	background-color: white;
-	box-shadow: 0 0 60px 0 #333;
-	border: 1px solid #ddd;
 	padding: 20px;
+	min-width: 190px;
 }
 
 .controls label {
