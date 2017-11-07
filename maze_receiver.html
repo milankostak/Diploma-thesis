@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Maze</title>
+<link rel="stylesheet" type="text/css" href="/css/receiver.css">
+<script type="text/javascript" src="/js/transforms3d.js"></script>
+<script type="text/javascript" src="/js/webgl-utils.js"></script>
+<script type="text/javascript" src="/js/math2.js"></script>
+<script type="text/javascript" src="/js/ws.js"></script>
+<script id="shader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+
+	uniform sampler2D texture;
+
+	varying vec2 textureCoord;
+	
+	void main(void) {
+		vec4 finalColor = texture2D(texture, textureCoord);
+		gl_FragColor = finalColor;
+	}
+</script>
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec2 aTextureCoord;
+
+	uniform mat4 projection;
+	uniform mat4 modelview;
+
+	varying vec2 textureCoord;
+
+	void main(void) {
+		textureCoord = aTextureCoord;
+		gl_Position = projection * modelview * vec4(aVertexPosition, 1.0);
+	}
+</script>
+<script type="text/javascript">
+	"use strict";
+
+	// HTMLCanvasElement
+	var canvas, readCanvas;
+	// CanvasRenderingContext2D
+	var readContext;
+	// WebGLRenderingContext
+	var gl;
+	// WebGLProgram
+	var program;
+	// WebGLBuffer
+	var vertexBuffer, indexBuffer, textureBuffer;
+	// Mat4PerspRH
+	var projection;
+	// WebGLTexture
+	var textures;
+	// Mat4
+	var rotation, rotationAlphabet, translation;
+	//  Camera
+	var camera;
+	// number, holds indices count of block object with alphabet
+	var oneFaceIndicesCount;
+	// numbers, holding first received data after restart for computing relative change
+	var firstMarkerX = 0, firstMarkerY = 0;
+	// numbers, holding last sequence number for skipping delayed packets
+	var lastReceivedRotationSocketSequence = -1, lastReceivedMarkerSocketSequence = -1;
+	// boolean, if position data sequence should be restarted
+	var toBeRestarted = true;
+	// HTMLDivElement
+	var lost;
+
+	// alphabet rotation
+	var rotationChange = 0;
+	// constants for rotation
+	const NO_ROTATION = 0, ROTATE_RIGHT = 1, ROTATE_LEFT = 2;
+	// current state of rotation
+	var nowRotating = NO_ROTATION;
+	// variables for stepping rotation
+	var startRotation = 0, currentRotation = 0, rotationStep = Math.PI * 2 / 4;
+	// basic translation unit because whole face takes 14 units on width
+	const baseTranslUnit = 7;
+
+	/**
+	 * Init scene and buffers
+	 */	
+	function initBuffers() {
+		let scene = new Utils.Scene();
+		let or = new Mat3RotX(Math.PI / 2);
+
+		// maze face
+		scene.add(new Utils.Face(7, 4, 0, 0, 0, {strip: false, orientation: or}));
+		oneFaceIndicesCount = scene.indices.length;// get the count of indices one face has
+		// stone face
+		scene.add(new Utils.Face(0.5, 0.5, -4.5, -0.0001, -2.5, {strip: false, orientation: or}));
+
+		vertexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.vertices), gl.STATIC_DRAW);
+		vertexBuffer.itemSize = 3;
+		vertexBuffer.numItems = scene.vertices.length;
+
+		indexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(scene.indices), gl.STATIC_DRAW);
+		indexBuffer.itemSize = 1;
+		indexBuffer.numItems = scene.indices.length;
+
+		textureBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.textureCoords), gl.STATIC_DRAW);
+		textureBuffer.itemSize = 2;
+		textureBuffer.numItems = scene.textureCoords.length;
+	}
+
+	/**
+	 * Main repaint function
+	 */
+	function repaint() {
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		
+		gl.useProgram(program);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.vertexAttribPointer(program.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.vertexAttribPointer(program.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+		// draw basic small alphabet
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, textures[0]);
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(rotationAlphabet.mul(camera.view)));
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
+
+		// draw border
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, textures[1]);
+		gl.uniformMatrix4fv(program.projection, false, projection);
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation.mul(camera.view)));
+		// second face from the start
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
+	}
+
+	window.onload = function() {
+		lost = document.querySelector("#lost");
+		canvas = document.querySelector("canvas");
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight-5;
+		gl = Utils.initWebGL(canvas);
+
+		gl.clearColor(0.1, 0.1, 0.1, 1);
+		gl.disable(gl.DEPTH_TEST);
+
+		gl.enable(gl.BLEND);
+		gl.blendEquation(gl.FUNC_ADD);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+		gl.enable(gl.CULL_FACE);
+		gl.frontFace(gl.CCW);
+		gl.cullFace(gl.BACK);
+
+		program = gl.createProgram();
+		Utils.initShaders(gl, program, "shader-vs", "shader-fs");
+		gl.linkProgram(program);
+		gl.useProgram(program);
+		
+		gl.viewport(0, 0, canvas.width, canvas.height);
+		program.vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
+		gl.enableVertexAttribArray(program.vertexPositionAttribute);
+
+		program.vertexTexCoordAttribute = gl.getAttribLocation(program, "aTextureCoord");
+		gl.enableVertexAttribArray(program.vertexTexCoordAttribute);
+
+		program.projection = gl.getUniformLocation(program, "projection");
+		program.modelview = gl.getUniformLocation(program, "modelview");
+		program.texture = gl.getUniformLocation(program, "texture");
+
+		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		rotation = new Mat4RotY(-Math.PI/2);
+		rotationAlphabet = new Mat4Identity();
+		translation = new Mat4Identity();
+		camera = new Camera();
+		camera.setAzimuth(0);
+		camera.setZenith(0);
+		camera.setPosition(new Vec3D(0, -10, 0));
+
+		initBuffers();
+
+		WS.setWebSocket(() => {}, onWsMessage, () => {});
+
+		Utils.initRequestAnimationFrame();
+
+		// load all textures
+		let images = ["img/maze.png", "img/stone.png"];
+		Utils.loadTexture(gl, images, (imgs) => {
+			textures = [];
+			for (let i = 0; i < imgs.length; i++) {
+				textures[i] = imgs[i];
+				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[i].image);
+
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+			}
+			// pass maze image
+			initReadCanvas(textures[0].image);
+			// start animation
+			animate();
+		});
+	};
+
+	function animate() {
+		//manageRotation();
+		repaint();
+		requestAnimFrame(animate);
+	}
+
+	/**
+	 * Init canvas for reading RGB values of a maze image
+	 * @param  {Image} img
+	 */
+	function initReadCanvas(img) {
+		readCanvas = document.createElement('canvas');
+		readCanvas.width = img.width;
+		readCanvas.height = img.height;
+		readContext = readCanvas.getContext('2d');
+		readContext.drawImage(img, 0, 0, img.width, img.height);
+	}
+
+	/**
+	 * Get color of given pixel coordinates from maze image
+	 * @param  {number} x x coordinate
+	 * @param  {number} y y coordinate
+	 * @return {Uint8ClampedArray}   RGBA array(4) of colors
+	 */
+	function getColor(x, y) {
+		return readContext.getImageData(x, y, 1, 1).data;
+	}
+
+	function onWsMessage(data) {
+		if (data.type === "rotation") {
+			doRotation(data);
+		} else if (data.type === "marker") {
+			doPosition(data);
+		}
+	}
+
+	function doPosition(data) {
+		// finish
+		if (data.sequence === -1) {
+			// hide lost message
+			lost.style.top = "-50px";
+			// prevent any late from showing
+			lastReceivedMarkerSocketSequence = Number.MAX_VALUE;
+			return;
+		}
+
+		// start or restart the sequence so we can skip delayed data
+		// wait for two data sets to be sure
+		// first has sequence 1
+		if (data.sequence <= 2) {
+			lastReceivedMarkerSocketSequence = -1;
+			toBeRestarted = true;
+		}
+
+		if (data.sequence > lastReceivedMarkerSocketSequence) {
+			lastReceivedMarkerSocketSequence = data.sequence;
+			//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
+			//console.log(data.max, lastMarkerX, data.x, lastMarkerY, data.y);
+
+			if (data.count > 0) {
+				if (!toBeRestarted) {
+					translate(firstMarkerX - data.x, firstMarkerY - data.y, 45);
+					//console.log(data.x, data.y, firstMarkerX, firstMarkerY);
+				} else {
+					toBeRestarted = false;
+					firstMarkerX = data.x;
+					firstMarkerY = data.y;
+				}
+
+				lost.style.top = "-50px";
+			} else {
+				lost.style.top = "0px";
+			}
+		} else {
+			//console.log("skipping marker data " + data.sequence);
+		}
+	}
+
+	const baseX = 200;
+	const baseY = 100;
+	const stoneSize = 100;
+	const WIDTH = 700;
+	const HEIGHT = 350;
+
+	function translate(x, y, divisor) {
+		y = -y;
+		let base = 100 / divisor;
+
+		//console.log(x, y);
+		let x1 = editNumber(x, base, baseX);
+		let y1 = HEIGHT*2 - editNumber(y, base, baseY);
+
+		let topLeft = getColor(x1, y1);
+		let topRight = getColor(x1 + stoneSize, y1);
+		let center = getColor(x1 + stoneSize/2, y1 + stoneSize/2);
+		let bottomLeft = getColor(x1, y1 + stoneSize);
+		let bottomRight = getColor(x1 + stoneSize, y1 + stoneSize);
+
+		//console.log(x1, y1);
+		//console.log(topLeft, topRight);
+		//console.log(bottomLeft, bottomRight);
+
+		//console.log(WIDTH, Math.round(baseX/base), Math.round(x));
+		x = Math2.clamp(x, -baseX/base, (baseX/base) * 5.5);
+		y = Math2.clamp(y, -baseY/base, (baseY/base) * 6);
+
+		translation = new Mat4Transl(x/divisor, 0, y/divisor);
+	}
+
+	function editNumber(num, divisor, base) {
+		num *= divisor;
+
+		num += base;
+
+		return Math.round(num);
+	}
+
+	function doRotation(data) {
+		// start or restart
+		if (data.sequence <= 2) {
+			lastReceivedRotationSocketSequence = -1;
+		}
+
+		// skip all delayed data
+		if (data.sequence > lastReceivedRotationSocketSequence) {
+			lastReceivedRotationSocketSequence = data.sequence;
+
+			if (nowRotating === NO_ROTATION) {
+				// this operation is some magic that I looked up in the data
+				// looks at gamma (basically tells if screen is facing more up or down) and changes beta when gama is positive number
+				let rotDegrees = (data.gamma > 0) ? 180 - data.beta : data.beta;
+				// narrow data; second benefit is that there is no difference in numbers when screen is up or down
+				if (rotDegrees < 0) rotDegrees += 360;
+				// base (0) of rotDegrees is when top is left and at the same level as bottom of the phone
+				// goes as normal degrees from 0 to 360 clockwise
+				//console.log(Math.round(data.beta), Math.round(data.gamma), Math.round(rotDegrees));
+
+				// 20 from base with 15 degrees space
+				// rotation to right
+				if ((rotDegrees > 20 && rotDegrees < 35) || (rotDegrees > 200 && rotDegrees < 215) || (rotDegrees > 110 && rotDegrees < 125)) {
+					// 20 -> 35 (top to left) ; 200 -> 215 (top to right) ; 110 -> 125 (top to up)
+					if (rotationChange < 0) rotationChange = 0;
+					rotationChange++;
+
+				// rotation to left
+				} else if ((rotDegrees < 340 && rotDegrees > 325) || (rotDegrees < 160 && rotDegrees > 145) || (rotDegrees < 70 && rotDegrees > 55)) {
+					// 340 -> 325 (top to left) ; 145 -> 160 (top to right) ; 50 -> 70 (top to up)
+					if (rotationChange > 0) rotationChange = 0;
+					rotationChange--;
+				}
+
+				if (rotationChange > 3) {
+					nowRotating = ROTATE_RIGHT;
+					startRotation = currentRotation;
+				} else if (rotationChange < -3) {
+					nowRotating = ROTATE_LEFT;
+					startRotation = currentRotation;
+				}
+			}
+
+		} else {
+			//console.log("skipping rotation data " + data.sequence);
+		}
+	}
+
+
+	function manageRotation() {
+		if (nowRotating === NO_ROTATION) return;
+
+		if (nowRotating === ROTATE_RIGHT) {
+			currentRotation += 0.06;
+			if (currentRotation > startRotation + rotationStep) {
+				currentRotation = startRotation + rotationStep;
+				rotationChange = 0;
+				nowRotating = NO_ROTATION;
+			}
+		} else if (nowRotating === ROTATE_LEFT) {
+			currentRotation -= 0.06;
+			if (currentRotation < startRotation - rotationStep) {
+				currentRotation = startRotation - rotationStep;
+				rotationChange = 0;
+				nowRotating = NO_ROTATION;
+			}
+		}
+
+		rotationAlphabet = new Mat4Transl(0, -baseTranslUnit, 0).mul(new Mat4RotZ(currentRotation)).mul(new Mat4Transl(0, baseTranslUnit, 0));
+	}
+
+</script>
+</head>
+<body>
+<img src="">
+<canvas></canvas>
+<div id="lost">Marker is lost.</div>
+</body>
+</html>
