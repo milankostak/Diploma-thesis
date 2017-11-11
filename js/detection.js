@@ -42,7 +42,11 @@ var Detection = (function() {
 	// variables for sending marker location
 	let dataToSend = [], positionSequence = 0;
 	// id of interval
-	let sendPositionInterval;
+	let markerFoundCheckInterval;
+	// number, check every 50 ms if marker is lost
+	const markerFoundCheckIntervalTime = 50;
+	// boolean, if it remains false for 50ms then it means marker was lost
+	let dataSent = true;
 
 	/**
 	 * Public initialization function. Sets all necessary variables.
@@ -377,8 +381,6 @@ var Detection = (function() {
 			window.performance.mark("a");
 			//console.log("MAX")
 			//console.log(max, x, y);
-		//}
-
 	}
 
 	/**
@@ -401,7 +403,7 @@ var Detection = (function() {
 	Detection.restart = function() {
 		// restart the sequence so the receiver can also restart the relative position
 		positionSequence = 0;
-		sendPositionInterval = setInterval(sendPosition, 50);
+		markerFoundCheckInterval = setInterval(checkIfMarkerFound, markerFoundCheckIntervalTime);
 	};
 
 	/**
@@ -409,8 +411,7 @@ var Detection = (function() {
 	 * @public
 	 */
 	Detection.finish = function() {
-		clearInterval(sendPositionInterval);
-		sendPosition();
+		clearInterval(markerFoundCheckInterval);
 		let obj = {
 			type: "marker",
 			time: new Date().getTime(),
@@ -441,8 +442,8 @@ var Detection = (function() {
 	 * Function for sending found marker position to the server
 	 * @private
 	 */
-	function sendPosition() {
-		if (dataToSend.length === 0) {
+	function checkIfMarkerFound() {
+		if (!dataSent) {
 			let obj = {
 				type: "marker",
 				time: new Date().getTime(),
@@ -452,75 +453,11 @@ var Detection = (function() {
 				y: 0,
 				count: 0
 			};
-			send(obj);
-		} else {
-			let a = dataToSend;
-/*
-			// weighted mean of values
-			// weight is getting lower with age of the value
-			// weight is given by the sequence, last having 100%, first (oldest) the least of given fraction
-			let weight = a.map((val, index) => (1 / a.length) * (index + 1)).reduce((a, b) => a + b);
-			let max = a.map((val, index) => val.max * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
-			let coordX = a.map((val, index) => val.x * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
-			let coordY = a.map((val, index) => val.y * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
-			let count = a.map((val, index) => val.count * ((1 / a.length) * (index + 1))).reduce((a, b) => a + b) / weight;
-
-			// leave last 4 values
-			if (dataToSend.length > 4) {
-				dataToSend = a.slice(a.length - 4);
-			// or take away one if there is not enough values
-			} else {
-				dataToSend = a.slice(1);
-			}
-*/
-
-			//console.log(weight, max, coordX, coordY, count);
-			let sumMax = 0, sumX = 0, sumY = 0, sumCount = 0;
-			for (let i = 0; i < a.length; i++) {
-				sumMax += a[i].max;
-				sumX += a[i].x;
-				sumY += a[i].y;
-				sumCount += a[i].count;
-			}
-			// send mean of data
-			let max = sumMax / a.length;
-			let coordX = sumX / a.length;
-			let coordY = sumY / a.length;
-			let count = sumCount / a.length;
-			// clear dataToSend
-			dataToSend.length = 0;
-
-			// keep at least 4 last values
-			/*if (dataToSend.length > 4) {
-				dataToSend = a.slice(a.length - 4);
-			// or take away one if there is not enough values
-			} else {
-				dataToSend = a.slice(1);
-			}*/
-
-			let obj = {
-				type: "marker",
-				time: new Date().getTime(),
-				sequence: ++positionSequence,
-				max: max,
-				x: coordX,
-				y: coordY,
-				count: count
-			};
-			send(obj);
+			Sender.add(obj)
 		}
+		dataSent = false;
 	}
 
-	/**
-	 * Sends data to server
-	 * @param  {object} objectToSend object of data to be sent
-	 */
-	function send(objectToSend) {
-		let request = new XMLHttpRequest();
-		request.open('POST', address);
-		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-		request.send(JSON.stringify(objectToSend));
-	}
-
+	// export Detection object
 	return Detection;
 })();
