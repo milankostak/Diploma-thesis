@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<title>Pong</title>
+<link rel="stylesheet" type="text/css" href="/css/receiver.css">
+<script type="text/javascript" src="/js/transforms3d.js"></script>
+<script type="text/javascript" src="/js/webgl-utils.js"></script>
+<script type="text/javascript" src="/js/math2.js"></script>
+<script type="text/javascript" src="/js/ws.js"></script>
+<script id="shader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+
+	uniform sampler2D texture;
+
+	varying vec2 textureCoord;
+	
+	void main(void) {
+		vec4 finalColor = texture2D(texture, textureCoord);
+		gl_FragColor = finalColor;
+	}
+</script>
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec2 aTextureCoord;
+
+	uniform mat4 projection;
+	uniform mat4 modelview;
+
+	varying vec2 textureCoord;
+
+	void main(void) {
+		textureCoord = aTextureCoord;
+		gl_Position = projection * modelview * vec4(aVertexPosition, 1.0);
+	}
+</script>
+<script type="text/javascript">
+	"use strict";
+
+	// HTMLCanvasElement
+	var canvas;
+	// WebGLRenderingContext
+	var gl;
+	// WebGLProgram
+	var program;
+	// WebGLBuffer
+	var vertexBuffer, indexBuffer, textureBuffer;
+	// Mat4PerspRH
+	var projection;
+	// WebGLTexture array
+	var textures;
+	// Mat4Rot
+	var translation1, translation2, translationPuck;
+	//  Camera
+	var camera;
+	// number, holds indices count of block object with alphabet
+	var oneFaceIndicesCount;
+	// numbers, holding first received data after restart for computing relative change
+	var firstMarkerX = 0, firstMarkerY = 0;
+	// number, holding last sequence number for skipping delayed packets
+	var lastReceivedMarkerSocketSequence = -1;
+	// boolean, if position data sequence should be restarted
+	var toBeRestarted = true;
+	// HTMLDivElement
+	var lost;
+
+	// GAME VARIABLES
+
+	// translation of puck on the X axis
+	const baseXtransl = 6.75;
+	// numbers, puck coordinates
+	var puckX, puckY;
+	// numbers, puck move values
+	var puckXchange, puckYchange;
+	// score of players
+	var score1 = 0, score2 = 0;
+	// location of players' puck on Y axis
+	var player1Y = 0, player2Y = 0;
+	// constant of value where change of direction should appear when hitting border up and down
+	const BORDER_Y = 3.92;
+	// number, half of height of the slider 
+	const SLIDER_HEIGHT = 0.8;
+	// number, playgournd height
+	const PLAYGROUND_HEIGHT = 4;
+	// number, max (and min) value for slider
+	const SLIDER_MAX_Y = PLAYGROUND_HEIGHT - SLIDER_HEIGHT;
+
+	/**
+	 * Init scene and buffers
+	 */	
+	function initBuffers() {
+		let scene = new Utils.Scene();
+		let or = new Mat3RotX(Math.PI / 2);
+
+		// maze face
+		scene.add(new Utils.Face(7, 4, 0, 0, 0, {strip: false, orientation: or}));
+		oneFaceIndicesCount = scene.indices.length;// get the count of indices one face has
+		// slider face
+		scene.add(new Utils.Face(0.2, 0.8, 0, -0.0001, 0, {strip: false, orientation: or}));
+		// puck face
+		scene.add(new Utils.Face(0.1, 0.1, 0, -0.0001, 0, {strip: false, orientation: or}));
+
+		vertexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.vertices), gl.STATIC_DRAW);
+		vertexBuffer.itemSize = 3;
+		vertexBuffer.numItems = scene.vertices.length;
+
+		indexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(scene.indices), gl.STATIC_DRAW);
+		indexBuffer.itemSize = 1;
+		indexBuffer.numItems = scene.indices.length;
+
+		textureBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.textureCoords), gl.STATIC_DRAW);
+		textureBuffer.itemSize = 2;
+		textureBuffer.numItems = scene.textureCoords.length;
+	}
+
+	/**
+	 * Main repaint function
+	 */
+	function repaint() {
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		
+		gl.useProgram(program);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.vertexAttribPointer(program.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.vertexAttribPointer(program.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+		// draw playground
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, textures[0]);
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(camera.view));
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
+
+		// draw slider of first player
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, textures[1]);
+		gl.uniformMatrix4fv(program.projection, false, projection);
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation1.mul(camera.view)));
+		// second face from the start
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
+
+		// draw slider of second player
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, textures[1]);
+		gl.uniformMatrix4fv(program.projection, false, projection);
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation2.mul(camera.view)));
+		// second face from the start
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
+
+		// draw pubkc
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, textures[2]);
+		gl.uniformMatrix4fv(program.projection, false, projection);
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translationPuck.mul(camera.view)));
+		// second face from the start
+		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 4);
+	}
+
+	window.onload = function() {
+		lost = document.querySelector("#lost");
+		canvas = document.querySelector("canvas");
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight-5;
+		gl = Utils.initWebGL(canvas);
+
+		gl.clearColor(0.1, 0.1, 0.1, 1);
+		gl.disable(gl.DEPTH_TEST);
+
+		gl.enable(gl.BLEND);
+		gl.blendEquation(gl.FUNC_ADD);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+		gl.enable(gl.CULL_FACE);
+		gl.frontFace(gl.CCW);
+		gl.cullFace(gl.BACK);
+
+		program = gl.createProgram();
+		Utils.initShaders(gl, program, "shader-vs", "shader-fs");
+		gl.linkProgram(program);
+		gl.useProgram(program);
+		
+		gl.viewport(0, 0, canvas.width, canvas.height);
+		program.vertexPositionAttribute = gl.getAttribLocation(program, "aVertexPosition");
+		gl.enableVertexAttribArray(program.vertexPositionAttribute);
+
+		program.vertexTexCoordAttribute = gl.getAttribLocation(program, "aTextureCoord");
+		gl.enableVertexAttribArray(program.vertexTexCoordAttribute);
+
+		program.projection = gl.getUniformLocation(program, "projection");
+		program.modelview = gl.getUniformLocation(program, "modelview");
+		program.texture = gl.getUniformLocation(program, "texture");
+
+		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		translationPuck = new Mat4Identity();
+		translation1 = new Mat4Transl(-baseXtransl, 0, player1Y);
+		translation2 = new Mat4Transl(baseXtransl, 0, player2Y);
+		camera = new Camera();
+		camera.setAzimuth(0);
+		camera.setZenith(0);
+		camera.setPosition(new Vec3D(0, -10, 0));
+
+		initBuffers();
+		resetPuck();
+
+		WS.setWebSocket(() => {}, onWsMessage, () => {});
+
+		Utils.initRequestAnimationFrame();
+
+		// load all textures
+		let images = ["img/pong.png", "img/slider.png", "img/puck.png"];
+		Utils.loadTexture(gl, images, (imgs) => {
+			textures = [];
+			for (let i = 0; i < imgs.length; i++) {
+				textures[i] = imgs[i];
+				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textures[i].image);
+
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+			}
+			// start animation
+			animate();
+		});
+	};
+
+	function animate() {
+		movePuck();
+		repaint();
+		requestAnimFrame(animate);
+	}
+
+	function resetPuck() {
+		puckX = 0;
+		puckY = (Math.random() * 8) - 4;
+		puckXchange = 0.04;
+		puckYchange = 0.04;
+	}
+
+	function fasterPuck() {
+		puckXchange += 0.01 * Math.sign(puckXchange);
+		puckYchange += 0.01 * Math.sign(puckYchange);
+	}
+
+	function movePuck() {
+		puckX += puckXchange;
+
+		// score for left player
+		if (puckX > 6.45) {
+			if (puckY < player2Y + SLIDER_HEIGHT && puckY > player2Y - SLIDER_HEIGHT) {
+				puckXchange = -puckXchange;
+				fasterPuck();
+			} else {
+				resetPuck();
+				document.querySelector("#score1").innerHTML = ++score1;
+			}
+		}
+		// score for right player
+		else if (puckX < -6.45) {
+			if (puckY < player1Y + SLIDER_HEIGHT && puckY > player1Y - SLIDER_HEIGHT) {
+				puckXchange = -puckXchange;
+				fasterPuck();
+			} else {
+				resetPuck();
+				document.querySelector("#score2").innerHTML = ++score2;
+			}
+		}
+
+		// top and bottom border
+		puckY += puckYchange;
+		if (puckY > BORDER_Y) {
+			puckY = BORDER_Y;
+			puckYchange = -puckYchange;
+		} else if (puckY < -BORDER_Y) {
+			puckY = -BORDER_Y;
+			puckYchange = -puckYchange;
+		}
+
+		// fake computer player for now
+		translation2 = new Mat4Transl(baseXtransl, 0, puckY);
+		player2Y = puckY;
+
+		translationPuck = new Mat4Transl(puckX, 0, puckY);
+	}
+
+	function onWsMessage(data) {
+		for (let i = 0; i < data.length; i++) {
+			let d = data[i];
+			if (d.type === "marker") {
+				doPosition(d);
+			}
+		}
+	}
+
+	function doPosition(data) {
+		// finish
+		if (data.sequence === -1) {
+			// hide lost message
+			lost.style.top = "-50px";
+			// prevent any late from showing
+			lastReceivedMarkerSocketSequence = Number.MAX_VALUE;
+			return;
+		}
+
+		// start or restart the sequence so we can skip delayed data
+		// wait for two data sets to be sure
+		// first has sequence 1
+		if (data.sequence <= 2) {
+			lastReceivedMarkerSocketSequence = -1;
+			toBeRestarted = true;
+		}
+
+		if (data.sequence > lastReceivedMarkerSocketSequence) {
+			lastReceivedMarkerSocketSequence = data.sequence;
+
+			if (data.count > 0) {
+				if (!toBeRestarted) {
+					translate(firstMarkerY - data.y, 50);
+				} else {
+					toBeRestarted = false;
+					firstMarkerY = data.y;
+				}
+
+				lost.style.top = "-50px";
+			} else {
+				lost.style.top = "0px";
+			}
+		} else {
+			//console.log("skipping marker data " + data.sequence);
+		}
+	}
+
+	function translate(y, divisor) {
+		let val = -y/divisor;
+		val = Math2.clamp(val, -SLIDER_MAX_Y, SLIDER_MAX_Y);
+
+		player1Y = val;
+		translation1 = new Mat4Transl(-baseXtransl, 0, val);
+	}
+
+</script>
+<style type="text/css">
+	#score1,
+	#score2 {
+		position: absolute;
+		top: 0;
+		color: #ffed00;
+		font-size: 60px;
+		width: 150px;
+		text-align: center;
+	}
+	#score1 {
+		left: 35%;
+	}
+	#score2 {
+		right: 35%;
+	}
+</style>
+</head>
+<body>
+<img src="">
+<canvas></canvas>
+<div id="score1">0</div>
+<div id="score2">0</div>
+<div id="lost">Marker is lost.</div>
+</body>
+</html>
