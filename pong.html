@@ -247,8 +247,8 @@
 	function resetPuck() {
 		puckX = 0;
 		puckY = (Math.random() * 8) - 4;
-		puckXchange = 0.04;
-		puckYchange = 0.04;
+		puckXchange = 0.04 * Math.sign((Math.random() * 2) - 1);
+		puckYchange = 0.04 * Math.sign((Math.random() * 2) - 1);
 	}
 
 	function fasterPuck() {
