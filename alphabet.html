@@ -361,8 +361,10 @@
 		}
 	}
 
+	var blockMotion = false;
 	function doMotion(data) {
 		if (Math.abs(data.z) > 2.3) addText();
+		blockMotion = (Math.abs(data.x) > 1 || Math.abs(data.y) > 1 || Math.abs(data.z) > 1);
 	}
 
 	function receivedImage(data) {
@@ -373,6 +375,10 @@
 	}
 
 	function doPosition(data) {
+		if (blockMotion) {
+			console.log("blokujeme");
+			toBeRestarted = true;
+		}
 		// finish
 		if (data.sequence === -1) {
 			// hide lost message
