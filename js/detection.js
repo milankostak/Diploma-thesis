@@ -422,6 +422,7 @@ var Detection = (function() {
 
 	/**
 	 * Create object and put it into queue for sending
+	 * @private
 	 * @param  {Object} obj2 data about marker
 	 */
 	function send(obj2) {
