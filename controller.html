@@ -176,15 +176,9 @@
 
 	// HTMLVideoElement
 	var video;
-	// constants for methods
-	const DO_NOTHING = 1, DO_POSITION = 2, DO_ROTATION = 3, DO_BOTH = 4;
-	// currently running method
-	var currentMethod = DO_NOTHING;
 	// info if detection is being performed - if animation is running
 	// also is used to make sure that animation is running only once
 	var isAnimating = false;
-	// labels of all buttons
-	var allLabels = ["#nothing", "#position", "#rotation", "#both"];
 
 	window.onload = function() {
 		Detection.init();
@@ -195,10 +189,11 @@
 		video.addEventListener("click", sendTouch, false);
 
 		// method change listeners
-		document.querySelector("label#nothing").addEventListener("click", doNothing, false);
-		document.querySelector("label#position").addEventListener("click", doPosition, false);
-		document.querySelector("label#rotation").addEventListener("click", doRotation, false);
-		document.querySelector("label#both").addEventListener("click", doBoth, false);
+		document.querySelector("label#all").addEventListener("click", doAll, false);
+		document.querySelector("label#none").addEventListener("click", doNone, false);
+		document.querySelector("label#position input").addEventListener("change", doPosition, false);
+		document.querySelector("label#rotation input").addEventListener("change", doRotation, false);
+		document.querySelector("label#motion input").addEventListener("change", doMotion, false);
 
 		// window size listener for changing layout
 		// checks which one of height or width is bigger and changes the layout appropriately
@@ -227,7 +222,7 @@
 			video.srcObject = stream;
 		}).catch(function(error) {
 			if (error.name === "ConstraintNotSatisfiedError" || error.name === "NotFoundError") {
-				alert("Your camera does not meet required resolution for this appplication to work.");
+				alert("Your camera does not meet required resolution for this application to work.");
 			}
 			console.log("%cVideo Error: " + error, 'color: red');
 			console.log(error);
@@ -247,7 +242,7 @@
 	}
 
 	/**
-	 * Event handler when acmera is ready to give pictures
+	 * Event handler when camera is ready to give pictures
 	 */
 	function setupAfterVideoStreamIsReady() {
 		Detection.setupAfterVideoStreamIsReady(video.videoWidth, video.videoHeight);
@@ -258,92 +253,86 @@
 	}
 
 	/**
-	 * Event handler when particular button is clicked
-	 * Ensures Rotation and Detection is finished
-	 * Sets class for GUI modification
+	 * Event handler for starting all operations
 	 */
-	function doNothing() {
-		currentMethod = DO_NOTHING;
-		isAnimating = false;
+	function doAll() {
+		document.querySelector("#all").classList.add("active");
+		setTimeout(function() {
+			document.querySelector("#all").classList.remove("active");
+		}, 150);
 
-		// finish others
-		Rotation.finish();
-		Detection.finish();
-		Motion.finish();
-
-		setActive("nothing");
+		document.querySelector("label#position input").checked = true;
+		document.querySelector("label#rotation input").checked = true;
+		document.querySelector("label#motion input").checked = true;
+		doPosition();
+		doRotation();
+		doMotion();
 	}
 
 	/**
-	 * Event handler when particular button is clicked
-	 * Ensures Rotation is finished and animation is started if it's not running already
-	 * Sets class for GUI modification
+	 * Event handler for stopping all operations
+	 */
+	function doNone() {
+		document.querySelector("#none").classList.add("active");
+		setTimeout(function() {
+			document.querySelector("#none").classList.remove("active");
+		}, 150);
+
+		document.querySelector("label#position input").checked = false;
+		document.querySelector("label#rotation input").checked = false;
+		document.querySelector("label#motion input").checked = false;
+		doPosition();
+		doRotation();
+		doMotion();
+	}
+
+	/**
+	 * Event handler when position button is clicked
 	 */
 	function doPosition() {
-		currentMethod = DO_POSITION;
-
-		Rotation.finish();
-		Motion.finish();
-
-		if (!isAnimating) {
-			isAnimating = true;
-			Detection.restart();
-			animate();
+		if (document.querySelector("label#position input").checked) {
+			document.querySelector("label#position").classList.add("active");
+			if (!isAnimating) {
+				isAnimating = true;
+				Detection.restart();
+				animate();
+			}
+		} else {
+			document.querySelector("label#position").classList.remove("active");
+			Detection.finish();
+			isAnimating = false;
 		}
-
-		setActive("position");
 	}
 
 	/**
-	 * Event handler when particular button is clicked
-	 * Ensures Detection is finished and Rotation is started
-	 * Sets class for GUI modification
+	 * Event handler when rotation button is clicked
 	 */
 	function doRotation() {
-		currentMethod = DO_ROTATION;
-		isAnimating = false;
-
-		Detection.finish();
-		Rotation.start();
-		Motion.start();
-
-		setActive("rotation");
+		if (document.querySelector("label#rotation input").checked) {
+			document.querySelector("label#rotation").classList.add("active");
+			Rotation.start();
+		} else {
+			document.querySelector("label#rotation").classList.remove("active");
+			Rotation.finish();
+		}
 	}
 
 	/**
-	 * Event handler when particular button is clicked
-	 * Ensures that both Rotation and Detection are started
-	 * Sets class for GUI modification
+	 * Event handler when motion button is clicked
 	 */
-	function doBoth() {
-		currentMethod = DO_BOTH;
-
-		Rotation.start();
-		Motion.start();
-
-		if (!isAnimating) {
-			isAnimating = true;
-			Detection.restart();
-			animate();
+	function doMotion() {
+		if (document.querySelector("label#motion input").checked) {
+			document.querySelector("label#motion").classList.add("active");
+			Motion.start();
+		} else {
+			document.querySelector("label#motion").classList.remove("active");
+			Motion.finish();
 		}
-
-		setActive("both");
-	}
-
-	/**
-	 * Changes classes on buttons in GUI
-	 * @param {string} current class of the button that is active now
-	 */
-	function setActive(current) {
-		for (let i = 0; i < allLabels.length; i++) {
-			document.querySelector(allLabels[i]).classList.remove("active");
-		}
-		document.querySelector("#" + current).classList.add("active");
 	}
 
 	/**
 	 * Resize event handler
-	 * Changes GUI so that buttons are either left or bottom
+	 * Changes GUI so that buttons are either right or bottom
 	 */
 	function windowSizeChanged() {
 		if (window.innerHeight < window.innerWidth) {
@@ -386,10 +375,12 @@
 		<video src="" autoplay muted></video>
 	</div>
 	<div class="controls">
-		<label id="nothing" class="active"><input type="radio" name="aa" checked> Do nothing</label><br>
-		<label id="position"><input type="radio" name="aa"> Position</label><br>
-		<label id="rotation"><input type="radio" name="aa"> Rotation</label><br>
-		<label id="both"><input type="radio" name="aa"> Both</label>
+		<label id="all">Check all</label><br>
+		<label id="none">Uncheck all</label><br>
+		<hr>
+		<label id="position"><input type="checkbox"> Position</label><br>
+		<label id="rotation"><input type="checkbox"> Rotation</label><br>
+		<label id="motion"><input type="checkbox"> Motion</label>
 	</div>
 </div>
 </body>
