@@ -244,6 +244,10 @@
 
 		Utils.initRequestAnimationFrame();
 
+		//setInterval(function () {
+		//	console.log("vteřina");
+		//}, 1000);
+
 		// load all textures
 		let images = ["img/alphabet-basic-small.png", "img/alphabet-basic-big.png", "img/alphabet-special.png", "img/alphabet-numerics-small.png", "img/border.png", "img/border-debug.png"];
 		Utils.loadTexture(gl, images, (imgs) => {
@@ -300,16 +304,18 @@
 	}
 
 	function onWsMessage(data) {
-		if (data.type === "rotation") {
-			doRotation(data);
-		} else if (data.type === "motion") {
-			doMotion(data);
-		} else if (data.type === "image") {
-			receivedImage(data);
-		} else if (data.type === "marker") {
-			doPosition(data);
-		} else if (data.type === "touch") {
-			addText();
+		for (let i = 0; i < data.length; i++) {
+			if (data[i].type === "rotation") {
+				doRotation(data[i]);
+			} else if (data[i].type === "motion") {
+				doMotion(data[i]);
+			} else if (data[i].type === "image") {
+				receivedImage(data[i]);
+			} else if (data[i].type === "marker") {
+				doPosition(data[i]);
+			} else if (data[i].type === "touch") {
+				addText();
+			}
 		}
 	}
 

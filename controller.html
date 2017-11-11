@@ -6,6 +6,7 @@
 <link rel="stylesheet" type="text/css" href="/css/controller.css">
 <script type="text/javascript" src="/js/transforms3d.js"></script>
 <script type="text/javascript" src="/js/webgl-utils.js"></script>
+<script type="text/javascript" src="/js/sender.js"></script>
 <script type="text/javascript" src="/js/detection.js"></script>
 <script type="text/javascript" src="/js/rotation.js"></script>
 <script type="text/javascript" src="/js/motion.js"></script>
@@ -186,7 +187,7 @@
 	var allLabels = ["#nothing", "#position", "#rotation", "#both"];
 
 	window.onload = function() {
-		Detection.init("/ajax/marker");
+		Detection.init();
 
 		// set video listener, important for starting animation
 		video = document.querySelector("video");
@@ -207,11 +208,11 @@
 		// init requestAnimFrame function
 		Utils.initRequestAnimationFrame();
 
-		// init Rotation object with address on which server is listening
-		Rotation.init("/ajax/rotation");
+		// init Rotation object
+		Rotation.init();
 
-		// init Motion object with address on which server is listening
-		Motion.init("/ajax/motion");
+		// init Motion object
+		Motion.init();
 
 		//https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
 		navigator.mediaDevices.getUserMedia({
@@ -254,9 +255,6 @@
 		// hide loading message
 		document.querySelector(".loading-container").classList.add("hidden");
 		document.querySelector(".main").classList.remove("hidden");
-
-		//animate();
-		//sendPositionInterval = setInterval(sendPosition, 50);
 	}
 
 	/**
@@ -361,17 +359,14 @@
 
 	/**
 	 * Click and touch event handler
-	 * Sends XHR request that the video has been clicked or touched
+	 * Sends information that the video has been clicked or touched
 	 */
 	function sendTouch() {
-		let request = new XMLHttpRequest();
-		let objectToSend = {
+		let obj = {
 			type: "touch",
 			time: new Date().getTime()
 		};
-		request.open("POST", "/ajax/touch");
-		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-		request.send(JSON.stringify(objectToSend));
+		Sender.add(obj);
 	}
 
 </script>

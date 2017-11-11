@@ -19,16 +19,14 @@ const serveStatic = require('serve-static');
 
 // setup server with all important resources and listeners for ajax calls
 const server = express()
-	.use(serveStatic(__dirname, {'alphabet_receiver': false}))
+	.use(serveStatic(__dirname, {'alphabe': false}))
 	.use(serveStatic(__dirname, {'camera': false}))
 	.use(serveStatic(__dirname, {'controller': false}))
+	.use(serveStatic(__dirname, {'maze': false}))
 	.use(serveStatic(__dirname, {'receiver': false}))
 	.use(serveStatic(__dirname, {'rotation': false}))
 	.use(bodyParser.json({limit: '5mb'}))
-	.post('/ajax/rotation', receiveData)
-	.post('/ajax/motion', receiveData)
-	.post('/ajax/marker', receiveData)
-	.post('/ajax/touch', receiveData)
+	.post('/ajax/data', receiveData)
 	.post('/ajax/picture', receivePicture)
 	.listen(PORT, () => console.log(`App server is running.\nPort number: ${ PORT }`));
 

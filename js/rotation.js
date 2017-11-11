@@ -5,6 +5,7 @@
  * It is assigned by its inner anonymous self-invoking function. By using this approach some variables and functions can remain private.
  *
  * @public
+ * @requires sender.js
  * @type {Object}
  * @author Milan Košťák
  * @version 1.0
@@ -60,19 +61,10 @@ var Rotation = (function() {
 	let isRunning = false;
 
 	/**
-	 * Relative address on which the server is listening for rotation data.
-	 * It is set by init function.
-	 * @type {String}
+	 * Main initialization function.
+	 * It checks if DeviceOrientationEvent is supported by browser.
 	 */
-	let address;
-
-	/**
-	 * Main initialization  function.
-	 * Apart from setting the address, it checks if DeviceOrientationEvent is supported by browser.
-	 * @param  {String} addr address on which the server is listening for rotation data
-	 */
-	Rotation.init = function(addr) {
-		address = addr;
+	Rotation.init = function() {
 		if (window.DeviceOrientationEvent) {
 			console.log("DeviceOrientation is supported.");
 			isSupported = true;
@@ -139,9 +131,6 @@ var Rotation = (function() {
 			let betaToSend = (tmpBeta + e.beta) / divisor;
 			let gammaToSend = (tmpGamma + e.gamma) / divisor;
 
-			let request = new XMLHttpRequest();
-			request.open('POST', address);
-			request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 			let obj = {
 				type: "rotation",
 				time: new Date().getTime(),
@@ -150,7 +139,7 @@ var Rotation = (function() {
 				beta: betaToSend,
 				gamma: gammaToSend
 			};
-			request.send(JSON.stringify(obj));
+			Sender.add(obj);
 		}
 	}
 

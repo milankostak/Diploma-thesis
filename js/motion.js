@@ -5,6 +5,7 @@
  * It is assigned by its inner anonymous self-invoking function. By using this approach some variables and functions can remain private.
  *
  * @public
+ * @requires sender.js
  * @type {Object}
  * @author Milan Košťák
  * @version 1.0
@@ -60,19 +61,10 @@ var Motion = (function() {
 	let isRunning = false;
 
 	/**
-	 * Relative address on which the server is listening for motion data.
-	 * It is set by init function.
-	 * @type {String}
-	 */
-	let address;
-
-	/**
 	 * Main initialization  function.
-	 * Apart from setting the address, it checks if DeviceMotionEvent is supported by browser.
-	 * @param  {String} addr address on which the server is listening for motion data
+	 * It checks if DeviceMotionEvent is supported by browser.
 	 */
-	Motion.init = function(addr) {
-		address = addr;
+	Motion.init = function() {
 		if (window.DeviceMotionEvent) {
 			console.log("DeviceMotion is supported.");
 			isSupported = true;
@@ -132,9 +124,6 @@ var Motion = (function() {
 			let yToSend = (tmpY + e.acceleration.y) / divisor;
 			let zToSend = (tmpZ + e.acceleration.z) / divisor;
 
-			let request = new XMLHttpRequest();
-			request.open('POST', address);
-			request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 			let obj = {
 				type: "motion",
 				time: new Date().getTime(),
@@ -143,7 +132,7 @@ var Motion = (function() {
 				y: yToSend,
 				z: zToSend
 			};
-			request.send(JSON.stringify(obj));
+			Sender.add(obj);
 		}
 	}
 

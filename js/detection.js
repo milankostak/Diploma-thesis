@@ -7,6 +7,7 @@
  * @public
  * @requires transforms3d.js
  * @requires webgl-utils.js
+ * @requires sender.js
  * @type {Object}
  * @author Milan Košťák
  * @version 1.0
@@ -44,18 +45,10 @@ var Detection = (function() {
 	let sendPositionInterval;
 
 	/**
-	 * Relative address on which the server is listening for motion data.
-	 * It is set by init function.
-	 * @type {String}
-	 */
-	let address;
-
-	/**
 	 * Public initialization function. Sets all necessary variables.
 	 * @public
 	 */
-	Detection.init = function(addr) {
-		address = addr;
+	Detection.init = function() {
 		initBasics();
 		initPrograms();
 		initFB();
@@ -379,7 +372,7 @@ var Detection = (function() {
 				}
 			}
 			if (max > 1) {
-				dataToSend.push({max: max, x: x, y: y, count: count});
+				send({max: max, x: x, y: y, count: count});
 			}
 			window.performance.mark("a");
 			//console.log("MAX")
@@ -423,8 +416,26 @@ var Detection = (function() {
 			time: new Date().getTime(),
 			sequence: -1
 		};
-		send(obj);
+		Sender.add(obj)
 	};
+
+	/**
+	 * Create object and put it into queue for sending
+	 * @param  {Object} obj2 data about marker
+	 */
+	function send(obj2) {
+		let obj = {
+			type: "marker",
+			time: new Date().getTime(),
+			sequence: ++positionSequence,
+			max: obj2.max,
+			x: obj2.x,
+			y: obj2.y,
+			count: obj2.count
+		};
+		Sender.add(obj);
+		dataSent = true;
+	}
 
 	/**
 	 * Function for sending found marker position to the server
