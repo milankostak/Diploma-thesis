@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Sender object holds all necessary functions for sending data to receiver as one big object.
+ * Sender object holds all necessary functions for sending data to receiver as one object.
  * It is assigned by its inner anonymous self-invoking function. By using this approach some variables and functions can remain private.
  *
  * @public
@@ -25,10 +25,24 @@ var Sender = (function() {
 	 */
 	let data = [];
 
+	/**
+	 * Add object into array for sending
+	 * @public
+	 * @param {object} obj object with data to send
+	 */
 	Sender.add = function(obj) {
 		data.push(obj);
 	};
 
+	// interval that calls send() method every 10 ms is there are any data to be send
+	setInterval(function() {
+		if (data.length > 0) send();
+	}, 10);
+
+	/**
+	 * Send all data every 10 ms (if there are any)
+	 * @private
+	 */
 	function send() {
 		let request = new XMLHttpRequest();
 		request.open('POST', '/ajax/data');
@@ -36,10 +50,6 @@ var Sender = (function() {
 		request.send(JSON.stringify(data));
 		data.length = 0;
 	}
-
-	setInterval(function() {
-		if (data.length > 0) send();
-	}, 10);
 
 	// export Sender object
 	return Sender;
