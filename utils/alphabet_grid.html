@@ -12,7 +12,6 @@
 	var context = canvas.getContext('2d');
 /*
 	context.strokeStyle = "#0000FF";
-	context.lineWidth = 10;
 
 	context.beginPath();
 	context.moveTo(0, 0);
@@ -30,12 +29,14 @@
 	context.moveTo(190, 190);
 	context.lineTo(0, 190);
 	context.stroke();
-*/
 
+*/
 	// fill with white background
 	context.fillStyle = "#FFFFFF";
 	context.fillRect(0, 0, 1400, 800);
 	context.fillStyle = "#000000";
+
+	context.lineWidth = 2;
 
 	// vertical lines
 	for (var i = 0; i <= 7; i++) {
@@ -74,7 +75,7 @@
 
 		// space also contains green marker
 		context.fillStyle = "#00FF00";
-		context.fillRect(631, 406, 138, 40);
+		context.fillRect(661, 405, 78, 40);
 		context.fillStyle = "#000000";
 		// space chat
 		context.beginPath();
