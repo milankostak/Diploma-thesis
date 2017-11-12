@@ -11,7 +11,8 @@ div#lost {
 	background-color: #FF2222;
 	position: fixed;
 	top: -50px; /* always shown but outside wiewport, shown by zeroing top */
-	left: 45%;
+	left: calc(50% - 80px);
+	width: 120px;
 	transition: all .4s ease-in;
 }
 
