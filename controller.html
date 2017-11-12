@@ -256,10 +256,10 @@
 	 * Event handler for starting all operations
 	 */
 	function doAll() {
-		document.querySelector("#all").classList.add("active");
+		document.querySelector("#all").classList.add("pulse");
 		setTimeout(function() {
-			document.querySelector("#all").classList.remove("active");
-		}, 150);
+			document.querySelector("#all").classList.remove("pulse");
+		}, 600);
 
 		document.querySelector("label#position input").checked = true;
 		document.querySelector("label#rotation input").checked = true;
@@ -273,10 +273,10 @@
 	 * Event handler for stopping all operations
 	 */
 	function doNone() {
-		document.querySelector("#none").classList.add("active");
+		document.querySelector("#none").classList.add("pulse");
 		setTimeout(function() {
-			document.querySelector("#none").classList.remove("active");
-		}, 150);
+			document.querySelector("#none").classList.remove("pulse");
+		}, 600);
 
 		document.querySelector("label#position input").checked = false;
 		document.querySelector("label#rotation input").checked = false;
