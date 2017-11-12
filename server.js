@@ -19,7 +19,7 @@ const serveStatic = require('serve-static');
 
 // setup server with all important resources and listeners for ajax calls
 const server = express()
-	.use(serveStatic(__dirname, {'alphabe': false}))
+	.use(serveStatic(__dirname, {'alphabet': false}))
 	.use(serveStatic(__dirname, {'camera': false}))
 	.use(serveStatic(__dirname, {'controller': false}))
 	.use(serveStatic(__dirname, {'maze': false}))
