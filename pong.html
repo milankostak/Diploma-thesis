@@ -291,7 +291,7 @@
 		}
 
 		// fake computer player for now
-		translation2 = new Mat4Transl(baseXtransl, 0, puckY);
+		translation2 = new Mat4Transl(baseXtransl, 0, Math2.clamp(puckY, -SLIDER_MAX_Y, SLIDER_MAX_Y));
 		player2Y = puckY;
 
 		translationPuck = new Mat4Transl(puckX, 0, puckY);
