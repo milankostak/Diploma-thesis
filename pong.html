@@ -64,6 +64,8 @@
 
 	// GAME VARIABLES
 
+	// boolean, if game is paused
+	var paused = true;
 	// translation of puck on the X axis
 	const baseXtransl = 6.75;
 	// numbers, puck coordinates
@@ -209,6 +211,8 @@
 		initBuffers();
 		resetPuck();
 
+		document.querySelector("#pause").addEventListener("click", pause, false);
+
 		WS.setWebSocket(() => {}, onWsMessage, () => {});
 
 		Utils.initRequestAnimationFrame();
@@ -231,14 +235,16 @@
 				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
 			}
 			// start animation
-			animate();
+			repaint();
 		});
 	};
 
 	function animate() {
-		movePuck();
-		repaint();
-		requestAnimFrame(animate);
+		if (!paused) {
+			movePuck();
+			repaint();
+			requestAnimFrame(animate);
+		}
 	}
 
 	function resetPuck() {
@@ -349,6 +355,21 @@
 		translation1 = new Mat4Transl(-baseXtransl, 0, val);
 	}
 
+	function pause() {
+		if (paused) {
+			document.querySelector("#pause").innerHTML = "Pause";
+			document.querySelector("#pause").classList.remove("active");
+			document.querySelector(".overlay").style.display = "none";
+			paused = false;
+			animate();
+		} else {
+			document.querySelector("#pause").innerHTML = "Continue";
+			document.querySelector("#pause").classList.add("active");
+			document.querySelector(".overlay").style.display = "block";
+			paused = true;
+		}
+	}
+
 </script>
 <style type="text/css">
 	#score1,
@@ -366,13 +387,56 @@
 	#score2 {
 		right: 35%;
 	}
+	#pause {
+		position: absolute;
+		width: 100px;
+		top: 20px;
+		padding: 10px;
+		border-radius: 100px;
+		background-color: #eee;
+		text-align: center;
+		text-transform: uppercase;
+		font-weight: bold;
+		letter-spacing: 0.1em;
+		cursor: pointer;
+		left: calc(50% - 60px);
+		z-index: 10;
+		transition: all .3s ease-in;
+		/*box-shadow: 0 0 0 0 rgba(#5a99d4, .5);
+		animation: pulse 1.25s infinite cubic-bezier(0.66, 0, 0, 1);*/
+	}
+
+
+	/*@keyframes pulse {to {box-shadow: 0 0 0 45px rgba(232, 76, 61, 0);}}*/
+
+	#pause:hover {
+		background-color: #99ccde;
+		animation: none;
+	}
+	#pause.active,
+	#pause.active:hover {
+		background-color: #2098D1;
+		color: #d6d6d6;
+	}
+	.overlay {
+		position: absolute;
+		left: 0;
+		top: 0;
+		display: none;
+		width: 100%;
+		height: 100%;
+		background: url("/img/overlay.png") repeat;
+		z-index: 5;
+	}
 </style>
 </head>
 <body>
 <img src="">
 <canvas></canvas>
+<div id="pause">Start</div>
 <div id="score1">0</div>
 <div id="score2">0</div>
 <div id="lost">Marker is lost.</div>
+<div class="overlay"></div>
 </body>
 </html>
