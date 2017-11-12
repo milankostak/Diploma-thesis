@@ -45,8 +45,6 @@
 	var program;
 	// WebGLBuffer
 	var vertexBuffer, indexBuffer, textureBuffer;
-	// Mat4PerspRH
-	var projection;
 	// WebGLTexture array
 	var textures;
 	// Mat4Rot
@@ -144,7 +142,6 @@
 		// draw slider of first player
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-		gl.uniformMatrix4fv(program.projection, false, projection);
 		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation1.mul(camera.view)));
 		// second face from the start
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
@@ -152,7 +149,6 @@
 		// draw slider of second player
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-		gl.uniformMatrix4fv(program.projection, false, projection);
 		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation2.mul(camera.view)));
 		// second face from the start
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
@@ -160,7 +156,6 @@
 		// draw pubkc
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[2]);
-		gl.uniformMatrix4fv(program.projection, false, projection);
 		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translationPuck.mul(camera.view)));
 		// second face from the start
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 4);
@@ -200,7 +195,9 @@
 		program.modelview = gl.getUniformLocation(program, "modelview");
 		program.texture = gl.getUniformLocation(program, "texture");
 
-		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		let projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		gl.uniformMatrix4fv(program.projection, false, projection);
+
 		translationPuck = new Mat4Identity();
 		translation1 = new Mat4Transl(-baseXtransl, 0, player1Y);
 		translation2 = new Mat4Transl(baseXtransl, 0, player2Y);

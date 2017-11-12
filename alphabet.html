@@ -45,8 +45,6 @@
 	var program;
 	// WebGLBuffer
 	var vertexBuffer, indexBuffer, textureBuffer;
-	// Mat4PerspRH
-	var projection;
 	// WebGLTexture array
 	var textures;
 	// Mat4
@@ -177,7 +175,6 @@
 		// draw border
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[4]);
-		gl.uniformMatrix4fv(program.projection, false, projection);
 		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation.mul(camera.view)));
 		// second face from the start
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
@@ -186,7 +183,6 @@
 		if (debug) {
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, textures[5]);
-			gl.uniformMatrix4fv(program.projection, false, projection);
 			gl.uniformMatrix4fv(program.modelview, false, Utils.convert(debugTranslation.mul(camera.view)));
 			// last face
 			gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
@@ -227,7 +223,9 @@
 		program.modelview = gl.getUniformLocation(program, "modelview");
 		program.texture = gl.getUniformLocation(program, "texture");
 
-		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		let projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		gl.uniformMatrix4fv(program.projection, false, projection);
+
 		rotation = new Mat4RotY(-Math.PI/2);
 		rotationAlphabet = new Mat4Identity();
 		translation = new Mat4Identity();
