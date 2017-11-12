@@ -47,8 +47,6 @@
 	var program;
 	// WebGLBuffer
 	var vertexBuffer, indexBuffer, textureBuffer;
-	// Mat4PerspRH
-	var projection;
 	// WebGLTexture array
 	var textures;
 	// Mat4
@@ -88,7 +86,7 @@
 		scene.add(new Utils.Face(7, 4, 0, 0, 0, {strip: false, orientation: or}));
 		oneFaceIndicesCount = scene.indices.length;// get the count of indices one face has
 		// stone face
-		scene.add(new Utils.Face(0.5, 0.5, -4.5, -0.0001, -2.5, {strip: false, orientation: or}));
+		scene.add(new Utils.Face(1.5, 0.5, 0, -0.0001, 0, {strip: false, orientation: or}));
 
 		vertexBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -103,10 +101,39 @@
 		indexBuffer.numItems = scene.indices.length;
 
 		textureBuffer = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(scene.textureCoords), gl.STATIC_DRAW);
+		textureCoords = scene.textureCoords;
+		move();
 		textureBuffer.itemSize = 2;
 		textureBuffer.numItems = scene.textureCoords.length;
+	}
+
+	var textureCoords;
+	var positionX = -0.1, positionY = 0.8;
+	const VIEWPORT_WIDTH = 0.3, VIEWPORT_HEIGHT = 0.3;
+
+	function moveX(diff) {
+		positionX += diff;
+		move();
+	}
+
+	function moveY(diff) {
+		positionY += diff;
+		move();
+	}
+
+	function move() {
+		textureCoords[0] = positionX;
+		textureCoords[4] = positionX;
+		textureCoords[5] = positionY;
+		textureCoords[7] = positionY;
+
+		textureCoords[1] = positionY + VIEWPORT_HEIGHT;
+		textureCoords[2] = positionX + VIEWPORT_WIDTH;
+		textureCoords[3] = positionY + VIEWPORT_HEIGHT;
+		textureCoords[6] = positionX + VIEWPORT_WIDTH;
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
 	}
 
 	/**
@@ -125,16 +152,15 @@
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-		// draw basic small alphabet
+		// draw maze
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[0]);
 		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(rotationAlphabet.mul(camera.view)));
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
 
-		// draw border
+		// draw player
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-		gl.uniformMatrix4fv(program.projection, false, projection);
 		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation.mul(camera.view)));
 		// second face from the start
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
@@ -174,7 +200,9 @@
 		program.modelview = gl.getUniformLocation(program, "modelview");
 		program.texture = gl.getUniformLocation(program, "texture");
 
-		projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		let projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
+		gl.uniformMatrix4fv(program.projection, false, projection);
+
 		rotation = new Mat4RotY(-Math.PI/2);
 		rotationAlphabet = new Mat4Identity();
 		translation = new Mat4Identity();
@@ -242,11 +270,15 @@
 	}
 
 	function onWsMessage(data) {
-		if (data.type === "rotation") {
-			doRotation(data);
-		} else if (data.type === "marker") {
-			doPosition(data);
+		for (let i = 0; i < data.length; i++) {
+			let d = data[i]
+			if (d.type === "rotation") {
+				doRotation(d);
+			} else if (d.type === "marker") {
+				doPosition(d);
+			}
 		}
+
 	}
 
 	function doPosition(data) {
@@ -298,6 +330,11 @@
 	const HEIGHT = 350;
 
 	function translate(x, y, divisor) {
+		console.log(x);
+		moveX(x/100000);
+		moveY(y/100000);
+
+		return;
 		y = -y;
 		let base = 100 / divisor;
 
