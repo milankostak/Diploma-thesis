@@ -38,3 +38,12 @@ div#text {
 	margin-left: 10px;
 	font-size: 30px;
 }
+
+/* maze receiver */
+div#time {
+	position: fixed;
+	color: #DDD;
+	font-size: 25px;
+	top: 50px;
+	left: 50px;
+}

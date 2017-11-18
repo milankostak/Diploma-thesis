@@ -99,6 +99,10 @@
 	// then used for obtaining color
 	const SHIFT_X = (STONE_X / WIDTH) * VIEWPORT_WIDTH / 2;
 	const SHIFT_Y = (STONE_Y / HEIGHT) * VIEWPORT_HEIGHT / 2;
+	// boolean
+	var won = false;
+	// variables for time management
+	var time, timeDiv, timeInterval;
 
 	/**
 	 * Init scene and buffers
@@ -232,6 +236,10 @@
 		camera.setZenith(0);
 		camera.setPosition(new Vec3D(0, -10, 0));
 
+		time = new Date().getTime();
+		timeDiv = document.querySelector("#time");
+		timeInterval = setInterval(formatTime, 200);
+
 		initBuffers();
 
 		WS.setWebSocket(() => {}, onWsMessage, () => {});
@@ -346,6 +354,8 @@
 	}
 
 	function translate(x, y, divisor) {
+		if (won) return;
+
 		moveX(x / 100000);
 		if (isMovementInvalid()) {
 			moveX(-x / 100000);
@@ -375,7 +385,7 @@
 		for (let i = 0; i < colorsArray.length; i+=4) {
 			// black (0, 0, 0, 255) or outside of canvas (0, 0, 0, 0)
 			// red channel is the important one
-			if (colorsArray[i] === 0) {
+			if (colorsArray[i] < 255) {
 				rollback = true;
 				break;
 			} else if (colorsArray[i] === 255 && colorsArray[i+1] === 0 && colorsArray[i+2] === 0) {// red (255, 0, 0, 255)
@@ -384,10 +394,39 @@
 		}
 
 		if (!rollback && possibleWin) {
-			console.log("WIN")
+			clearInterval(timeInterval);
+			won = true;
+			formatTime(true);
 		}
 
 		return rollback;
+	}
+
+	function formatTime(final) {
+		if (won && !final) return;
+
+		let t = new Date().getTime() - time;
+		if (!final) t = Math.round(t / 100) / 10;
+		else t = t / 1000;
+
+		// if over a minute
+		if (t > 60) {
+			// get number of seconds
+			let tt = t % 60;
+			// round number of seconds with one digit after decimal comma
+			if (!final) tt = Math.round(tt * 10) / 10;
+			else tt =  Math.round(tt * 1000) / 1000;
+			// fill with zero if less than 10
+			if (tt < 10) tt = "0"+tt;
+			// add zero to the end if number is dividable by whole seconds
+			if (Number(tt).toString().indexOf(".") === -1) tt += ".0";
+			// final format minute:second.milis
+			t = Math.round(t / 60) + ":" + tt;
+		} else {
+			// if less than a minutes than just add a zero to the end if necessary
+			if (Number(t).toString().indexOf(".") === -1) t += ".0";
+		}
+		timeDiv.innerHTML = t;
 	}
 
 	function doRotation(data) {
@@ -464,6 +503,7 @@
 </script>
 </head>
 <body>
+<div id="time">0.0</div>
 <img src="">
 <canvas></canvas>
 <div id="lost">Marker is lost.</div>
