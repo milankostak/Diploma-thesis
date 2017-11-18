@@ -5,14 +5,15 @@
 }
 
 div#lost {
+	position: fixed;
 	font-size: 18px;
 	color: #DDD;
-	padding: 5px 20px;
 	background-color: #FF2222;
-	position: fixed;
+	padding: 5px 20px;
+	width: 120px;
 	top: -50px; /* always shown but outside wiewport, shown by zeroing top */
 	left: calc(50% - 80px);
-	width: 120px;
+	text-align: center;
 	transition: all .4s ease-in;
 }
 
