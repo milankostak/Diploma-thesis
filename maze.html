@@ -101,14 +101,19 @@
 		indexBuffer.numItems = scene.indices.length;
 
 		textureBuffer = gl.createBuffer();
-		textureCoords = scene.textureCoords;
+		textureCoords = new Float32Array(scene.textureCoords);
 		move();
 		textureBuffer.itemSize = 2;
 		textureBuffer.numItems = scene.textureCoords.length;
 	}
 
 	var textureCoords;
+
+	// tohle číslo říká, kde na textuře mám pravý horní roh
+	// 0, 0 => 0, 0 of the image is in the top left corner
 	var positionX = -0.1, positionY = 0.8;
+	//var positionX = 0, positionY = 0;
+	// how big is the "window"
 	const VIEWPORT_WIDTH = 0.3, VIEWPORT_HEIGHT = 0.3;
 
 	function moveX(diff) {
@@ -133,7 +138,7 @@
 		textureCoords[6] = positionX + VIEWPORT_WIDTH;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
 	}
 
 	/**
@@ -301,8 +306,6 @@
 
 		if (data.sequence > lastReceivedMarkerSocketSequence) {
 			lastReceivedMarkerSocketSequence = data.sequence;
-			//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
-			//console.log(data.max, lastMarkerX, data.x, lastMarkerY, data.y);
 
 			if (data.count > 0) {
 				if (!toBeRestarted) {
@@ -323,48 +326,25 @@
 		}
 	}
 
-	const baseX = 200;
-	const baseY = 100;
-	const stoneSize = 100;
-	const WIDTH = 700;
-	const HEIGHT = 350;
-
 	function translate(x, y, divisor) {
-		console.log(x);
 		moveX(x/100000);
 		moveY(y/100000);
 
-		return;
-		y = -y;
-		let base = 100 / divisor;
+		let centerX = Math.round((positionX + VIEWPORT_WIDTH / 2) * readCanvas.width);
+		let centerY = Math.round((positionY + VIEWPORT_HEIGHT / 2) * readCanvas.height);
 
-		//console.log(x, y);
-		let x1 = editNumber(x, base, baseX);
-		let y1 = HEIGHT*2 - editNumber(y, base, baseY);
+		let color = getColor(centerX, centerY);
+		//console.log(centerY, centerX, color);
 
-		let topLeft = getColor(x1, y1);
-		let topRight = getColor(x1 + stoneSize, y1);
-		let center = getColor(x1 + stoneSize/2, y1 + stoneSize/2);
-		let bottomLeft = getColor(x1, y1 + stoneSize);
-		let bottomRight = getColor(x1 + stoneSize, y1 + stoneSize);
+		let rollback = color[0] === 0;// && color[1] === 0 && color[2] === 0;
+		let won = color[0] === 255 && color[1] === 0 && color[2] === 0;
 
-		//console.log(x1, y1);
-		//console.log(topLeft, topRight);
-		//console.log(bottomLeft, bottomRight);
-
-		//console.log(WIDTH, Math.round(baseX/base), Math.round(x));
-		x = Math2.clamp(x, -baseX/base, (baseX/base) * 5.5);
-		y = Math2.clamp(y, -baseY/base, (baseY/base) * 6);
-
-		translation = new Mat4Transl(x/divisor, 0, y/divisor);
-	}
-
-	function editNumber(num, divisor, base) {
-		num *= divisor;
-
-		num += base;
-
-		return Math.round(num);
+		if (rollback) {
+			moveX(-x/100000);
+			moveY(-y/100000);
+		} else if (won) {
+			console.log("WIN");
+		}
 	}
 
 	function doRotation(data) {
