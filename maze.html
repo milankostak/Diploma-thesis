@@ -53,7 +53,7 @@
 	var rotation;
 	// Camera
 	var camera;
-	// number, holds indices count of block object with alphabet
+	// number, holds indices count of one block object
 	var oneFaceIndicesCount;
 
 	// POSITION VARIABLES
@@ -75,8 +75,8 @@
 	const NO_ROTATION = 0, ROTATE_RIGHT = 1, ROTATE_LEFT = 2;
 	// current state of rotation
 	var nowRotating = NO_ROTATION;
-	// variables for stepping rotation
-	var startRotation = 0, currentRotation = 0, rotationStep = Math.PI * 2 / 4;
+	// number, current degree of rotation
+	var currentRotation = 0;
 
 	// GAME VARIABLES
 
@@ -88,7 +88,7 @@
 	var positionX = -0.1, positionY = 0.8;
 
 	// width and height of "window"
-	const WIDTH = 7, HEIGHT = 4;
+	const WIDTH = 10, HEIGHT = WIDTH / 1.75;
 	// how big is the actual viewport
 	const VIEWPORT_WIDTH = 0.3, VIEWPORT_HEIGHT = 0.3;
 	// size of the stone relative to "window"
