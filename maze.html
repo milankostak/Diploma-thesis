@@ -50,7 +50,7 @@
 	// WebGLTexture array
 	var textures;
 	// Mat4
-	var rotation, rotationAlphabet, translation;
+	var rotation;
 	// Camera
 	var camera;
 	// number, holds indices count of block object with alphabet
@@ -77,8 +77,6 @@
 	var nowRotating = NO_ROTATION;
 	// variables for stepping rotation
 	var startRotation = 0, currentRotation = 0, rotationStep = Math.PI * 2 / 4;
-	// basic translation unit because whole face takes 14 units on width
-	const baseTranslUnit = 7;
 
 	// GAME VARIABLES
 
@@ -180,13 +178,13 @@
 		// draw maze
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[0]);
-		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(rotationAlphabet.mul(camera.view)));
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(camera.view));
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
 
 		// draw player
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(translation.mul(camera.view)));
+		gl.uniformMatrix4fv(program.modelview, false, Utils.convert(rotation.mul(camera.view)));
 		// second face from the start
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, oneFaceIndicesCount * 2);
 	}
@@ -228,9 +226,7 @@
 		let projection = Utils.convert(new Mat4PerspRH(45, canvas.height / canvas.width, 0.1, 100.0));
 		gl.uniformMatrix4fv(program.projection, false, projection);
 
-		rotation = new Mat4RotY(-Math.PI/2);
-		rotationAlphabet = new Mat4Identity();
-		translation = new Mat4Identity();
+		rotation = new Mat4Identity();
 		camera = new Camera();
 		camera.setAzimuth(0);
 		camera.setZenith(0);
@@ -271,7 +267,7 @@
 	};
 
 	function animate() {
-		//manageRotation();
+		manageRotation();
 		repaint();
 		requestAnimFrame(animate);
 	}
@@ -292,8 +288,8 @@
 	 * Get color of given pixels from maze image
 	 * @param  {number} x x coordinate
 	 * @param  {number} y y coordinate
-	 * @param  {number} w width of rectangle
-	 * @param  {number} h height of rectangle
+	 * @param  {number} w width of rectangle, default is one
+	 * @param  {number} h height of rectangle, default is one
 	 * @return {Uint8ClampedArray}   RGBA array of colors
 	 */
 	function getColor(x, y, w, h) {
@@ -447,7 +443,6 @@
 				if (rotDegrees < 0) rotDegrees += 360;
 				// base (0) of rotDegrees is when top is left and at the same level as bottom of the phone
 				// goes as normal degrees from 0 to 360 clockwise
-				//console.log(Math.round(data.beta), Math.round(data.gamma), Math.round(rotDegrees));
 
 				// 20 from base with 15 degrees space
 				// rotation to right
@@ -461,14 +456,16 @@
 					// 340 -> 325 (top to left) ; 145 -> 160 (top to right) ; 50 -> 70 (top to up)
 					if (rotationChange > 0) rotationChange = 0;
 					rotationChange--;
+				} else {
+					rotationChange = 0;
 				}
 
 				if (rotationChange > 3) {
 					nowRotating = ROTATE_RIGHT;
-					startRotation = currentRotation;
 				} else if (rotationChange < -3) {
 					nowRotating = ROTATE_LEFT;
-					startRotation = currentRotation;
+				} else {
+					nowRotating = NO_ROTATION;
 				}
 			}
 
@@ -477,27 +474,17 @@
 		}
 	}
 
-
 	function manageRotation() {
+		//console.log(nowRotating)
 		if (nowRotating === NO_ROTATION) return;
 
 		if (nowRotating === ROTATE_RIGHT) {
 			currentRotation += 0.06;
-			if (currentRotation > startRotation + rotationStep) {
-				currentRotation = startRotation + rotationStep;
-				rotationChange = 0;
-				nowRotating = NO_ROTATION;
-			}
 		} else if (nowRotating === ROTATE_LEFT) {
 			currentRotation -= 0.06;
-			if (currentRotation < startRotation - rotationStep) {
-				currentRotation = startRotation - rotationStep;
-				rotationChange = 0;
-				nowRotating = NO_ROTATION;
-			}
 		}
 
-		rotationAlphabet = new Mat4Transl(0, -baseTranslUnit, 0).mul(new Mat4RotZ(currentRotation)).mul(new Mat4Transl(0, baseTranslUnit, 0));
+		rotation = new Mat4RotY(currentRotation);
 	}
 
 </script>
