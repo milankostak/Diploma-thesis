@@ -64,10 +64,10 @@
 
 	// GAME VARIABLES
 
+	// width and height of "window"
+	const WIDTH = 7, HEIGHT = WIDTH / 1.75;
 	// boolean, if game is paused
 	var paused = true;
-	// translation of puck on the X axis
-	const baseXtransl = 6.75;
 	// numbers, puck coordinates
 	var puckX, puckY;
 	// numbers, puck move values
@@ -76,14 +76,17 @@
 	var score1 = 0, score2 = 0;
 	// location of players' puck on Y axis
 	var player1Y = 0, player2Y = 0;
+
+	// translation of puck on the X axis
+	const PUCK_X_TRANSL = WIDTH - 0.25; // 6.75
 	// constant of value where change of direction should appear when hitting border up and down
-	const BORDER_Y = 3.92;
+	const BORDER_Y = HEIGHT - 0.08; // 3.92
 	// number, half of height of the slider 
-	const SLIDER_HEIGHT = 0.8;
-	// number, playgournd height
-	const PLAYGROUND_HEIGHT = 4;
+	const SLIDER_WIDTH = 0.2, SLIDER_HEIGHT = 0.8;
 	// number, max (and min) value for slider
-	const SLIDER_MAX_Y = PLAYGROUND_HEIGHT - SLIDER_HEIGHT;
+	const SLIDER_MAX_Y = HEIGHT - SLIDER_HEIGHT;
+	// number, line where scoring happens
+	const SCORE_LINE = PUCK_X_TRANSL - SLIDER_WIDTH - 0.1 // 6.45
 
 	/**
 	 * Init scene and buffers
@@ -93,10 +96,10 @@
 		let or = new Mat3RotX(Math.PI / 2);
 
 		// maze face
-		scene.add(new Utils.Face(7, 4, 0, 0, 0, {strip: false, orientation: or}));
+		scene.add(new Utils.Face(WIDTH, HEIGHT, 0, 0, 0, {strip: false, orientation: or}));
 		oneFaceIndicesCount = scene.indices.length;// get the count of indices one face has
 		// slider face
-		scene.add(new Utils.Face(0.2, 0.8, 0, -0.0001, 0, {strip: false, orientation: or}));
+		scene.add(new Utils.Face(SLIDER_WIDTH, SLIDER_HEIGHT, 0, -0.0001, 0, {strip: false, orientation: or}));
 		// puck face
 		scene.add(new Utils.Face(0.1, 0.1, 0, -0.0001, 0, {strip: false, orientation: or}));
 
@@ -201,8 +204,8 @@
 		gl.uniformMatrix4fv(program.projection, false, projection);
 
 		translationPuck = new Mat4Identity();
-		translation1 = new Mat4Transl(-baseXtransl, 0, player1Y);
-		translation2 = new Mat4Transl(baseXtransl, 0, player2Y);
+		translation1 = new Mat4Transl(-PUCK_X_TRANSL, 0, player1Y);
+		translation2 = new Mat4Transl(PUCK_X_TRANSL, 0, player2Y);
 		camera = new Camera();
 		camera.setAzimuth(0);
 		camera.setZenith(0);
@@ -263,7 +266,7 @@
 		puckX += puckXchange;
 
 		// score for left player
-		if (puckX > 6.45) {
+		if (puckX > SCORE_LINE) {
 			if (puckY < player2Y + SLIDER_HEIGHT && puckY > player2Y - SLIDER_HEIGHT) {
 				puckXchange = -puckXchange;
 				fasterPuck();
@@ -273,7 +276,7 @@
 			}
 		}
 		// score for right player
-		else if (puckX < -6.45) {
+		else if (puckX < -SCORE_LINE) {
 			if (puckY < player1Y + SLIDER_HEIGHT && puckY > player1Y - SLIDER_HEIGHT) {
 				puckXchange = -puckXchange;
 				fasterPuck();
@@ -294,7 +297,7 @@
 		}
 
 		// fake computer player for now
-		translation2 = new Mat4Transl(baseXtransl, 0, Math2.clamp(puckY, -SLIDER_MAX_Y, SLIDER_MAX_Y));
+		translation2 = new Mat4Transl(PUCK_X_TRANSL, 0, Math2.clamp(puckY, -SLIDER_MAX_Y, SLIDER_MAX_Y));
 		player2Y = puckY;
 
 		translationPuck = new Mat4Transl(puckX, 0, puckY);
@@ -352,7 +355,7 @@
 		val = Math2.clamp(val, -SLIDER_MAX_Y, SLIDER_MAX_Y);
 
 		player1Y = val;
-		translation1 = new Mat4Transl(-baseXtransl, 0, val);
+		translation1 = new Mat4Transl(-PUCK_X_TRANSL, 0, val);
 	}
 
 	function pause() {
