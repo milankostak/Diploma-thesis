@@ -23,7 +23,7 @@ var Detection = (function() {
 
 	// HTMLCanvasElement
 	let canvas;
-	// WebGLRenderingContext
+	// WebGLRenderingContext or WebGL2RenderingContext
 	let gl;
 	// WebGLProgram
 	let program1, program2, programDraw;
@@ -35,6 +35,8 @@ var Detection = (function() {
 	let fbo;
 	// precision of reading from texture, either FLOAT or HALF_FLOAT_OES
 	let texturePrecision;
+	// format of texture depedning on the version of WebGL that is used, either RGBA or RGBA32F
+	let internalFormatTexture;
 	// numbers, input width and height
 	let width, height, w4, h4, w12, h12;
 	// Float32Array
@@ -51,40 +53,74 @@ var Detection = (function() {
 	/**
 	 * Public initialization function. Sets all necessary variables.
 	 * @public
+	 * @return {boolean} true or false if the initialization was successful
 	 */
 	Detection.init = function() {
+		if (!initWebGL()) return false;
 		initBasics();
 		initPrograms();
 		initFB();
 		initTextures();
 		initBuffers();
+		return true;
 	};
 
 	/**
 	 * Init canvas and gl and get texture precision from extension
 	 * @private
 	 */
-	function initBasics() {
+	function initWebGL() {
 		canvas = document.querySelector("canvas");
-		gl = Utils.initWebGL(canvas);
+		gl = canvas.getContext("webgl2");
 
+
+		// if WebGL2 is not supported try to fall-back to version 1
+		if (!gl) {
+			gl = canvas.getContext("experimental-webgl");
+
+			// even WebGL1 is not supported - not much to do without it
+			if (!gl) {
+				alert("Initialization of WebGL was not successful. Your browser probably doesn't support it.");
+				return false;
+			}
+
+			// extension that is necessary for loading or reading float data to or from GPU when using WebGL1
+			let floatExtension = gl.getExtension("OES_texture_float");
+			if (!floatExtension) {
+				floatExtension = gl.getExtension("OES_texture_half_float");
+				if (!floatExtension) {
+					console.log("OES_texture_float nor OES_texture_half_float are supported.");
+					alert("Initialization was not successful. Your browser doesn't support all necessary WebGL1 extensions.");
+					return false;
+				}
+				texturePrecision = floatExtension.HALF_FLOAT_OES;
+				console.log("Using OES_texture_half_float");
+			} else {
+				texturePrecision = gl.FLOAT;
+				console.log("Using OES_texture_float");
+			}
+			internalFormatTexture = gl.RGBA;
+			console.log("WebGL1 was initialized.");
+		} else {
+			// necessary extension for WebGL2
+			const exten = gl.getExtension("EXT_color_buffer_float");
+			if (!exten) {
+				console.log("EXT_color_buffer_float is not supported");
+				alert("Initialization was not successful. Your browser doesn't support all necessary WebGL2 extensions.");
+				return false;
+			}
+			internalFormatTexture = gl.RGBA32F;
+			texturePrecision = gl.FLOAT;
+			console.log("WebGL2 was initialized.");
+		}
+		return true;
+	}
+
+	function initBasics() {
 		gl.clearColor(0.1, 0.1, 0.1, 1);
 		gl.clearDepth(1.0);
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LEQUAL);
-
-		// extension that is necessary for loading or reading float data to or from GPU
-		let floatExtension = gl.getExtension("OES_texture_float");
-		if (!floatExtension) {
-			floatExtension = gl.getExtension('OES_texture_half_float');
-			texturePrecision = floatExtension.HALF_FLOAT_OES;
-			console.log("Using OES_texture_half_float");
-			//alert("Using OES_texture_half_float");
-		} else {
-			texturePrecision = gl.FLOAT;
-			console.log("Using OES_texture_float");
-			//alert("Using OES_texture_float");
-		}
 	}
 
 	/**
@@ -265,7 +301,8 @@ var Detection = (function() {
 
 			gl.bindTexture(gl.TEXTURE_2D, texture2);
 			// target, level, internalformat, width, height, border, format, type, ArrayBufferView? pixels)
-			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w4, h4, 0, gl.RGBA, texturePrecision, null);
+			gl.texImage2D(gl.TEXTURE_2D, 0, internalFormatTexture, w4, h4, 0, gl.RGBA, texturePrecision, null);
+
 			gl.viewport(0, 0, w4, h4);
 
 			// ... and draw to it
@@ -287,7 +324,7 @@ var Detection = (function() {
 			gl.uniform1f(program2.height, h4);
 
 			gl.bindTexture(gl.TEXTURE_2D, texture1);
-			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w12, h12, 0, gl.RGBA, texturePrecision, null);
+			gl.texImage2D(gl.TEXTURE_2D, 0, internalFormatTexture, w12, h12, 0, gl.RGBA, texturePrecision, null);
 			gl.viewport(0, 0, w12, h12);
 
 			// ... and draw to it
@@ -378,9 +415,10 @@ var Detection = (function() {
 			if (max > 1) {
 				send({max: max, x: x, y: y, count: count});
 			}
+
 			window.performance.mark("a");
 			//console.log("MAX")
-			//console.log(max, x, y);
+			//console.log(max, x, y, count);
 	}
 
 	/**

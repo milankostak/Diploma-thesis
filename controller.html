@@ -181,7 +181,13 @@
 	var isAnimating = false;
 
 	window.onload = function() {
-		Detection.init();
+		let initResult = Detection.init();
+
+		if (!initResult) {
+			alert("Your browser does not support WebGL.")
+			document.querySelector(".loading").innerHTML = "Your browser does not support WebGL or some of its extensions.";
+			return;
+		}
 
 		// set video listener, important for starting animation
 		video = document.querySelector("video");
