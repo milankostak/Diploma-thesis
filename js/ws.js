@@ -48,7 +48,7 @@ var WS = (function() {
 		if ("WebSocket" in window) {
 			console.log("WebSocket: WS is supported by your browser!");
 			isSupported = true;
-			host = location.origin.replace(/^https?/, 'ws');
+			host = location.origin.replace(/^http/, 'ws');
 		} else {
 			console.log("%cWebSocket is NOT supported by your browser!", 'color: red');
 		}
