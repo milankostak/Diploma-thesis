@@ -53,14 +53,23 @@
 	var camera;
 	// number, holds indices count of block object with alphabet
 	var oneFaceIndicesCount;
-	// numbers, holding first received data after restart for computing relative change
-	var firstMarkerX = 0, firstMarkerY = 0;
+
+	// PLAYERS VARIABLES
+
+	const player1 = {}, player2 = {};
+	// players ids
+	player1.id = 0; player2.id = 0;
+	// location of players' puck on Y axis
+	player1.puckY = 0; player2.puckY = 0;
+	// score of players
+	player1.score = 0; player2.score = 0;
+	// window sizes
+	player1.width = 0; player2.width = 0;
+	player1.height = 0; player2.height = 0;
 	// number, holding last sequence number for skipping delayed packets
-	var lastReceivedMarkerSocketSequence = -1;
-	// boolean, if position data sequence should be restarted
-	var toBeRestarted = true;
+	player1.lastReceivedSequence = -1; player2.lastReceivedSequence = -1;
 	// HTMLDivElement
-	var lost;
+	player1.lost; player2.lost;
 
 	// GAME VARIABLES
 
@@ -72,10 +81,6 @@
 	var puckX, puckY;
 	// numbers, puck move values
 	var puckXchange, puckYchange;
-	// score of players
-	var score1 = 0, score2 = 0;
-	// location of players' puck on Y axis
-	var player1Y = 0, player2Y = 0;
 
 	// translation of puck on the X axis
 	const PUCK_X_TRANSL = WIDTH - 0.25; // 6.75
@@ -167,7 +172,8 @@
 	}
 
 	window.onload = function() {
-		lost = document.querySelector("#lost");
+		player1.lost = document.querySelector(".lost1");
+		player2.lost = document.querySelector(".lost2");
 		canvas = document.querySelector("canvas");
 		canvas.width = window.innerWidth;
 		canvas.height = window.innerHeight-5;
@@ -204,8 +210,8 @@
 		gl.uniformMatrix4fv(program.projection, false, projection);
 
 		translationPuck = new Mat4Identity();
-		translation1 = new Mat4Transl(-PUCK_X_TRANSL, 0, player1Y);
-		translation2 = new Mat4Transl(PUCK_X_TRANSL, 0, player2Y);
+		translation1 = new Mat4Transl(-PUCK_X_TRANSL, 0, player1.puckY);
+		translation2 = new Mat4Transl(PUCK_X_TRANSL, 0, player2.puckY);
 		camera = new Camera();
 		camera.setAzimuth(0);
 		camera.setZenith(0);
@@ -267,22 +273,22 @@
 
 		// score for left player
 		if (puckX > SCORE_LINE) {
-			if (puckY < player2Y + SLIDER_HEIGHT && puckY > player2Y - SLIDER_HEIGHT) {
+			if (puckY < player2.puckY + SLIDER_HEIGHT && puckY > player2.puckY - SLIDER_HEIGHT) {
 				puckXchange = -puckXchange;
 				fasterPuck();
 			} else {
 				resetPuck();
-				document.querySelector("#score1").innerHTML = ++score1;
+				document.querySelector("#score1").innerHTML = ++player1.score;
 			}
 		}
 		// score for right player
 		else if (puckX < -SCORE_LINE) {
-			if (puckY < player1Y + SLIDER_HEIGHT && puckY > player1Y - SLIDER_HEIGHT) {
+			if (puckY < player1.puckY + SLIDER_HEIGHT && puckY > player1.puckY - SLIDER_HEIGHT) {
 				puckXchange = -puckXchange;
 				fasterPuck();
 			} else {
 				resetPuck();
-				document.querySelector("#score2").innerHTML = ++score2;
+				document.querySelector("#score2").innerHTML = ++player2.score;
 			}
 		}
 
@@ -296,9 +302,11 @@
 			puckYchange = -puckYchange;
 		}
 
-		// fake computer player for now
-		translation2 = new Mat4Transl(PUCK_X_TRANSL, 0, Math2.clamp(puckY, -SLIDER_MAX_Y, SLIDER_MAX_Y));
-		player2Y = puckY;
+		if (player2.id === 0) {
+			// fake computer player for now
+			translation2 = new Mat4Transl(PUCK_X_TRANSL, 0, Math2.clamp(puckY, -SLIDER_MAX_Y, SLIDER_MAX_Y));
+			player2.puckY = puckY;
+		}
 
 		translationPuck = new Mat4Transl(puckX, 0, puckY);
 	}
@@ -308,39 +316,51 @@
 			let d = data[i];
 			if (d.type === "marker") {
 				doPosition(d);
+			} else if (d.type === "setup") {
+				setupPlayer(d);
 			}
 		}
 	}
 
+	function setupPlayer(data) {
+		let id = data.id;
+		if (player1.id === 0 && player1.id !== id && player2.id !== id)  {
+			player1.id = id;
+			player1.width = data.width;
+			player1.height = data.height
+		}
+		else if (player2.id === 0 && player1.id !== id && player2.id !== id) {
+			player2.id = id;
+			player2.width = data.width;
+			player2.height = data.height
+		}
+	}
+
 	function doPosition(data) {
+		// save temporary variables for two players handling
+		let lastReceivedSequence = (data.id === player2.id) ? player2.lastReceivedSequence : player1.lastReceivedSequence;
+		let lost = (data.id === player2.id) ? player2.lost : player1.lost;
+
 		// finish
 		if (data.sequence === -1) {
 			// hide lost message
 			lost.style.top = "-50px";
 			// prevent any late from showing
-			lastReceivedMarkerSocketSequence = Number.MAX_VALUE;
+			lastReceivedSequence = Number.MAX_VALUE;
 			return;
 		}
 
-		// start or restart the sequence so we can skip delayed data
-		// wait for two data sets to be sure
-		// first has sequence 1
+		// start or restart the sequence
+		// wait for two data sets to be sure, first has sequence 1
 		if (data.sequence <= 2) {
-			lastReceivedMarkerSocketSequence = -1;
-			toBeRestarted = true;
+			lastReceivedSequence = -1;
 		}
 
-		if (data.sequence > lastReceivedMarkerSocketSequence) {
-			lastReceivedMarkerSocketSequence = data.sequence;
+		if (data.sequence > lastReceivedSequence) {
+			lastReceivedSequence = data.sequence;
 
 			if (data.count > 0) {
-				if (!toBeRestarted) {
-					translate(firstMarkerY - data.y, 50);
-				} else {
-					toBeRestarted = false;
-					firstMarkerY = data.y;
-				}
-
+				translate(data.id, data.y);
 				lost.style.top = "-50px";
 			} else {
 				lost.style.top = "0px";
@@ -348,14 +368,28 @@
 		} else {
 			//console.log("skipping marker data " + data.sequence);
 		}
+
+		// assign back last received packet sequence
+		if (data.id === player2.id) player2.lastReceivedSequence = lastReceivedSequence;
+		else player1.lastReceivedSequence = lastReceivedSequence;
 	}
 
-	function translate(y, divisor) {
-		let val = -y/divisor;
-		val = Math2.clamp(val, -SLIDER_MAX_Y, SLIDER_MAX_Y);
+	function translate(playerid, y) {
+		let height = (playerid === player2.id) ? player2.height : player1.height;
 
-		player1Y = val;
-		translation1 = new Mat4Transl(-PUCK_X_TRANSL, 0, val);
+		let halfHeight = height/2;
+		let val = y;//<0;1280>
+		val = val - halfHeight;//<-640;640>
+		val = val / (halfHeight / SLIDER_MAX_Y);//<-SLIDER_MAX_Y, SLIDER_MAX_Y>
+
+		if (playerid === player1.id) {
+			player1.puckY = val;
+			translation1 = new Mat4Transl(-PUCK_X_TRANSL, 0, val);
+		} else if (playerid === player2.id) {
+			player2.puckY = val;
+			translation2 = new Mat4Transl(PUCK_X_TRANSL, 0, val);
+		}
+
 	}
 
 	function pause() {
@@ -444,7 +478,8 @@
 <div id="pause">Start</div>
 <div id="score1">0</div>
 <div id="score2">0</div>
-<div id="lost">Marker is lost.</div>
+<div id="lost" class="lost1">Marker 1 is lost.</div>
+<div id="lost" class="lost2">Marker 2 is lost.</div>
 <div class="overlay"></div>
 </body>
 </html>
