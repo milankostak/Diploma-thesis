@@ -254,6 +254,8 @@ var Detection = (function() {
 		width = canvas.width = videoWidth;
 		height = canvas.height = videoHeight;
 
+		Sender.add({type: "setup", width: width, height: height});
+
 		//alert(width + ", " + height);
 		w4 = width/4;
 		h4 = height/4;
