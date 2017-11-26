@@ -26,11 +26,21 @@ var Sender = (function() {
 	let data = [];
 
 	/**
-	 * Add object into array for sending
+	 * Identifier to uniquely distinguish between connected devices
+	 * @type {string} hexa string
+	 */
+	const iud = Math.floor((Math.random() + 1) * 1000000000)// a bilion should be enough
+				.toString(16) // transform to hexa
+				.substring(1);// remove first char because the first one is not random
+
+	/**
+	 * Add object into array for sending.
+	 * Adds identifier to the data object
 	 * @public
 	 * @param {object} obj object with data to send
 	 */
 	Sender.add = function(obj) {
+		obj.id = iud;
 		data.push(obj);
 	};
 
