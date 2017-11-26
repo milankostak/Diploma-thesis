@@ -20,15 +20,16 @@
 	varying vec2 textureCoord;
 
 	void main(void) {
-		// current coordinates
+		// get current real coordinates
 		float x = floor(textureCoord.x * width);
 		float y = floor(textureCoord.y * height);
 
 		// base top left coordinates of given square
+		// taking every fourth pixel
 		float baseX = x - mod(x, 4.0);
 		float baseY = y - mod(y, 4.0);
 
-		// distance between 2 pixels
+		// distance between 2 pixels in general
 		vec2 diff = vec2(1.0/width, 1.0/height);
 
 		// actual texture coordinates of top left pixel
@@ -36,7 +37,7 @@
 		vec2 baseTextureCoord = vec2(baseX / width + diff.x / 2.0, baseY / height + diff.y / 2.0);
 
 		// get all 16 pixels in given square
-		// done this way because when making the texture smaller, browsers where returning different sampled coordinates
+		// done this way because when making the texture smaller, browsers were returning different sampled coordinates (Firefox and Chrome)
 		// doing it like this means all 16 pixels have the same values and it doesn't matter anymore which one is picked by browser
 		vec4 pix00 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y));
 		vec4 pix10 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y));
@@ -142,7 +143,6 @@
 			pix01.r * pix01.b + pix11.r * pix11.b + pix21.r * pix21.b +
 			pix02.r * pix02.b + pix12.r * pix12.b + pix22.r * pix22.b;
 		float meanY = sumY / sumCount;
-
 
 		gl_FragColor = vec4(sumCount, meanX, meanY, 1.0);
 	}
