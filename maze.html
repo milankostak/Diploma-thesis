@@ -332,8 +332,7 @@
 
 			if (data.count > 0) {
 				if (!toBeRestarted) {
-					translate(firstMarkerX - data.x, firstMarkerY - data.y, 45);
-					//console.log(data.x, data.y, firstMarkerX, firstMarkerY);
+					translate(firstMarkerX - data.x, firstMarkerY - data.y);
 				} else {
 					toBeRestarted = false;
 					firstMarkerX = data.x;
@@ -349,7 +348,7 @@
 		}
 	}
 
-	function translate(x, y, divisor) {
+	function translate(x, y) {
 		if (won) return;
 
 		moveX(x / 100000);
