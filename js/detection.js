@@ -116,6 +116,10 @@ var Detection = (function() {
 		return true;
 	}
 
+	/**
+	 * Set basic GL parameters
+	 * @private
+	 */
 	function initBasics() {
 		gl.clearColor(0.1, 0.1, 0.1, 1);
 		gl.clearDepth(1.0);
@@ -250,9 +254,7 @@ var Detection = (function() {
 		width = canvas.width = videoWidth;
 		height = canvas.height = videoHeight;
 
-		// mobile portrait 360×640
-		// mobile landscape 640×360
-		//alert(width+", "+height);
+		//alert(width + ", " + height);
 		w4 = width/4;
 		h4 = height/4;
 		w12 = w4/3;
@@ -383,42 +385,35 @@ var Detection = (function() {
 	 * Then find point of interest - point with maximum count of "interesting" pixels.
 	 */
 	function readData() {
-			gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
-			window.performance.mark("a");
-			/*times.push(new Date().getTime() - time);
-			if (times.length % 60 == 0) {
-				let sum = 0;
-				for (let i = 0; i < times.length; i++) {
-					sum += times[i];
-				}
-				console.log(sum / times.length);
-				times.length = 0;
+		gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
+		window.performance.mark("a");
+		/*times.push(new Date().getTime() - time);
+		if (times.length % 60 == 0) {
+			let sum = 0;
+			for (let i = 0; i < times.length; i++) {
+				sum += times[i];
 			}
+			console.log(sum / times.length);
+			times.length = 0;
+		}*/
 
-			for (let i = 0; i < readBuffer.length; i+=4) {
-				if (readBuffer[i] >= 1) {
-					console.log(readBuffer[i], readBuffer[i+1], readBuffer[i+2], readBuffer[i+3]);
-				}
-			}*/
-
-			let max = 0, x, y, count = 0;
-			for (let i = 0; i < readBuffer.length; i+=4) {
-				if (readBuffer[i] > max) {
-					max = readBuffer[i];
-					x = readBuffer[i+1];
-					y = readBuffer[i+2];
-				}
-				if (readBuffer[i] > 1) {
-					count++;
-				}
+		let max = 0, x, y, count = 0;
+		for (let i = 0; i < readBuffer.length; i+=4) {
+			if (readBuffer[i] > max) {
+				max = readBuffer[i];
+				x = readBuffer[i+1];
+				y = readBuffer[i+2];
 			}
-			if (max > 1) {
-				send({max: max, x: x, y: y, count: count});
+			if (readBuffer[i] > 1) {
+				count++;
 			}
+		}
+		if (max > 1) {
+			send({max: max, x: x, y: y, count: count});
+		}
 
-			window.performance.mark("a");
-			//console.log("MAX")
-			//console.log(max, x, y, count);
+		window.performance.mark("a");
+		//console.log(max, x, y, count);
 	}
 
 	/**
