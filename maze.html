@@ -134,16 +134,27 @@
 		textureBuffer.numItems = scene.textureCoords.length;
 	}
 
+	/**
+	 * Move texture on X axis
+	 * @param  {number} diff difference of made movement
+	 */
 	function moveX(diff) {
 		positionX += diff;
 		move();
 	}
 
+	/**
+	 * Move texture on Y axis
+	 * @param  {number} diff difference of made movement
+	 */
 	function moveY(diff) {
 		positionY += diff;
 		move();
 	}
 
+	/**
+	 * Apply texture movement and bond changed data into buffer
+	 */
 	function move() {
 		textureCoords[0] = positionX;
 		textureCoords[4] = positionX;
@@ -238,10 +249,6 @@
 
 		initBuffers();
 
-		WS.setWebSocket(() => {}, onWsMessage, () => {});
-
-		Utils.initRequestAnimationFrame();
-
 		// load all textures
 		let images = ["img/maze.png", "img/stone.png"];
 		Utils.loadTexture(gl, images, (imgs) => {
@@ -259,13 +266,31 @@
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
 			}
-			// pass maze image
-			initReadCanvas(textures[0].image);
-			// start animation
-			animate();
+			start(textures[0].image)
 		});
 	};
 
+	/**
+	 * Main start function which is run when everything is loaded
+	 * @param  {Image} imgForReadCanvas image for read canvas initialization
+	 */
+	function start(imgForReadCanvas) {
+		// pass maze image
+		initReadCanvas(imgForReadCanvas);
+
+		// init WS
+		WS.setWebSocket(() => {}, onWsMessage, () => {});
+
+		// start animation
+		Utils.initRequestAnimationFrame();
+		animate();
+
+		console.log("Initialization finished.")
+	}
+
+	/**
+	 * Main animate function
+	 */
 	function animate() {
 		manageRotation();
 		repaint();
@@ -298,6 +323,10 @@
 		return readContext.getImageData(x, y, w, h).data;
 	}
 
+	/**
+	 * Function for receiving data from web sockets
+	 * @param  {Array} data array of data
+	 */
 	function onWsMessage(data) {
 		for (let i = 0; i < data.length; i++) {
 			let d = data[i]
@@ -348,6 +377,12 @@
 		}
 	}
 
+	/**
+	 * Process received movement data.
+	 * Send it to move() method and perform validation and rollback if necessary
+	 * @param  {number} x coordinate change
+	 * @param  {number} y coordinate change
+	 */
 	function translate(x, y) {
 		if (won) return;
 
@@ -362,6 +397,11 @@
 		}
 	}
 
+	/**
+	 * Check if the applied movement was valid or not.
+	 * Also checks is winning red square was hit.
+	 * @return {boolean} true or false of rollback should be performed
+	 */
 	function isMovementInvalid() {
 		let baseCenterX = (positionX + VIEWPORT_WIDTH / 2);
 		let baseCenterY = (positionY + VIEWPORT_HEIGHT / 2);
