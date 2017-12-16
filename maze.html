@@ -420,30 +420,13 @@
 		let rightTop = new Point3D(rightX, 0, topY).mul(new Mat4Transl(-x, 0, -y)).mul(new Mat4RotY(-currentRotation)).mul(new Mat4Transl(x, 0, y));
 		let rightBottom = new Point3D(rightX, 0, bottomY).mul(new Mat4Transl(-x, 0, -y)).mul(new Mat4RotY(-currentRotation)).mul(new Mat4Transl(x, 0, y));
 
-/*console.log("------------------------")
-console.log("y", y);
-console.log("x", x);
-
-console.log("rightX", rightX);
-console.log("bottomY", bottomY);
-
-console.log("leftX", leftX);
-console.log("topY", topY);
-
-console.log("leftTop", leftTop);
-console.log("leftBottom", leftBottom);
-console.log("rightTop", rightTop);
-console.log("rightBottom", rightBottom);*/
-
 		let minX = Math.min(leftTop.x, Math.min(leftBottom.x, Math.min(rightTop.x, rightBottom.x)));
 		let minY = Math.min(leftTop.z, Math.min(leftBottom.z, Math.min(rightTop.z, rightBottom.z)));
 		let maxX = Math.max(leftTop.x, Math.max(leftBottom.x, Math.max(rightTop.x, rightBottom.x)));
 		let maxY = Math.max(leftTop.z, Math.max(leftBottom.z, Math.max(rightTop.z, rightBottom.z)));
 
 		//let colorsArray = getColor(leftX, topY, rightX - leftX, bottomY - topY);
-		let colorsArray = getColor(minX, minY, maxX - minX + 1, maxY - minY + 1);
-		//maxX -= 1;
-		//maxY -= 1;
+		let colorsArray = getColor(Math.round(minX), Math.round(minY), Math.round(maxX - minX), Math.round(maxY - minY));
 
 		// assign mostLeft
 		let mostLeft;
@@ -475,8 +458,7 @@ console.log("rightBottom", rightBottom);*/
 		let t3 = [mostRight, new Point3D(maxX, 0, minY), mostTop];
 		let t4 = [mostDown, new Point3D(maxX, 0, maxY), mostRight];
 
-		let width = maxX - minX;
-		let height = maxY - minY;
+		let width = Math.round(maxX - minX);
 
 		let possibleWin = false;
 		let rollback = false;
@@ -484,8 +466,8 @@ console.log("rightBottom", rightBottom);*/
 		for (let i = 0; i < colorsArray.length; i+=4) {
 
 			if (currentRotation > 0.01 && Math.PI * 2 - 0.01 > currentRotation) {
-				let realY = (i/4) % width;
-				let realX = ((i/4) - realY) / width;
+				let realX = (i/4) % width;
+				let realY = ((i/4) - realX) / width;
 
 				let testPoint = new Point3D(realX + minX, 0, realY + minY);
 				let r1 = pointInTriangle(testPoint, t1);
@@ -516,9 +498,9 @@ console.log("rightBottom", rightBottom);*/
 	}
 
 	function pointInTriangle(pt, trng) {
-		let b1 = sign(pt, trng[0], trng[1]) < 0;
-		let b2 = sign(pt, trng[1], trng[2]) < 0;
-		let b3 = sign(pt, trng[2], trng[0]) < 0;
+		let b1 = sign(pt, trng[0], trng[1]) <= 0;
+		let b2 = sign(pt, trng[1], trng[2]) <= 0;
+		let b3 = sign(pt, trng[2], trng[0]) <= 0;
 
 		return ((b1 == b2) && (b2 == b3));
 	}
