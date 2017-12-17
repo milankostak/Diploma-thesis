@@ -310,20 +310,6 @@
 	}
 
 	/**
-	 * Get color of given pixels from maze image
-	 * @param  {number} x x coordinate
-	 * @param  {number} y y coordinate
-	 * @param  {number} w width of rectangle, default is one
-	 * @param  {number} h height of rectangle, default is one
-	 * @return {Uint8ClampedArray}   RGBA array of colors
-	 */
-	function getColor(x, y, w, h) {
-		if (w === undefined || w === 0) w = 1;
-		if (h === undefined || h === 0) h = 1;
-		return readContext.getImageData(x, y, w, h).data;
-	}
-
-	/**
 	 * Function for receiving data from web sockets
 	 * @param  {Array} data array of data
 	 */
@@ -337,6 +323,10 @@
 			}
 		}
 	}
+
+	///////////
+	/// position methods
+	//////////
 
 	/**
 	 * Main position change handler
@@ -400,6 +390,10 @@
 			moveY(-y / 100000);
 		}
 	}
+
+	///////////
+	/// validation methods
+	//////////
 
 	/**
 	 * Check if the applied movement was valid or not.
@@ -519,6 +513,20 @@
 	}
 
 	/**
+	 * Get color of given pixels from maze image
+	 * @param  {number} x x coordinate
+	 * @param  {number} y y coordinate
+	 * @param  {number} w width of rectangle, default is one
+	 * @param  {number} h height of rectangle, default is one
+	 * @return {Uint8ClampedArray}   RGBA array of colors
+	 */
+	function getColor(x, y, w, h) {
+		if (w === undefined || w === 0) w = 1;
+		if (h === undefined || h === 0) h = 1;
+		return readContext.getImageData(x, y, w, h).data;
+	}
+
+	/**
 	 * Detect if given point is inside given triangle (including border lines)
 	 * @param  {Point3D} pt point to be detected
 	 * @param  {array} trng array of 3 Point3D which are creating the rectangle
@@ -543,36 +551,9 @@
 		return (p1.x - p3.x) * (p2.z - p3.z) - (p2.x - p3.x) * (p1.z - p3.z);
 	}
 
-	/**
-	 * Format lasted time
-	 * @param  {boolean} final tells if milliseconds should be formated to 3 decimal point (when the time is final)
-	 */
-	function formatTime(final) {
-		if (won && !final) return;
-
-		let t = new Date().getTime() - time;
-		if (!final) t = Math.round(t / 100) / 10;
-		else t = t / 1000;
-
-		// if over a minute
-		if (t > 60) {
-			// get number of seconds
-			let tt = t % 60;
-			// round number of seconds with one digit after decimal comma
-			if (!final) tt = Math.round(tt * 10) / 10;
-			else tt =  Math.round(tt * 1000) / 1000;
-			// fill with zero if less than 10
-			if (tt < 10) tt = "0"+tt;
-			// add zero to the end if number is dividable by whole seconds
-			if (Number(tt).toString().indexOf(".") === -1) tt += ".0";
-			// final format minute:second.milis
-			t = Math.round(t / 60) + ":" + tt;
-		} else {
-			// if less than a minutes than just add a zero to the end if necessary
-			if (Number(t).toString().indexOf(".") === -1) t += ".0";
-		}
-		timeDiv.innerHTML = t;
-	}
+	///////////
+	/// rotation methods
+	//////////
 
 	/**
 	 * Main rotation change handler
@@ -617,8 +598,7 @@
 
 	/**
 	 * Called right before repaint method.
-	 * Applies rotation change and check if the movement was valid.
-	 * @return {[type]} [description]
+	 * Applies rotation change and checks if the movement was valid.
 	 */
 	function manageRotation() {
 		if (rotationChange === 0 || won) return;
@@ -635,7 +615,41 @@
 		} else {
 			currentRotation = tempRotation;
 		}
+	}
 
+	///////////
+	/// other helpers methods
+	//////////
+
+	/**
+	 * Format lasted time
+	 * @param  {boolean} final tells if milliseconds should be formated to 3 decimal point (when the time is final)
+	 */
+	function formatTime(final) {
+		if (won && !final) return;
+
+		let t = new Date().getTime() - time;
+		if (!final) t = Math.round(t / 100) / 10;
+		else t = t / 1000;
+
+		// if over a minute
+		if (t > 60) {
+			// get number of seconds
+			let tt = t % 60;
+			// round number of seconds with one digit after decimal comma
+			if (!final) tt = Math.round(tt * 10) / 10;
+			else tt =  Math.round(tt * 1000) / 1000;
+			// fill with zero if less than 10
+			if (tt < 10) tt = "0"+tt;
+			// add zero to the end if number is dividable by whole seconds
+			if (Number(tt).toString().indexOf(".") === -1) tt += ".0";
+			// final format minute:second.milis
+			t = Math.round(t / 60) + ":" + tt;
+		} else {
+			// if less than a minutes than just add a zero to the end if necessary
+			if (Number(t).toString().indexOf(".") === -1) t += ".0";
+		}
+		timeDiv.innerHTML = t;
 	}
 
 </script>
