@@ -151,7 +151,7 @@
 	}
 
 	/**
-	 * Apply texture movement and bond changed data into buffer
+	 * Apply texture movement and bind changed data into buffer
 	 */
 	function move() {
 		textureCoords[0] = positionX;
@@ -338,6 +338,10 @@
 		}
 	}
 
+	/**
+	 * Main position change handler
+	 * @param  {object} data data object
+	 */
 	function doPosition(data) {
 		// finish
 		if (data.sequence === -1) {
@@ -514,6 +518,12 @@
 		return rollback;
 	}
 
+	/**
+	 * Detect if given point is inside given triangle (including border lines)
+	 * @param  {Point3D} pt point to be detected
+	 * @param  {array} trng array of 3 Point3D which are creating the rectangle
+	 * @return {boolean}    value whether the point is inside of triangle or not
+	 */
 	function pointInTriangle(pt, trng) {
 		let b1 = sign(pt, trng[0], trng[1]) <= 0;
 		let b2 = sign(pt, trng[1], trng[2]) <= 0;
@@ -522,10 +532,21 @@
 		return ((b1 == b2) && (b2 == b3));
 	}
 
+	/**
+	 * Helper method for triangle detection
+	 * @param  {Point3D} p1 point 1
+	 * @param  {Point3D} p2 point 2
+	 * @param  {Point3D} p3 point 3
+	 * @return {number}     sign product
+	 */
 	function sign(p1, p2, p3) {
 		return (p1.x - p3.x) * (p2.z - p3.z) - (p2.x - p3.x) * (p1.z - p3.z);
 	}
 
+	/**
+	 * Format lasted time
+	 * @param  {boolean} final tells if milliseconds should be formated to 3 decimal point (when the time is final)
+	 */
 	function formatTime(final) {
 		if (won && !final) return;
 
@@ -553,6 +574,10 @@
 		timeDiv.innerHTML = t;
 	}
 
+	/**
+	 * Main rotation change handler
+	 * @param  {object} data data object
+	 */
 	function doRotation(data) {
 		// start or restart
 		if (data.sequence <= 2) {
@@ -590,6 +615,11 @@
 		}
 	}
 
+	/**
+	 * Called right before repaint method.
+	 * Applies rotation change and check if the movement was valid.
+	 * @return {[type]} [description]
+	 */
 	function manageRotation() {
 		if (rotationChange === 0 || won) return;
 		rotationChange /= 1000
