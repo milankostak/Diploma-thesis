@@ -12,7 +12,7 @@
   "description": "Practical part of my diploma thesis.",
   "engines": {
     "node": "8.9.1",
-    "npm": "5.5.1"
+    "npm": "5.6.0"
   },
   "main": "server.js",
   "name": "DT",
