@@ -1,0 +1,121 @@
+
+<canvas id="canvas" width="400" height="400"></canvas>
+<script type="text/javascript" src="../js/transforms3d.js"></script>
+
+<script>
+let ctx = document.getElementById("canvas").getContext("2d");
+ctx.fillStyle = "rgb(0, 0, 0)";
+
+
+let mostTop = new Point3D(118, 200);
+let mostLeft = new Point3D(100, 210);
+let mostRight = new Point3D(148, 256);
+let mostDown = new Point3D(129, 266);
+
+let minX = 100;
+let minY = 200;
+let maxX = 148;
+let maxY = 266;
+
+for (let i = minX; i < maxX; i++) {
+	for (let j = minY; j < maxY; j++) {
+		ctx.fillRect(i, j, 1, 1);
+	}
+}
+
+ctx.fillStyle = "rgb(255, 0, 0)";
+
+ctx.beginPath();
+ctx.moveTo(mostLeft.x, mostLeft.y);
+ctx.lineTo(minX, maxY);
+ctx.lineTo(mostDown.x, mostDown.y);
+let t1 = [mostLeft, new Point3D(minX, maxY), mostDown];
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(mostLeft.x, mostLeft.y);
+ctx.lineTo(minX, minY);
+ctx.lineTo(mostTop.x, mostTop.y);
+let t2 = [mostLeft, new Point3D(minX, minY), mostTop];
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(mostTop.x, mostTop.y);
+ctx.lineTo(maxX, minY);
+ctx.lineTo(mostRight.x, mostRight.y);
+let t3 = [mostTop, new Point3D(maxX, minY), mostRight];
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(mostRight.x, mostRight.y);
+ctx.lineTo(maxX, maxY);
+ctx.lineTo(mostDown.x, mostDown.y);
+let t4 = [mostRight, new Point3D(maxX, maxY), mostDown];
+ctx.fill();
+
+
+let colorsArray = ctx.getImageData(minX, minY, maxX - minX, maxY - minY).data;
+
+let possibleWin = false;
+let rollback = false;
+
+let width = maxX - minX;
+let height = maxY - minY;
+
+/*for (var a = 0; a < 100; a++) {
+	let ano = 0;
+	let ne = 0;
+	let t = new Date().getTime();*/
+	for (let i = 0; i < colorsArray.length; i+=4) {
+		let realX = (i/4) % width;
+		let realY = ((i/4) - realX) / width;
+		console.log(realX, realY)
+
+		let testPoint = new Point3D(realX + minX, realY + minY);
+		let r1 = pointInTriangle(testPoint, t1);
+		let r2 = pointInTriangle(testPoint, t2);
+		let r3 = pointInTriangle(testPoint, t3);
+		let r4 = pointInTriangle(testPoint, t4);
+
+		if (r1 || r2 || r3 || r4) {
+			//ano++;
+			continue;
+		}
+		//ne++;
+
+		// black (0, 0, 0, 255) or outside of canvas (0, 0, 0, 0)
+		// red channel is the important one
+		if (colorsArray[i] < 255) {
+			rollback = true;
+			//break;
+		} else if (colorsArray[i] === 255 && colorsArray[i+1] === 0 && colorsArray[i+2] === 0) {// red (255, 0, 0, 255)
+			possibleWin = true;
+		}
+	}
+/*	console.log(ano, ne);
+	console.log(new Date().getTime() - t);
+}
+*/
+
+////////////////
+
+let pt = new Point3D(1, 2);
+let v1 = new Point3D(0, 0);
+let v2 = new Point3D(2, 2);
+let v3 = new Point3D(0, 2);
+let tt = [v1, v2, v3];
+console.log(pointInTriangle(pt, tt));
+
+function pointInTriangle(pt, trng) {
+	let b1 = sign(pt, trng[0], trng[1]) < 0;
+	let b2 = sign(pt, trng[1], trng[2]) < 0;
+	let b3 = sign(pt, trng[2], trng[0]) < 0;
+
+	return ((b1 == b2) && (b2 == b3));
+}
+
+function sign(p1, p2, p3) {
+	return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+</script>

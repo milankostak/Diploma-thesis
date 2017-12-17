@@ -1,0 +1,28 @@
+<script>
+let count = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+for (let i = 0; i < 1000000; i++) {
+	let a = Math.floor((Math.random() + 1) * 1000000000)
+		.toString(16) // transform to hexa
+		.substring(1);// remove first char because the first one is not random
+	switch (a[0]) {
+		case '0': count[0]++; break;
+		case '1': count[1]++; break;
+		case '2': count[2]++; break;
+		case '3': count[3]++; break;
+		case '4': count[4]++; break;
+		case '5': count[5]++; break;
+		case '6': count[6]++; break;
+		case '7': count[7]++; break;
+		case '8': count[8]++; break;
+		case '9': count[9]++; break;
+		case 'a': count[10]++; break;
+		case 'b': count[11]++; break;
+		case 'c': count[12]++; break;
+		case 'd': count[13]++; break;
+		case 'e': count[14]++; break;
+		case 'f': count[15]++; break;
+	}
+}
+console.log(count);
+</script>

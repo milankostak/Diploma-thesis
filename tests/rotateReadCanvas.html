@@ -1,0 +1,60 @@
+
+<canvas id="canvas" width="400" height="200"></canvas>
+
+<script type="text/javascript" src="../js/webgl-utils.js"></script>
+
+<script>
+var readCanvas = document.getElementById("canvas");
+var readContext = canvas.getContext("2d");
+
+var image = new Image();
+image.onload = initReadCanvas;
+image.src = "../img/maze.png";
+
+function initReadCanvas() {
+	readCanvas.width = image.width;
+	readCanvas.height = image.height;
+	readContext = readCanvas.getContext('2d');
+	readContext.drawImage(image, 0, 0, image.width, image.height);
+
+	readContext.fillStyle = "black";
+	readContext.fillRect(0, 0, readCanvas.width, readCanvas.height);
+
+	let time = new Date().getTime();
+	readContext.translate(50, 750);
+	readContext.rotate(-45 * Math.PI / 180);
+	readContext.translate(-50, -750);
+	readContext.drawImage(image, 0, 0, image.width, image.height);
+	readContext.setTransform(1, 0, 0, 1, 0, 0);
+	console.log(new Date().getTime() - time);
+
+	time = new Date().getTime();
+	readContext.fillRect(0, 0, readCanvas.width, readCanvas.height);
+	readContext.translate(60, 760);
+	readContext.rotate(-55 * Math.PI / 180);
+	readContext.translate(-60, -760);
+	readContext.drawImage(image, 0, 0, image.width, image.height);
+	readContext.setTransform(1, 0, 0, 1, 0, 0);
+	console.log(new Date().getTime() - time);
+
+	time = new Date().getTime();
+	readContext.fillRect(0, 0, readCanvas.width, readCanvas.height);
+	readContext.translate(70, 770);
+	readContext.rotate(-65 * Math.PI / 180);
+	readContext.translate(-70, -770);
+	readContext.drawImage(image, 0, 0, image.width, image.height);
+	readContext.setTransform(1, 0, 0, 1, 0, 0);
+	console.log(new Date().getTime() - time);
+
+	time = new Date().getTime();
+	readContext.fillRect(0, 0, readCanvas.width, readCanvas.height);
+	readContext.translate(80, 780);
+	readContext.rotate(-75 * Math.PI / 180);
+	readContext.translate(-80, -780);
+	readContext.drawImage(image, 0, 0, image.width, image.height);
+	readContext.setTransform(1, 0, 0, 1, 0, 0);
+	console.log(new Date().getTime() - time);
+}
+
+
+</script>
