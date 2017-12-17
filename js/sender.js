@@ -44,7 +44,7 @@ var Sender = (function() {
 		data.push(obj);
 	};
 
-	// interval that calls send() method every 10 ms is there are any data to be send
+	// interval that calls send() method every 10 ms if there are any data to be send
 	setInterval(function() {
 		if (data.length > 0) send();
 	}, 10);

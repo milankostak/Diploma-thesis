@@ -256,7 +256,7 @@ var Detection = (function() {
 
 		Sender.add({type: "setup", width: width, height: height});
 
-		//alert(width + ", " + height);
+		//alert(width, height);
 		w4 = width/4;
 		h4 = height/4;
 		w12 = w4/3;
