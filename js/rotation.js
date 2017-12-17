@@ -61,6 +61,13 @@ var Rotation = (function() {
 	let isRunning = false;
 
 	/**
+	 * Custom function that modifies GUI of controller
+	 * @private
+	 * @type {Function}
+	 */
+	let customFunc;
+
+	/**
 	 * Main initialization function.
 	 * It checks if DeviceOrientationEvent is supported by browser.
 	 */
@@ -97,7 +104,17 @@ var Rotation = (function() {
 		if (isSupported && isRunning) {
 			isRunning = false;
 			window.removeEventListener("deviceorientation", deviceOrientationHandler, false);
+
+			customFunc({ alpha: 0, beta: 0, gamma: 0 });
 		}
+	};
+
+	/**
+	 * Set custom function for modifying GUI
+	 * @param {Function} func
+	 */
+	Rotation.setCustomFunction = function(func) {
+		customFunc = func;
 	};
 
 	/**
@@ -140,6 +157,12 @@ var Rotation = (function() {
 				gamma: gammaToSend
 			};
 			Sender.add(obj);
+
+			customFunc({
+				alpha: alphaToSend,
+				beta: betaToSend,
+				gamma: gammaToSend
+			});
 		}
 	}
 

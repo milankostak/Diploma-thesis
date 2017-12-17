@@ -10,6 +10,7 @@
 <script type="text/javascript" src="/js/detection.js"></script>
 <script type="text/javascript" src="/js/rotation.js"></script>
 <script type="text/javascript" src="/js/motion.js"></script>
+<script type="text/javascript" src="/js/helpers.js"></script>
 <script id="shader-fs1" type="x-shader/x-fragment">
 	precision mediump float;
 
@@ -211,6 +212,15 @@
 
 		// init Rotation object
 		Rotation.init();
+		Rotation.setCustomFunction(function(data) {
+			Helpers.checkRotation(data, function rotationToRight() {
+				document.querySelector(".controls").style.backgroundColor = "lightblue";
+			}, function rotationToLeft() {
+				document.querySelector(".controls").style.backgroundColor = "lightblue";
+			}, function noRotation() {
+				document.querySelector(".controls").style.backgroundColor = "white";
+			});
+		});
 
 		// init Motion object
 		Motion.init();
