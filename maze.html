@@ -403,30 +403,39 @@
 	 * @return {boolean} true or false if rollback should be performed
 	 */
 	function isMovementInvalid() {
+		// get center coordinates of gaming stone in <0; 1> (texture coordinates)
 		let baseCenterX = (positionX + VIEWPORT_WIDTH / 2);
 		let baseCenterY = (positionY + VIEWPORT_HEIGHT / 2);
-
+		// the same as base, but real ones
 		let y = (positionY + VIEWPORT_HEIGHT / 2) * readCanvas.height;
 		let x = (positionX + VIEWPORT_WIDTH / 2) * readCanvas.width;
-
+		// texture coordinates of corners of the gaming stone
 		let rightX = Math.round((baseCenterX + SHIFT_X) * readCanvas.width);
 		let bottomY = Math.round((baseCenterY + SHIFT_Y) * readCanvas.height);
-
 		let leftX = Math.round((baseCenterX - SHIFT_X) * readCanvas.width);
 		let topY = Math.round((baseCenterY - SHIFT_Y) * readCanvas.height);
-
+		// apply rotation to stone corners
 		let leftTop = new Point3D(leftX, 0, topY).mul(new Mat4Transl(-x, 0, -y)).mul(new Mat4RotY(-currentRotation)).mul(new Mat4Transl(x, 0, y));
 		let leftBottom = new Point3D(leftX, 0, bottomY).mul(new Mat4Transl(-x, 0, -y)).mul(new Mat4RotY(-currentRotation)).mul(new Mat4Transl(x, 0, y));
 		let rightTop = new Point3D(rightX, 0, topY).mul(new Mat4Transl(-x, 0, -y)).mul(new Mat4RotY(-currentRotation)).mul(new Mat4Transl(x, 0, y));
 		let rightBottom = new Point3D(rightX, 0, bottomY).mul(new Mat4Transl(-x, 0, -y)).mul(new Mat4RotY(-currentRotation)).mul(new Mat4Transl(x, 0, y));
 
+		// create bounding box around gaming stone
+		// and then get its color array
 		let minX = Math.min(leftTop.x, Math.min(leftBottom.x, Math.min(rightTop.x, rightBottom.x)));
 		let minY = Math.min(leftTop.z, Math.min(leftBottom.z, Math.min(rightTop.z, rightBottom.z)));
 		let maxX = Math.max(leftTop.x, Math.max(leftBottom.x, Math.max(rightTop.x, rightBottom.x)));
 		let maxY = Math.max(leftTop.z, Math.max(leftBottom.z, Math.max(rightTop.z, rightBottom.z)));
-
-		//let colorsArray = getColor(leftX, topY, rightX - leftX, bottomY - topY);
 		let colorsArray = getColor(Math.round(minX), Math.round(minY), Math.round(maxX - minX), Math.round(maxY - minY));
+
+		/// the main point behind detection when stone is being rotated is using bounding box
+		/// we know at which points the stone touches the bounding box
+		/// so we can get all 4 triangles created by rotated stone (rectangle) inside the bounding box (non-rotated rectangle)
+		/// when checking pixels for colors, it is checked if the checked pixel is inside any of these 4 triangles
+		/// - if it is then the color test is not performed and the movement is allowed
+		/// - if it is not then is means the pixel is under gaming stone and the color test must be performed
+
+		// when creating the triangles, it is important to know which point is the most-left, most-right, ...
 
 		// assign mostLeft
 		let mostLeft;
@@ -453,34 +462,42 @@
 		else if (maxY === rightTop.z) mostDown = rightTop;
 		else mostDown = rightBottom;
 
+		// when the orientation of points is established - create all 4 triangles
 		let t1 = [mostLeft, new Point3D(minX, 0, maxY), mostDown];
 		let t2 = [mostTop, new Point3D(minX, 0, minY), mostLeft];
 		let t3 = [mostRight, new Point3D(maxX, 0, minY), mostTop];
 		let t4 = [mostDown, new Point3D(maxX, 0, maxY), mostRight];
 
+		// width for calculation of position in the matrix of flat array
 		let width = Math.round(maxX - minX);
 
+		// main control variables
 		let possibleWin = false;
 		let rollback = false;
 
-		for (let i = 0; i < colorsArray.length; i+=4) {
-
+		for (let i = 0; i < colorsArray.length; i+=4) {// +=4 because every pixel is represented as RGBA
+			// ignore situations where gaming stone is in horizontal position as the triangle detection fails in such situations
+			// and it anyway doesn't make sense to do it, because bounding box is nearly (if not fully) identical to gaming stone
 			if (currentRotation > 0.01 && Math.PI * 2 - 0.01 > currentRotation) {
+				// get real pixel position in the bounding box
 				let realX = (i/4) % width;
-				let realY = ((i/4) - realX) / width;
-
+				let realY = (i/4 - realX) / width;
+				// then create a point with real position inside the maze
 				let testPoint = new Point3D(realX + minX, 0, realY + minY);
+				// and then perform triangle test
 				let r1 = pointInTriangle(testPoint, t1);
 				let r2 = pointInTriangle(testPoint, t2);
 				let r3 = pointInTriangle(testPoint, t3);
 				let r4 = pointInTriangle(testPoint, t4);
 
+				// if pixel is inside any of triangles continue to next one - don't perform the color test
 				if (r1 || r2 || r3 || r4) continue;
 			}
 
 			// black (0, 0, 0, 255) or outside of canvas (0, 0, 0, 0)
 			// red channel is the important one
 			if (colorsArray[i] < 255) {
+				// is black is found on the background the movement was invalid and rollback is needed
 				rollback = true;
 				break;
 			} else if (colorsArray[i] === 255 && colorsArray[i+1] === 0 && colorsArray[i+2] === 0) {// red (255, 0, 0, 255)
@@ -508,7 +525,6 @@
 	function sign(p1, p2, p3) {
 		return (p1.x - p3.x) * (p2.z - p3.z) - (p2.x - p3.x) * (p1.z - p3.z);
 	}
-
 
 	function formatTime(final) {
 		if (won && !final) return;
