@@ -243,11 +243,15 @@
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
 			}
-			// start animation
+			// start animation when textures are loaded
 			repaint();
 		});
 	};
-
+	/**
+	 * Main animate function.
+	 * Called using requestAnimFrame.
+	 * Not called when game is paused.
+	 */
 	function animate() {
 		if (!paused) {
 			movePuck();
@@ -256,6 +260,10 @@
 		}
 	}
 
+	/**
+	 * Set starting values.
+	 * Called at the beginning and when one of the players score
+	 */
 	function resetPuck() {
 		puckX = 0;
 		puckY = (Math.random() * 8) - 4;
@@ -263,15 +271,23 @@
 		puckYchange = 0.04 * Math.sign((Math.random() * 2) - 1);
 	}
 
+	/**
+	 * Make the puck a bit faster after every touch so the games are not too long
+	 */
 	function fasterPuck() {
 		puckXchange += 0.01 * Math.sign(puckXchange);
 		puckYchange += 0.01 * Math.sign(puckYchange);
 	}
 
+	/**
+	 * Main puck move function.
+	 * Called from animate function.
+	 * Performs validation, check for scoring and makes bouncing on top and bottom border.
+	 */
 	function movePuck() {
 		puckX += puckXchange;
 
-		// score for left player
+		// score for the left player
 		if (puckX > SCORE_LINE) {
 			if (puckY < player2.puckY + SLIDER_HEIGHT && puckY > player2.puckY - SLIDER_HEIGHT) {
 				puckXchange = -puckXchange;
@@ -281,7 +297,7 @@
 				document.querySelector("#score1").innerHTML = ++player1.score;
 			}
 		}
-		// score for right player
+		// score for the right player
 		else if (puckX < -SCORE_LINE) {
 			if (puckY < player1.puckY + SLIDER_HEIGHT && puckY > player1.puckY - SLIDER_HEIGHT) {
 				puckXchange = -puckXchange;
@@ -311,6 +327,11 @@
 		translationPuck = new Mat4Transl(puckX, 0, puckY);
 	}
 
+	/**
+	 * Web sockets handler.
+	 * Calls different method according to the type of received data.
+	 * @param  {Array} data array of sensor data
+	 */
 	function onWsMessage(data) {
 		for (let i = 0; i < data.length; i++) {
 			let d = data[i];
@@ -322,6 +343,10 @@
 		}
 	}
 
+	/**
+	 * Setup basic player values like id, width and height
+	 * @param  {object} data object with setup data
+	 */
 	function setupPlayer(data) {
 		let id = data.id;
 		if (player1.id === 0 && player1.id !== id && player2.id !== id)  {
@@ -336,6 +361,10 @@
 		}
 	}
 
+	/**
+	 * Position handler
+	 * @param  {object} data object with position data
+	 */
 	function doPosition(data) {
 		// save temporary variables for two players handling
 		let lastReceivedSequence = (data.id === player2.id) ? player2.lastReceivedSequence : player1.lastReceivedSequence;
@@ -374,6 +403,11 @@
 		else player1.lastReceivedSequence = lastReceivedSequence;
 	}
 
+	/**
+	 * Apply puck translation according to the received position data
+	 * @param  {string} playerid player id
+	 * @param  {number} y        current position on the y axis
+	 */
 	function translate(playerid, y) {
 		let height = (playerid === player2.id) ? player2.height : player1.height;
 
@@ -392,6 +426,10 @@
 
 	}
 
+	/**
+	 * Event handler for click on #pause.
+	 * Toggles game pause and start animation when resuming.
+	 */
 	function pause() {
 		if (paused) {
 			document.querySelector("#pause").innerHTML = "Pause";
