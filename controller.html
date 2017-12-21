@@ -195,7 +195,7 @@
 		video.addEventListener("canplaythrough", setupAfterVideoStreamIsReady, false);
 		video.addEventListener("click", sendTouch, false);
 
-		// method change listeners
+		// set change and click listeners
 		document.querySelector("label#all").addEventListener("click", doAll, false);
 		document.querySelector("label#none").addEventListener("click", doNone, false);
 		document.querySelector("label#position input").addEventListener("change", doPosition, false);
@@ -204,7 +204,7 @@
 
 		// window size listener for changing layout
 		// checks which one of height or width is bigger and changes the layout appropriately
-		window.addEventListener('resize', windowSizeChanged, false);
+		window.addEventListener("resize", windowSizeChanged, false);
 		windowSizeChanged();
 
 		// init requestAnimFrame function
@@ -212,6 +212,7 @@
 
 		// init Rotation object
 		Rotation.init();
+		// let the user know that the rotation of device is correct
 		Rotation.setCustomFunction(function(data) {
 			Helpers.checkRotation(data, function rotationToRight() {
 				document.querySelector(".controls").style.backgroundColor = "lightblue";
@@ -225,7 +226,8 @@
 		// init Motion object
 		Motion.init();
 
-		//https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+		// https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+		// get access to camera
 		navigator.mediaDevices.getUserMedia({
 			audio: false,
 			video: { width: 1280, height: 720, facingMode: "environment" }
