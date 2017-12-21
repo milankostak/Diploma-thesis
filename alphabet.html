@@ -52,8 +52,11 @@
 	var rotation, rotationAlphabet, translation;
 	//  Camera
 	var camera;
-	// number, holds indices count of block object with alphabet
+	// number, holds indices count of a block object with alphabet
 	var oneFaceIndicesCount;
+
+	// POSITION VARIABLES
+
 	// numbers, holding first received data after restart for computing relative change
 	var firstMarkerX = 0, firstMarkerY = 0;
 	// numbers, holding last sequence number for skipping delayed packets
@@ -64,15 +67,11 @@
 	var lost;
 	// variables for debugging
 	var debug = true, debugTranslation;
-	// char holding current letter
-	var currentLetter = "";
+
+	// ROTATION VARIABLES
 
 	// alphabet rotation
 	var rotationChange = 0;
-	// alphabet map
-	var alphabet;
-	// current alphabet according to the texture that is currently being displayed
-	var currentAlphabet;
 	// constants for rotation
 	const NO_ROTATION = 0, ROTATE_RIGHT = 1, ROTATE_LEFT = 2;
 	// current state of rotation
@@ -80,7 +79,16 @@
 	// variables for stepping rotation
 	var startRotation = 0, currentRotation = 0, rotationStep = Math.PI * 2 / 4;
 	// basic translation unit because whole face takes 14 units on width
-	const baseTranslUnit = 7;
+	const BASE_TRANSL_UNIT = 7;
+
+	// ALPHABET VARIABLES
+
+	// alphabet map
+	var alphabet;
+	// char holding current letter
+	var currentLetter = "";
+	// current alphabet according to the texture that is currently being displayed
+	var currentAlphabet;
 
 	/**
 	 * Set alphabet map for obtaining focused letters
@@ -153,7 +161,7 @@
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[1]);
 		gl.uniformMatrix4fv(program.modelview, false,
-			Utils.convert( new Mat4RotZ(-Math.PI / 2).mul(new Mat4Transl(-baseTranslUnit, baseTranslUnit, 0)).mul(rotationAlphabet).mul(camera.view))
+			Utils.convert( new Mat4RotZ(-Math.PI / 2).mul(new Mat4Transl(-BASE_TRANSL_UNIT, BASE_TRANSL_UNIT, 0)).mul(rotationAlphabet).mul(camera.view))
 		);
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
 
@@ -161,7 +169,7 @@
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[2]);
 		gl.uniformMatrix4fv(program.modelview, false,
-			Utils.convert( new Mat4RotZ(Math.PI).mul(new Mat4Transl(0, 2*baseTranslUnit, 0)).mul(rotationAlphabet).mul(camera.view))
+			Utils.convert( new Mat4RotZ(Math.PI).mul(new Mat4Transl(0, 2*BASE_TRANSL_UNIT, 0)).mul(rotationAlphabet).mul(camera.view))
 		);
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
 
@@ -169,7 +177,7 @@
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, textures[3]);
 		gl.uniformMatrix4fv(program.modelview, false,
-			Utils.convert( new Mat4RotZ(Math.PI / 2).mul(new Mat4Transl(baseTranslUnit, baseTranslUnit, 0)).mul(rotationAlphabet).mul(camera.view))
+			Utils.convert( new Mat4RotZ(Math.PI / 2).mul(new Mat4Transl(BASE_TRANSL_UNIT, BASE_TRANSL_UNIT, 0)).mul(rotationAlphabet).mul(camera.view))
 		);
 		gl.drawElements(gl.TRIANGLES, oneFaceIndicesCount, gl.UNSIGNED_SHORT, 0);
 
@@ -260,16 +268,24 @@
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
 			}
+			// start when textures are loaded and set
 			animate();
 		});
 	};
 
+	/**
+	 * Main animate function.
+	 * Called using requestAnimFrame.
+	 */
 	function animate() {
 		manageRotation();
 		repaint();
 		requestAnimFrame(animate);
 	}
 
+	/**
+	 * Check if any rotation is happening before every repaint call
+	 */
 	function manageRotation() {
 		if (nowRotating === NO_ROTATION) return;
 
@@ -295,9 +311,14 @@
 		// 4 means rotation to right going from  3 to left alphabet (basic small)
 		if (currentAlphabet > 3) currentAlphabet = 0;
 
-		rotationAlphabet = new Mat4Transl(0, -baseTranslUnit, 0).mul(new Mat4RotZ(currentRotation)).mul(new Mat4Transl(0, baseTranslUnit, 0));
+		rotationAlphabet = new Mat4Transl(0, -BASE_TRANSL_UNIT, 0).mul(new Mat4RotZ(currentRotation)).mul(new Mat4Transl(0, BASE_TRANSL_UNIT, 0));
 	}
 
+	/**
+	 * Web sockets handler.
+	 * Calls different method according to the type of received data
+	 * @param  {Array} data array of sensor data
+	 */
 	function onWsMessage(data) {
 		for (let i = 0; i < data.length; i++) {
 			if (data[i].type === "rotation") {
@@ -314,6 +335,10 @@
 		}
 	}
 
+	/**
+	 * Rotation handler
+	 * @param  {object} data object with rotation data
+	 */
 	function doRotation(data) {
 		// start or restart
 		if (data.sequence <= 2) {
@@ -324,6 +349,7 @@
 		if (data.sequence > lastReceivedRotationSocketSequence) {
 			lastReceivedRotationSocketSequence = data.sequence;
 
+			// do not do anything when rotation is being performed
 			if (nowRotating === NO_ROTATION) {
 
 				Helpers.checkRotation(data, function rotationToRight() {
@@ -334,6 +360,7 @@
 					rotationChange--;
 				}, () => {});
 
+				// do rotation only if the right data come 3 times in a row (stored in rotationChange)
 				if (rotationChange > 3) {
 					nowRotating = ROTATE_RIGHT;
 					startRotation = currentRotation;
@@ -361,6 +388,10 @@
 		console.log("Received image: ", data.dataUrl.substr(0, 50), "...");
 	}
 
+	/**
+	 * Position handler
+	 * @param  {object} data object with position data
+	 */
 	function doPosition(data) {
 		if (blockMotion) {
 			console.log("blokujeme");
@@ -385,8 +416,6 @@
 
 		if (data.sequence > lastReceivedMarkerSocketSequence) {
 			lastReceivedMarkerSocketSequence = data.sequence;
-			//console.log(Math.round(data.max), Math.round(data.x), Math.round(data.y));
-			//console.log(data.max, lastMarkerX, data.x, lastMarkerY, data.y);
 
 			if (data.count > 0) {
 				if (!toBeRestarted) {
@@ -409,10 +438,22 @@
 		}
 	}
 
+	/**
+	 * Apply translation for debug aiming square
+	 * @param  {number} x       change from the beginning number over x axis
+	 * @param  {number} y       change from the beginning number over y axis
+	 * @param  {number} divisor magic number to make x and y more reasonable (not really magic - one square is 100 units)
+	 */
 	function translateDebug(x, y, divisor) {
 		debugTranslation = new Mat4Transl(x/divisor, 0, -y/divisor);
 	}
 
+	/**
+	 * Apply translation for aiming square
+	 * The difference to the debug square is that this one is always aligned to exactly to a letter
+	 * @param  {number} x       change from the beginning number over x axis
+	 * @param  {number} y       change from the beginning number over y axis
+	 */
 	function translate(x, y) {
 		x = editNumber(x, -6, 6);
 		y = -editNumber(y, -4, 2);
@@ -420,6 +461,13 @@
 		translation = new Mat4Transl(x, 0, y);
 	}
 
+	/**
+	 * Change number value to make it exactly aligned to a letter in the grid
+	 * @param  {number} num number to be edited
+	 * @param  {number} min minimum value for given number
+	 * @param  {number} max maximum value for given number
+	 * @return {number}     edited number
+	 */
 	function editNumber(num, min, max) {
 		// divide by 100 because one square is 100 units
 		num /= 100;
@@ -432,13 +480,18 @@
 		return num;
 	}
 
+	/**
+	 * Takes edited numbers and finds letter which is being aimed on
+	 * @param {number} x number on x axis
+	 * @param {number} y number on y axis
+	 */
 	function setCurrentLetter(x, y) {
 		// divide by two because it has been multiplied for the size of the face
 		x /= 2;
 		y /= -2;
 		// x is in interval <-3;3>
 		// y is in interval <-2;1>
-		// narrow numbers
+		// narrow numbers to be in interval starting with 0
 		x += 3;
 		y += 2;
 		// 7 letters in a row
@@ -446,9 +499,14 @@
 		currentLetter = alphabet[currentAlphabet][seq];
 	}
 
+	/**
+	 * Takes current alphabet and print currently aimed letter or character.
+	 * Removes the last one if "←" is aimed on.
+	 */
 	function addText() {
 		if (currentLetter === '←') {
 			var currentText = document.querySelector("#text").innerHTML;
+			// check if there is anything to remove
 			if (currentText.length > 0) {
 				document.querySelector("#text").innerHTML = currentText.substr(0, currentText.length - 1);
 			}
