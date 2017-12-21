@@ -80,11 +80,11 @@
 	// GAME VARIABLES
 
 	// Float32Array of texture coordinates
-	// these numbers are changes in order to creating the moving effect
+	// these numbers are changed in order to create the moving effect
 	var textureCoords;
-	// this numbers says where on the texture we are currently having the right top corner
+	// this numbers say where on the texture we are currently having the right top corner
 	// 0, 0 => 0, 0 of the image is in the top left corner of our window
-	var positionX = -0.1, positionY = 0.8;
+	var positionX = -0.1, positionY = 0.8;// this means we are starting in bottom left corner and we can see a bit of "nothing" on the left
 
 	// width and height of "window"
 	const WIDTH = 10, HEIGHT = WIDTH / 1.75;
@@ -93,7 +93,7 @@
 	// size of the stone relative to "window"
 	const STONE_X = 1.5, STONE_Y = 0.5;
 	// actual half-width and half-height of the stone for getting coordinates of corner of the stone,
-	// then used for obtaining color
+	// used for obtaining color
 	const SHIFT_X = (STONE_X / WIDTH) * VIEWPORT_WIDTH / 2;
 	const SHIFT_Y = (STONE_Y / HEIGHT) * VIEWPORT_HEIGHT / 2;
 	// boolean
