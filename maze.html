@@ -265,7 +265,7 @@
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, textures[i]);
 			}
-			start(textures[0].image)
+			start(textures[0].image);
 		});
 	};
 
@@ -284,7 +284,7 @@
 		Utils.initRequestAnimationFrame();
 		animate();
 
-		console.log("Initialization finished.")
+		console.log("Initialization finished.");
 	}
 
 	/**
@@ -316,7 +316,7 @@
 	 */
 	function onWsMessage(data) {
 		for (let i = 0; i < data.length; i++) {
-			let d = data[i]
+			let d = data[i];
 			if (d.type === "rotation") {
 				doRotation(d);
 			} else if (d.type === "marker") {
@@ -589,7 +589,7 @@
 	 */
 	function manageRotation() {
 		if (rotationChange === 0 || won) return;
-		rotationChange /= 1000
+		rotationChange /= 1000;
 
 		let tempRotation = currentRotation + rotationChange;
 		if (tempRotation > Math.PI * 2) tempRotation -= Math.PI * 2;

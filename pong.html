@@ -91,7 +91,7 @@
 	// number, max (and min) value for slider
 	const SLIDER_MAX_Y = HEIGHT - SLIDER_HEIGHT;
 	// number, line where scoring happens
-	const SCORE_LINE = PUCK_X_TRANSL - SLIDER_WIDTH - 0.1 // 6.45
+	const SCORE_LINE = PUCK_X_TRANSL - SLIDER_WIDTH - 0.1; // 6.45
 
 	/**
 	 * Init scene and buffers
@@ -352,12 +352,12 @@
 		if (player1.id === 0 && player1.id !== id && player2.id !== id)  {
 			player1.id = id;
 			player1.width = data.width;
-			player1.height = data.height
+			player1.height = data.height;
 		}
 		else if (player2.id === 0 && player1.id !== id && player2.id !== id) {
 			player2.id = id;
 			player2.width = data.width;
-			player2.height = data.height
+			player2.height = data.height;
 		}
 	}
 
