@@ -2,7 +2,7 @@
 
 /**
  * Utils object contains some useful functions for use with WebGL.
- * Minimum browser support (syntax-wise, NOT function-wise) (mainly because arrow functions): Edge 12+, Chrome 45+, FF 22+, Opera 32+
+ * Minimum browser support (syntax-wise, NOT function-wise) (mainly because arrow functions): Edge 12+, Chrome 45+, FF 22+, Opera 32+, Safari 10
  * It intentionally doesn't support anything that wouldn't work with used syntax.
  * @type {Object}
  * @author Milan Košťák
@@ -41,7 +41,7 @@ Utils.initRequestAnimationFrame = function(fps) {
 			window.setTimeout(callback, 1000/fps);
 		};
 	} else {
-		// Edge 12+, FF 23+, Chrome 24+, Opera 15+
+		// Edge 12+, FF 23+, Chrome 24+, Opera 15+, Safari 6.1+
 		window.requestAnimFrame = window.requestAnimationFrame;
 	}
 };
@@ -922,7 +922,7 @@ Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
  * @param  {Function} exitFullscreen  function to call when cursor has been unlocked
  */
 Utils.initPointerLock = function(element, startPointerLock, exitPointerLock) {
-	// Edge 13+, FF 41+, Chrome 37+, Opera 24+
+	// Edge 13+, FF 41+, Chrome 37+, Opera 24+, Safari ne
 
 	function pointerLockChange() {
 		if (document.pointerLockElement === element) {
