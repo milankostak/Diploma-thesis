@@ -335,6 +335,10 @@
 	function onWsMessage(data) {
 		for (let i = 0; i < data.length; i++) {
 			let d = data[i];
+			// code for time measurement
+			/*if (d.type === "test") {
+				console.log(new Date().getTime()-d.time);
+			}*/
 			if (d.type === "marker") {
 				doPosition(d);
 			} else if (d.type === "setup") {

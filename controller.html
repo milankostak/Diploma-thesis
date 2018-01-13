@@ -383,6 +383,20 @@
 		Sender.add(obj);
 	}
 
+	/**
+	 * Helper method for sending test data
+	 */
+	function testSend() {
+		let request = new XMLHttpRequest();
+		request.open('POST', '/ajax/data');
+		request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		let data = [{
+			type: "test",
+			time: new Date().getTime()
+		}];
+		request.send(JSON.stringify(data));
+	}
+
 </script>
 
 </head>

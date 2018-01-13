@@ -62,6 +62,14 @@ wsServer.on('connection', (ws) => {
 function receiveData(req, res) {
 	res.sendStatus(200);
 	// console.log(req.body);
+	// code for time measurement
+	/*let data = req.body;
+	for (let i = 0; i < data.length; i++) {
+		let d = data[i];
+		if (d.type === "test") {
+			console.log(new Date().getTime()-d.time);
+		}
+	}*/
 	forwardToClients(req.body);
 }
 
