@@ -1,0 +1,98 @@
+<div>Alpha: <span id="alpha"></span></div>
+<div>Beta: <span id="beta"></span></div>
+<div>Gamma: <span id="gamma"></span></div>
+<div>webkitCompassHeading: <span id="webkitCompassHeading"></span></div>
+<div>webkitCompassAccuracy: <span id="webkitCompassAccuracy"></span></div>
+<hr>
+<div>acceleration</div>
+<div>X: <span id="x"></span>, max: <span id="x_max"></span></div>
+<div>Y: <span id="y"></span>, max: <span id="y_max"></span></div>
+<div>Z: <span id="z"></span>, max: <span id="z_max"></span></div>
+<hr>
+<div>accelerationIncludingGravity</div>
+<div>X: <span id="x2"></span>, max: <span id="x2_max"></span></div>
+<div>Y: <span id="y2"></span>, max: <span id="y2_max"></span></div>
+<div>Z: <span id="z2"></span>, max: <span id="z2_max"></span></div>
+<hr>
+<div>rotationRate</div>
+<div>Alpha: <span id="rot_a"></span>, max: <span id="rot_a_max"></span></div>
+<div>Beta: <span id="rot_b"></span>, max: <span id="rot_b_max"></span></div>
+<div>Gamma: <span id="rot_g"></span>, max: <span id="rot_g_max"></span></div>
+<hr>
+<div>interval</div>
+<div><span id="interval"></span></div>
+
+<script>
+var x_max = [],
+	y_max = [],
+	z_max = [],
+	x2_max = [],
+	y2_max = [],
+	z2_max = [],
+	rot_a_max = [],
+	rot_b_max = [],
+	rot_g_max = [];
+var kolik = 150;
+if (window.DeviceOrientationEvent) {
+	window.addEventListener("deviceorientation", function(e) {
+		document.querySelector("#alpha").innerHTML = e.alpha.toFixed(2);
+		document.querySelector("#beta").innerHTML = e.beta.toFixed(2);
+		document.querySelector("#gamma").innerHTML = e.gamma.toFixed(2);
+		document.querySelector("#webkitCompassHeading").innerHTML = e.webkitCompassHeading.toFixed(2);
+		document.querySelector("#webkitCompassAccuracy").innerHTML = e.webkitCompassAccuracy.toFixed(2);
+	});
+} else {
+	console.log("%cDeviceOrientation není podporováno.", 'color: red');
+	window.alert("Toto zařízení nemá všechny požadované senzory, aby zjistilo svou orientaci.");
+}
+
+
+if (window.DeviceMotionEvent) {
+	window.addEventListener("devicemotion", function(e) {
+		if (x_max.length > kolik) x_max.shift();
+		x_max.push(e.acceleration.x);
+		document.querySelector("#x_max").innerHTML = Math.max(...x_max).toFixed(1);
+		if (y_max.length > kolik) y_max.shift();
+		y_max.push(e.acceleration.y);
+		document.querySelector("#y_max").innerHTML = Math.max(...y_max).toFixed(1);
+		if (z_max.length > kolik) z_max.shift();
+		z_max.push(e.acceleration.z);
+		document.querySelector("#z_max").innerHTML = Math.max(...z_max).toFixed(1);
+
+		if (x2_max.length > kolik) x2_max.shift();
+		x2_max.push(e.accelerationIncludingGravity.x);
+		document.querySelector("#x2_max").innerHTML = Math.max(...x2_max).toFixed(1);
+		if (y2_max.length > kolik) y2_max.shift();
+		y2_max.push(e.accelerationIncludingGravity.y);
+		document.querySelector("#y2_max").innerHTML = Math.max(...y2_max).toFixed(1);
+		if (z2_max.length > kolik) z2_max.shift();
+		z2_max.push(e.accelerationIncludingGravity.z);
+		document.querySelector("#z2_max").innerHTML = Math.max(...z2_max).toFixed(1);
+
+		if (rot_a_max.length > kolik) rot_a_max.shift();
+		rot_a_max.push(e.rotationRate.alpha);
+		document.querySelector("#rot_a_max").innerHTML = Math.max(...rot_a_max).toFixed(0);
+		if (rot_b_max.length > kolik) rot_b_max.shift();
+		rot_b_max.push(e.rotationRate.beta);
+		document.querySelector("#rot_b_max").innerHTML = Math.max(...rot_b_max).toFixed(0);
+		if (rot_g_max.length > kolik) rot_g_max.shift();
+		rot_g_max.push(e.rotationRate.gamma);
+		document.querySelector("#rot_g_max").innerHTML = Math.max(...rot_g_max).toFixed(0);
+
+		document.querySelector("#x").innerHTML = e.acceleration.x.toFixed(1);
+		document.querySelector("#y").innerHTML = e.acceleration.y.toFixed(1);
+		document.querySelector("#z").innerHTML = e.acceleration.z.toFixed(1);
+		document.querySelector("#x2").innerHTML = e.accelerationIncludingGravity.x.toFixed(1);
+		document.querySelector("#y2").innerHTML = e.accelerationIncludingGravity.y.toFixed(1);
+		document.querySelector("#z2").innerHTML = e.accelerationIncludingGravity.z.toFixed(1);
+		document.querySelector("#rot_a").innerHTML = e.rotationRate.alpha.toFixed(0);
+		document.querySelector("#rot_b").innerHTML = e.rotationRate.beta.toFixed(0);
+		document.querySelector("#rot_g").innerHTML = e.rotationRate.gamma.toFixed(0);
+		document.querySelector("#interval").innerHTML = e.interval.toFixed(2);
+	});
+} else {
+	console.log("%cDeviceMotion není podporováno.", 'color: red');
+	window.alert("Toto zařízení nemá všechny požadované senzory, aby zjistilo svůj relativní pohyb.");
+}
+
+</script>
