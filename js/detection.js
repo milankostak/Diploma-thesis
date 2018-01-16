@@ -295,7 +295,7 @@ var Detection = (function() {
 			let t3 = times[3].reduce((a, b) => (a + b)) / times[3].length;
 			let t4 = times[4].reduce((a, b) => (a + b)) / times[4].length;
 			console.log(t0.toFixed(2), t1.toFixed(2), t2.toFixed(2), t3.toFixed(2), t4.toFixed(2));
-			alert(t0.toFixed(2) + ", " + t1.toFixed(2) + ", " + t2.toFixed(2) + ", " + t3.toFixed(2) + ", " + t4.toFixed(2));
+			//alert(t0.toFixed(2) + ", " + t1.toFixed(2) + ", " + t2.toFixed(2) + ", " + t3.toFixed(2) + ", " + t4.toFixed(2));
 
 			currentCount = 0;
 			times = [];
