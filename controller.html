@@ -118,16 +118,25 @@
 		vec4 pix00 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y));
 		vec4 pix10 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y));
 		vec4 pix20 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y));
+		//vec4 pix30 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y));
 
 		vec4 pix01 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + diff.y));
 		vec4 pix11 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + diff.y));
 		vec4 pix21 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + diff.y));
+		//vec4 pix31 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + diff.y));
 
 		vec4 pix02 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + 2.0*diff.y));
 		vec4 pix12 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + 2.0*diff.y));
 		vec4 pix22 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + 2.0*diff.y));
+		//vec4 pix32 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + 2.0*diff.y));
+
+		//vec4 pix03 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + 3.0*diff.y));
+		//vec4 pix13 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + 3.0*diff.y));
+		//vec4 pix23 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + 3.0*diff.y));
+		//vec4 pix33 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + 3.0*diff.y));
 
 		float sumCount = pix00.r + pix10.r + pix20.r + pix01.r + pix11.r + pix21.r + pix02.r + pix12.r + pix22.r;
+						//+ pix30.r + pix31.r + pix32.r + pix03.r + pix13.r + pix23.r + pix33.r;
 
 		// no interesting pixels here
 		// discard squares with one interesting pixel?
@@ -135,14 +144,16 @@
 
 		// weighted arithmetic mean of coordinates
 		float sumX =
-			pix00.r * pix00.g + pix10.r * pix10.g + pix20.r * pix20.g +
-			pix01.r * pix01.g + pix11.r * pix11.g + pix21.r * pix21.g +
-			pix02.r * pix02.g + pix12.r * pix12.g + pix22.r * pix22.g;
+			pix00.r * pix00.g + pix10.r * pix10.g + pix20.r * pix20.g + //pix30.r * pix30.g +
+			pix01.r * pix01.g + pix11.r * pix11.g + pix21.r * pix21.g + //pix31.r * pix31.g +
+			pix02.r * pix02.g + pix12.r * pix12.g + pix22.r * pix22.g;// + pix32.r * pix32.g +
+			//pix03.r * pix03.g + pix13.r * pix13.g + pix23.r * pix23.g + pix33.r * pix33.b;
 		float meanX = sumX / sumCount;
 		float sumY =
-			pix00.r * pix00.b + pix10.r * pix10.b + pix20.r * pix20.b +
-			pix01.r * pix01.b + pix11.r * pix11.b + pix21.r * pix21.b +
-			pix02.r * pix02.b + pix12.r * pix12.b + pix22.r * pix22.b;
+			pix00.r * pix00.b + pix10.r * pix10.b + pix20.r * pix20.b + //pix30.r * pix30.b +
+			pix01.r * pix01.b + pix11.r * pix11.b + pix21.r * pix21.b + //pix31.r * pix31.b +
+			pix02.r * pix02.b + pix12.r * pix12.b + pix22.r * pix22.b;// + pix32.r * pix32.b +
+			//pix03.r * pix03.b + pix13.r * pix13.b + pix23.r * pix23.b + pix33.r * pix33.b;
 		float meanY = sumY / sumCount;
 
 		gl_FragColor = vec4(sumCount, meanX, meanY, 1.0);
