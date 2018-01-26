@@ -15,8 +15,8 @@
 	precision mediump float;
 
 	uniform sampler2D texture;
-	uniform float width;
-	uniform float height;
+	uniform float width;//w4
+	uniform float height;//h4
 
 	varying vec2 textureCoord;
 
@@ -44,21 +44,31 @@
 		vec4 pix10 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y));
 		vec4 pix20 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y));
 		vec4 pix30 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y));
+		//vec4 pix40 = texture2D(texture, vec2(baseTextureCoord.x + 4.0*diff.x, baseTextureCoord.y));
 
 		vec4 pix01 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + diff.y));
 		vec4 pix11 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + diff.y));
 		vec4 pix21 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + diff.y));
 		vec4 pix31 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + diff.y));
+		//vec4 pix41 = texture2D(texture, vec2(baseTextureCoord.x + 4.0*diff.x, baseTextureCoord.y + diff.y));
 
 		vec4 pix02 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + 2.0*diff.y));
 		vec4 pix12 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + 2.0*diff.y));
 		vec4 pix22 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + 2.0*diff.y));
 		vec4 pix32 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + 2.0*diff.y));
+		//vec4 pix42 = texture2D(texture, vec2(baseTextureCoord.x + 4.0*diff.x, baseTextureCoord.y + 2.0*diff.y));
 
 		vec4 pix03 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + 3.0*diff.y));
 		vec4 pix13 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + 3.0*diff.y));
 		vec4 pix23 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + 3.0*diff.y));
 		vec4 pix33 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + 3.0*diff.y));
+		//vec4 pix43 = texture2D(texture, vec2(baseTextureCoord.x + 4.0*diff.x, baseTextureCoord.y + 3.0*diff.y));
+
+		//vec4 pix04 = texture2D(texture, vec2(baseTextureCoord.x, baseTextureCoord.y + 4.0*diff.y));
+		//vec4 pix14 = texture2D(texture, vec2(baseTextureCoord.x + diff.x, baseTextureCoord.y + 4.0*diff.y));
+		//vec4 pix24 = texture2D(texture, vec2(baseTextureCoord.x + 2.0*diff.x, baseTextureCoord.y + 4.0*diff.y));
+		//vec4 pix34 = texture2D(texture, vec2(baseTextureCoord.x + 3.0*diff.x, baseTextureCoord.y + 4.0*diff.y));
+		//vec4 pix44 = texture2D(texture, vec2(baseTextureCoord.x + 4.0*diff.x, baseTextureCoord.y + 4.0*diff.y));
 
 		float thresholdG = 0.6;
 		float thresholdRB = 0.4;
@@ -69,21 +79,31 @@
 		if (pix10.g > thresholdG && pix10.r < thresholdRB && pix10.b < thresholdRB) count += 1.0;
 		if (pix20.g > thresholdG && pix20.r < thresholdRB && pix20.b < thresholdRB) count += 1.0;
 		if (pix30.g > thresholdG && pix30.r < thresholdRB && pix30.b < thresholdRB) count += 1.0;
+		//if (pix40.g > thresholdG && pix40.r < thresholdRB && pix40.b < thresholdRB) count += 1.0;
 
 		if (pix01.g > thresholdG && pix01.r < thresholdRB && pix01.b < thresholdRB) count += 1.0;
 		if (pix11.g > thresholdG && pix11.r < thresholdRB && pix11.b < thresholdRB) count += 1.0;
 		if (pix21.g > thresholdG && pix21.r < thresholdRB && pix21.b < thresholdRB) count += 1.0;
 		if (pix31.g > thresholdG && pix31.r < thresholdRB && pix31.b < thresholdRB) count += 1.0;
+		//if (pix41.g > thresholdG && pix41.r < thresholdRB && pix41.b < thresholdRB) count += 1.0;
 
 		if (pix02.g > thresholdG && pix02.r < thresholdRB && pix02.b < thresholdRB) count += 1.0;
 		if (pix12.g > thresholdG && pix12.r < thresholdRB && pix12.b < thresholdRB) count += 1.0;
 		if (pix22.g > thresholdG && pix22.r < thresholdRB && pix22.b < thresholdRB) count += 1.0;
 		if (pix32.g > thresholdG && pix32.r < thresholdRB && pix32.b < thresholdRB) count += 1.0;
+		//if (pix42.g > thresholdG && pix42.r < thresholdRB && pix42.b < thresholdRB) count += 1.0;
 
 		if (pix03.g > thresholdG && pix03.r < thresholdRB && pix03.b < thresholdRB) count += 1.0;
 		if (pix13.g > thresholdG && pix13.r < thresholdRB && pix13.b < thresholdRB) count += 1.0;
 		if (pix23.g > thresholdG && pix23.r < thresholdRB && pix23.b < thresholdRB) count += 1.0;
 		if (pix33.g > thresholdG && pix33.r < thresholdRB && pix33.b < thresholdRB) count += 1.0;
+		//if (pix43.g > thresholdG && pix43.r < thresholdRB && pix43.b < thresholdRB) count += 1.0;
+
+		//if (pix04.g > thresholdG && pix04.r < thresholdRB && pix04.b < thresholdRB) count += 1.0;
+		//if (pix14.g > thresholdG && pix14.r < thresholdRB && pix14.b < thresholdRB) count += 1.0;
+		//if (pix24.g > thresholdG && pix24.r < thresholdRB && pix24.b < thresholdRB) count += 1.0;
+		//if (pix34.g > thresholdG && pix34.r < thresholdRB && pix34.b < thresholdRB) count += 1.0;
+		//if (pix44.g > thresholdG && pix44.r < thresholdRB && pix44.b < thresholdRB) count += 1.0;
 
 		// write count, and top left coordinates
 		gl_FragColor = vec4(count, baseX, baseY, 1.0);
@@ -93,8 +113,8 @@
 	precision highp float;
 
 	uniform sampler2D texture;
-	uniform float width;//w4
-	uniform float height;//h4
+	uniform float width;//w12
+	uniform float height;//h12
 
 	varying vec2 textureCoord;
 
