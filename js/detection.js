@@ -53,6 +53,8 @@ var Detection = (function() {
 	const MEASURE_TIME = false;
 	const FINISH_COUNT = 1000;
 	let currentCount = 0, times = [];
+	const timeSlots = 4;
+
 
 	/**
 	 * Public initialization function. Sets all necessary variables.
@@ -144,11 +146,7 @@ var Detection = (function() {
 		gl.useProgram(program1);
 
 		program1.vertexPositionAttribute = gl.getAttribLocation(program1, "aVertexPosition");
-		gl.enableVertexAttribArray(program1.vertexPositionAttribute);
-
 		program1.vertexTexCoordAttribute = gl.getAttribLocation(program1, "aTextureCoord");
-		gl.enableVertexAttribArray(program1.vertexTexCoordAttribute);
-
 		program1.rotation = gl.getUniformLocation(program1, "rotation");
 		program1.texture = gl.getUniformLocation(program1, "texture");
 		program1.width = gl.getUniformLocation(program1, "width");
@@ -161,11 +159,7 @@ var Detection = (function() {
 		gl.useProgram(program2);
 
 		program2.vertexPositionAttribute = gl.getAttribLocation(program2, "aVertexPosition");
-		gl.enableVertexAttribArray(program2.vertexPositionAttribute);
-
 		program2.vertexTexCoordAttribute = gl.getAttribLocation(program2, "aTextureCoord");
-		gl.enableVertexAttribArray(program2.vertexTexCoordAttribute);
-
 		program2.rotation = gl.getUniformLocation(program2, "rotation");
 		program2.texture = gl.getUniformLocation(program2, "texture");
 		program2.width = gl.getUniformLocation(program2, "width");
@@ -249,11 +243,9 @@ var Detection = (function() {
 	}
 
 	function initTimeMeasurement() {
-		times[0] = [];
-		times[1] = [];
-		times[2] = [];
-		times[3] = [];
-		times[4] = [];
+		for (var i = 0; i < timeSlots; i++) {
+			times[i] = [];
+		}
 	}
 
 	/**
@@ -289,21 +281,21 @@ var Detection = (function() {
 	Detection.repaint = function() {
 
 		if (MEASURE_TIME && ++currentCount === FINISH_COUNT) {
-			let t0 = times[0].reduce((a, b) => (a + b)) / times[0].length;
-			let t1 = times[1].reduce((a, b) => (a + b)) / times[1].length;
-			let t2 = times[2].reduce((a, b) => (a + b)) / times[2].length;
-			let t3 = times[3].reduce((a, b) => (a + b)) / times[3].length;
-			let t4 = times[4].reduce((a, b) => (a + b)) / times[4].length;
-			console.log(t0.toFixed(2), t1.toFixed(2), t2.toFixed(2), t3.toFixed(2), t4.toFixed(2));
-			//alert(t0.toFixed(2) + ", " + t1.toFixed(2) + ", " + t2.toFixed(2) + ", " + t3.toFixed(2) + ", " + t4.toFixed(2));
+			let t = [];
+
+			for (var i = 0; i < timeSlots; i++) {
+				t.push(times[i].reduce((a, b) => (a + b)) / times[i].length);
+			}
+			let result = "";
+			for (var i = 0; i < timeSlots; i++) {
+				result += t[i].toFixed(2) + ", "
+			}
+
+			console.log(result);
+			//alert(result);
 
 			currentCount = 0;
-			times = [];
-			times[0] = [];
-			times[1] = [];
-			times[2] = [];
-			times[3] = [];
-			times[4] = [];
+			initTimeMeasurement();
 
 		}
 		if (MEASURE_TIME) {
@@ -311,23 +303,23 @@ var Detection = (function() {
 			window.performance.mark("a");
 		}
 	///
-	/// 1. step: bind data
+	/// 1. step: first draw operation
 	///
+		gl.useProgram(program1);
+
 		// bind vertex data
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 		gl.vertexAttribPointer(program1.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(program1.vertexPositionAttribute);
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
 		gl.vertexAttribPointer(program1.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(program1.vertexTexCoordAttribute);
+
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
 		// bind framebuffer
 		gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-
-		if (MEASURE_TIME) window.performance.mark("a");
-	///
-	/// 2. step: first draw operation
-	///
-		gl.useProgram(program1);
 
 		gl.uniformMatrix4fv(program1.rotation, false, Utils.convert(new Mat4Identity()));
 		gl.uniform1f(program1.width, width);
@@ -339,48 +331,62 @@ var Detection = (function() {
 
 		gl.viewport(0, 0, w4, h4);
 
-		// ... and draw to it
+		// draw to texture2
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2, 0);
 
 		// bind input texture
+		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
 
-		// draw from input texture to FB texture
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
-		if (MEASURE_TIME)window.performance.mark("a");
+
+		if (MEASURE_TIME) window.performance.mark("a");
 	///
-	/// 3. step: second draw operation
+	/// 2. step: second draw operation
 	///
 		gl.useProgram(program2);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.vertexAttribPointer(program2.vertexPositionAttribute, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(program2.vertexPositionAttribute);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+		gl.vertexAttribPointer(program2.vertexTexCoordAttribute, textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(program2.vertexTexCoordAttribute);
+
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
 		gl.uniformMatrix4fv(program2.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
 		gl.uniform1f(program2.width, w4);
 		gl.uniform1f(program2.height, h4);
 
 		gl.bindTexture(gl.TEXTURE_2D, texture1);
+		// target, level, internalformat, width, height, border, format, type, ArrayBufferView? pixels)
 		gl.texImage2D(gl.TEXTURE_2D, 0, internalFormatTexture, w12, h12, 0, gl.RGBA, texturePrecision, null);
+
 		gl.viewport(0, 0, w12, h12);
 
-		// ... and draw to it
+		// draw to texture1
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture1, 0);
 
 		// bind input texture
+		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, texture2);
 
-		// draw from previous output to FB texture
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 		if (MEASURE_TIME) window.performance.mark("a");
 
 	///
-	/// 4. step: read data
+	/// 3. step: read data
 	///
 		readData();
 
 	///
-	/// 5. step: optionally draw result
+	/// 4. step: optionally draw result
 	///
 /*
 		// draw the output from previous draw cycle into canvas
@@ -394,16 +400,14 @@ var Detection = (function() {
 */
 
 	///
-	/// 6. step: save time if turned on
+	/// 5. step: save time if turned on
 	///
 		if (MEASURE_TIME) {
 			let times2 = performance.getEntriesByName("a");
 
-			times[0].push(times2[1].startTime - times2[0].startTime);
-			times[1].push(times2[2].startTime - times2[1].startTime);
-			times[2].push(times2[3].startTime - times2[2].startTime);
-			times[3].push(times2[4].startTime - times2[3].startTime);
-			times[4].push(times2[5].startTime - times2[4].startTime);
+			for (var i = 0; i < timeSlots; i++) {
+				times[i].push(times2[i+1].startTime - times2[i].startTime);
+			}
 		}
 	};
 
@@ -416,11 +420,11 @@ var Detection = (function() {
 		if (MEASURE_TIME) window.performance.mark("a");
 
 		let max = 0, x, y, count = 0;
-		for (let i = 0; i < readBuffer.length; i+=4) {
+		for (let i = 0; i < readBuffer.length; i += 4) {
 			if (readBuffer[i] > max) {
 				max = readBuffer[i];
-				x = readBuffer[i+1];
-				y = readBuffer[i+2];
+				x = readBuffer[i + 1];
+				y = readBuffer[i + 2];
 			}
 			if (readBuffer[i] > 1) {
 				count++;
