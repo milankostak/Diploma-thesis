@@ -55,6 +55,8 @@ var Detection = (function() {
 	let currentCount = 0, times = [];
 	const timeSlots = 4;
 
+	let targetColor;
+	let readBuffer2;
 
 	/**
 	 * Public initialization function. Sets all necessary variables.
@@ -151,6 +153,7 @@ var Detection = (function() {
 		program1.texture = gl.getUniformLocation(program1, "texture");
 		program1.width = gl.getUniformLocation(program1, "width");
 		program1.height = gl.getUniformLocation(program1, "height");
+		program1.targetColor = gl.getUniformLocation(program1, "targetColor");
 
 		// second step program - further merging points of interest with weighted arithmetic mean
 		program2 = gl.createProgram();
@@ -259,7 +262,7 @@ var Detection = (function() {
 		width = canvas.width = videoWidth;
 		height = canvas.height = videoHeight;
 
-		Sender.add({type: "setup", width: width, height: height});
+		// Sender.add({type: "setup", width: width, height: height});
 
 		//alert(width, height);
 		w4 = width/4;
@@ -271,6 +274,7 @@ var Detection = (function() {
 		// do it now, because it is time consuming operation
 		let arraySize = Math.ceil(w12 * h12 * 4);
 		readBuffer = new Float32Array(arraySize);
+		readBuffer2 = new Float32Array(2);
 	};
 
 	/**
@@ -324,6 +328,7 @@ var Detection = (function() {
 		gl.uniformMatrix4fv(program1.rotation, false, Utils.convert(new Mat4Identity()));
 		gl.uniform1f(program1.width, width);
 		gl.uniform1f(program1.height, height);
+		gl.uniform3fv(program1.targetColor, targetColor);
 
 		gl.bindTexture(gl.TEXTURE_2D, texture2);
 		// target, level, internalformat, width, height, border, format, type, ArrayBufferView? pixels)
@@ -431,12 +436,26 @@ var Detection = (function() {
 			}
 		}
 		if (max > 1) {
-			send({max: max, x: x, y: y, count: count});
+			// send({max: max, x: x, y: y, count: count});
+			readBuffer2[0] = x;
+			readBuffer2[1] = y;
 		}
 
 		if (MEASURE_TIME) window.performance.mark("a");
-		//console.log(max, x, y, count);
+		// console.log(max, x, y, count);
 	}
+
+	/**
+	 * Set external color, usually for testing purpose.
+	 * Uncomment readData2() !!
+	 */
+	Detection.setExternalColor = (rgb) => {
+		targetColor = Float32Array.from(rgb);
+	};
+
+	Detection.getReadBuffer2 = () => {
+		return readBuffer2;
+	};
 
 	/**
 	 * Update cameraTexture from video feed

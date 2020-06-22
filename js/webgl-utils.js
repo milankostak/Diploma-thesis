@@ -11,6 +11,32 @@
  */
 var Utils = {};
 
+Utils.getDataFromFile = function(url, callback) {
+	let _404 = false;
+	let unknown_error = false;
+	const http_request = new XMLHttpRequest();
+
+	http_request.open("GET", url, true);
+	http_request.onreadystatechange = function() {
+		// http_request.readyState
+		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+			// 0	UNSENT open() has not been called yet.
+			// 1	OPENED send() has not been called yet.
+			// 2	HEADERS_RECEIVED send() has been called, and headers and status are available.
+			// 3	LOADING Downloading; responseText holds partial data.
+			// 4	DONE The operation is complete.
+		if (http_request.readyState === 4 && http_request.status === 200) {
+			callback(http_request.responseText);
+		} else if (http_request.status === 404) {
+			if (!_404) window.alert("File \""+url+"\" was not found (404)!");
+			_404 = true;
+		} else if (http_request.status !== 200 && http_request.status !== 404) {
+			if (!unknown_error) window.alert("An error occured when laoding file \""+url+"\"!");
+			unknown_error = true;
+		}
+	};
+	http_request.send(null);
+};
 /**
  * Initialization of WebGL
  * @param  {HTMLCanvasElement} canvas to draw on
