@@ -12,7 +12,7 @@
  * @author Milan Košťák
  * @version 1.0
  */
-var Detection = (function() {
+const Detection = (function () {
 
 	/**
 	 * Main object which is exported into public Detection variable.
@@ -35,7 +35,7 @@ var Detection = (function() {
 	let fbo;
 	// precision of reading from texture, either FLOAT or HALF_FLOAT_OES
 	let texturePrecision;
-	// format of texture depedning on the version of WebGL that is used, either RGBA or RGBA32F
+	// format of texture depending on the version of WebGL that is used, either RGBA or RGBA32F
 	let internalFormatTexture;
 	// numbers, input width and height
 	let width, height, w4, h4, w12, h12;
@@ -63,7 +63,7 @@ var Detection = (function() {
 	 * @public
 	 * @return {boolean} true or false if the initialization was successful
 	 */
-	Detection.init = function() {
+	Detection.init = function () {
 		if (!initWebGL()) return false;
 		initBasics();
 		initPrograms();
@@ -83,7 +83,7 @@ var Detection = (function() {
 		gl = canvas.getContext("webgl2");
 
 
-		// if WebGL2 is not supported try to fall-back to version 1
+		// if WebGL2 is not supported try to fall back to version 1
 		if (!gl) {
 			gl = canvas.getContext("experimental-webgl");
 
@@ -112,8 +112,8 @@ var Detection = (function() {
 			console.log("WebGL1 was initialized.");
 		} else {
 			// necessary extension for WebGL2
-			const exten = gl.getExtension("EXT_color_buffer_float");
-			if (!exten) {
+			const extension = gl.getExtension("EXT_color_buffer_float");
+			if (!extension) {
 				console.log("EXT_color_buffer_float is not supported");
 				alert("Initialization was not successful. Your browser doesn't support all necessary WebGL2 extensions.");
 				return false;
@@ -246,7 +246,7 @@ var Detection = (function() {
 	}
 
 	function initTimeMeasurement() {
-		for (var i = 0; i < timeSlots; i++) {
+		for (let i = 0; i < timeSlots; i++) {
 			times[i] = [];
 		}
 	}
@@ -258,20 +258,20 @@ var Detection = (function() {
 	 * @param  {Number} videoWidth  width of source video
 	 * @param  {Number} videoHeight height of source video
 	 */
-	Detection.setupAfterVideoStreamIsReady = function(videoWidth, videoHeight) {
+	Detection.setupAfterVideoStreamIsReady = function (videoWidth, videoHeight) {
 		width = canvas.width = videoWidth;
 		height = canvas.height = videoHeight;
 
 		// Sender.add({type: "setup", width: width, height: height});
 
 		//alert(width, height);
-		w4 = width/4;
-		h4 = height/4;
-		w12 = w4/3;
-		h12 = h4/3;
+		w4 = width / 4;
+		h4 = height / 4;
+		w12 = w4 / 3;
+		h12 = h4 / 3;
 
 		// allocate readBuffer for reading pixels
-		// do it now, because it is time consuming operation
+		// do it now, because it is time-consuming operation
 		let arraySize = Math.ceil(w12 * h12 * 4);
 		readBuffer = new Float32Array(arraySize);
 		readBuffer2 = new Float32Array(2);
@@ -282,16 +282,15 @@ var Detection = (function() {
 	 * Runs the key algorithm
 	 * @public
 	 */
-	Detection.repaint = function() {
-
+	Detection.repaint = function () {
 		if (MEASURE_TIME && ++currentCount === FINISH_COUNT) {
 			let t = [];
 
-			for (var i = 0; i < timeSlots; i++) {
+			for (let i = 0; i < timeSlots; i++) {
 				t.push(times[i].reduce((a, b) => (a + b)) / times[i].length);
 			}
 			let result = "";
-			for (var i = 0; i < timeSlots; i++) {
+			for (let i = 0; i < timeSlots; i++) {
 				result += t[i].toFixed(2) + ", "
 			}
 
@@ -327,6 +326,7 @@ var Detection = (function() {
 
 		gl.uniformMatrix4fv(program1.rotation, false, Utils.convert(new Mat4Identity()));
 		gl.uniform1f(program1.width, width);
+		// noinspection JSSuspiciousNameCombination
 		gl.uniform1f(program1.height, height);
 		gl.uniform3fv(program1.targetColor, targetColor);
 
@@ -410,8 +410,8 @@ var Detection = (function() {
 		if (MEASURE_TIME) {
 			let times2 = performance.getEntriesByName("a");
 
-			for (var i = 0; i < timeSlots; i++) {
-				times[i].push(times2[i+1].startTime - times2[i].startTime);
+			for (let i = 0; i < timeSlots; i++) {
+				times[i].push(times2[i + 1].startTime - times2[i].startTime);
 			}
 		}
 	};
@@ -460,7 +460,7 @@ var Detection = (function() {
 	/**
 	 * Update cameraTexture from video feed
 	 */
-	Detection.updateTexture = function(video) {
+	Detection.updateTexture = function (video) {
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
 		//gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -474,7 +474,7 @@ var Detection = (function() {
 	 * Reset sequence variable and set interval for sending position.
 	 * @public
 	 */
-	Detection.restart = function() {
+	Detection.restart = function () {
 		// restart the sequence so the receiver can also restart the relative position
 		positionSequence = 0;
 		markerFoundCheckInterval = setInterval(checkIfMarkerFound, markerFoundCheckIntervalTime);
@@ -484,7 +484,7 @@ var Detection = (function() {
 	 * Clear sending interval and try to send any possible remaining data
 	 * @public
 	 */
-	Detection.finish = function() {
+	Detection.finish = function () {
 		clearInterval(markerFoundCheckInterval);
 		let obj = {
 			type: "marker",
