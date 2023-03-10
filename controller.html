@@ -21,7 +21,7 @@
 	varying vec2 textureCoord;
 
 	uniform vec3 targetColor;// = vec3(0.2, 0.8, 0.2);
-	const float thr = 0.25;
+	const float thr = 0.1;
 
 	bool correctPixel(vec4 pixel) {
 
@@ -329,45 +329,44 @@
 
 	function test(start, end) {
 		let loaded = 0;
-		const data = [];
-		Utils.getDataFromFile("/python/new/test.txt", (text) => {
+		const results = [];
+		Utils.getDataFromFile("/rgb.txt", (text) => {
 			const testData = text.split("\r\n")
-					.map(t => t.split(","))
-					.filter(t => t[0] !== "")
-					.map(t => [t[0], t[1] * 1, t[2] * 1, t[3] / 360, t[4] / 100, t[5] / 100])
-					.sort((a, b) => a[0] <= b[0] ? -1 : 1);
+					.map(t => t.split(" "))
+					.map(t => [t[0], t[1] * 1, t[2] * 1, t[3] * 1]);
 
-			for (let i = start; i <= end; i++) {
-				const name = String(i).padStart(3, "0");
+			const interval = function() {
+				if (loaded < testData.length) {
+					setTimeout(interval, 50);
+				} else {
+					console.log(results.sort().reduce((a, b) => a + "\n" + b))
+				}
+			};
+			setTimeout(interval, 50);
+
+			for (let i = 0; i < testData.length; i++) {
+				const data = testData[i];
+				const name = data[0];//String(i).padStart(3, "0");
 				const img = new Image();
 				img.onload = () => {
-					const hsv = testData[i];
-					const rgb = HSVtoRGB(hsv[3], hsv[4], hsv[5]);
+					// const rgb = HSVtoRGB(data[3], data[4], data[5]);
 					// console.log(rgb);
+					const rgb = [data[1] / 255, data[2] / 255, data[3] / 255];
 					Detection.setExternalColor(rgb);
 					Detection.setupAfterVideoStreamIsReady(img.width, img.height);
 					Detection.updateTexture(img);
 					Detection.repaint();
 					const readData = Detection.getReadBuffer2();
 					if (readData[0] === 0 && readData[1] === 0) {
-						data.push(name + ".jpg,-1,-1");
+						results.push(name + ",-1,-1");
 					} else {
-						data.push(name + ".jpg," + readData[0] + "," + readData[1]);
+						results.push(name + "," + readData[0] + "," + readData[1]);
 					}
 					loaded++;
 				};
-				img.src = "/python/new/" + name + ".jpg";
+				img.src = "/draw3-test-800/" + name;
 			}
 		});
-		const total = end + 1;
-		const interval = function() {
-			if (loaded < total) {
-				setTimeout(interval, 50);
-			} else {
-				console.log(data.sort().reduce((a, b) => a + "\n" + b))
-			}
-		};
-		setTimeout(interval, 1);
 	}
 
 	function HSVtoRGB(h, s, v) {

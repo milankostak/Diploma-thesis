@@ -424,25 +424,37 @@ const Detection = (function () {
 		gl.readPixels(0, 0, w12, h12, gl.RGBA, gl.FLOAT, readBuffer);
 		if (MEASURE_TIME) window.performance.mark("a");
 
-		let max = 0, x, y, count = 0;
+		let max = 0, count = 0;
+		const results = []
 		for (let i = 0; i < readBuffer.length; i += 4) {
 			if (readBuffer[i] > max) {
+				results.length = 0;
 				max = readBuffer[i];
-				x = readBuffer[i + 1];
-				y = readBuffer[i + 2];
+			}
+			if (readBuffer[i] === max) {
+				let x = readBuffer[i + 1];
+				let y = readBuffer[i + 2];
+				results.push([x, y]);
 			}
 			if (readBuffer[i] > 1) {
 				count++;
 			}
 		}
-		if (max > 1) {
-			// send({max: max, x: x, y: y, count: count});
+		if (results.length > 0) {
+			// get the "middle" one
+			let x = results[Math.floor(results.length / 2)][0];
+			let y = results[Math.floor(results.length / 2)][1];
 			readBuffer2[0] = x;
 			readBuffer2[1] = y;
 		}
+		// if (max > 1) {
+		// 	// send({max: max, x: x, y: y, count: count});
+		// 	readBuffer2[0] = x;
+		// 	readBuffer2[1] = y;
+		// }
 
 		if (MEASURE_TIME) window.performance.mark("a");
-		// console.log(max, x, y, count);
+		console.log(readBuffer2[0], readBuffer2[1], count);
 	}
 
 	/**
