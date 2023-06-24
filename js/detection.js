@@ -10,9 +10,9 @@
  * @requires sender.js
  * @type {Object}
  * @author Milan Košťák
- * @version 1.0
+ * @version 1.0.1
  */
-var Detection = (function() {
+const Detection = (function() {
 
 	/**
 	 * Main object which is exported into public Detection variable.
@@ -35,7 +35,7 @@ var Detection = (function() {
 	let fbo;
 	// precision of reading from texture, either FLOAT or HALF_FLOAT_OES
 	let texturePrecision;
-	// format of texture depedning on the version of WebGL that is used, either RGBA or RGBA32F
+	// format of texture depending on the version of WebGL that is used, either RGBA or RGBA32F
 	let internalFormatTexture;
 	// numbers, input width and height
 	let width, height, w4, h4, w12, h12;
@@ -243,7 +243,7 @@ var Detection = (function() {
 	}
 
 	function initTimeMeasurement() {
-		for (var i = 0; i < timeSlots; i++) {
+		for (let i = 0; i < timeSlots; i++) {
 			times[i] = [];
 		}
 	}
@@ -268,7 +268,7 @@ var Detection = (function() {
 		h12 = h4/3;
 
 		// allocate readBuffer for reading pixels
-		// do it now, because it is time consuming operation
+		// do it now, because it is a time-consuming operation
 		let arraySize = Math.ceil(w12 * h12 * 4);
 		readBuffer = new Float32Array(arraySize);
 	};
@@ -283,16 +283,16 @@ var Detection = (function() {
 		if (MEASURE_TIME && ++currentCount === FINISH_COUNT) {
 			let t = [];
 
-			for (var i = 0; i < timeSlots; i++) {
+			for (let i = 0; i < timeSlots; i++) {
 				t.push(times[i].reduce((a, b) => (a + b)) / times[i].length);
 			}
 			let result = "";
-			for (var i = 0; i < timeSlots; i++) {
+			for (let i = 0; i < timeSlots; i++) {
 				result += t[i].toFixed(2) + ", "
 			}
 
 			console.log(result);
-			//alert(result);
+			alert(result);
 
 			currentCount = 0;
 			initTimeMeasurement();
@@ -339,9 +339,7 @@ var Detection = (function() {
 		gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-
 
 		if (MEASURE_TIME) window.performance.mark("a");
 	///
@@ -378,6 +376,7 @@ var Detection = (function() {
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+
 		if (MEASURE_TIME) window.performance.mark("a");
 
 	///
@@ -388,7 +387,7 @@ var Detection = (function() {
 	///
 	/// 4. step: optionally draw result
 	///
-/*
+
 		// draw the output from previous draw cycle into canvas
 		gl.useProgram(programDraw);
 		gl.uniformMatrix4fv(programDraw.rotation, false, Utils.convert(new Mat4RotX(Math.PI)));
@@ -397,7 +396,7 @@ var Detection = (function() {
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.drawElements(gl.TRIANGLES, indexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-*/
+
 
 	///
 	/// 5. step: save time if turned on
@@ -405,7 +404,7 @@ var Detection = (function() {
 		if (MEASURE_TIME) {
 			let times2 = performance.getEntriesByName("a");
 
-			for (var i = 0; i < timeSlots; i++) {
+			for (let i = 0; i < timeSlots; i++) {
 				times[i].push(times2[i+1].startTime - times2[i].startTime);
 			}
 		}
@@ -430,12 +429,12 @@ var Detection = (function() {
 				count++;
 			}
 		}
-		if (max > 1) {
-			send({max: max, x: x, y: y, count: count});
-		}
+		// if (max > 1) {
+		// 	send({max: max, x: x, y: y, count: count});
+		// }
 
 		if (MEASURE_TIME) window.performance.mark("a");
-		//console.log(max, x, y, count);
+		console.log(max, x, y, count);
 	}
 
 	/**

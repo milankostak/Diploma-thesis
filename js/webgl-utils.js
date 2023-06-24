@@ -9,7 +9,7 @@
  * @version 2.0
  * @requires transforms3d.js
  */
-var Utils = {};
+const Utils = {};
 
 /**
  * Initialization of WebGL
@@ -808,7 +808,7 @@ Utils.Sphere.prototype.createIndices = function(precision, strip) {
  * @param  {Function} callback function to call after loading is complete; called with received data
  */
 Utils.getDataFromJSON = function(url, callback) {
-	var _404 = false,
+	let _404 = false,
 		unknown_error = false,
 		http_request = new XMLHttpRequest();
 	http_request.open("GET", url, true);
@@ -917,9 +917,9 @@ Utils.initFullscreen = function(element, startFullscreen, exitFullscreen) {
 /**
  * Preparation cursor locking on given element
  * @see {@link https://developer.mozilla.org/en-US/docs/WebAPI/Pointer_Lock}
- * @param  {HTMLElement} element      element, which is going to have locked cursor
- * @param  {Function} startFullscreen function to call on successful locking cursor
- * @param  {Function} exitFullscreen  function to call when cursor has been unlocked
+ * @param  {HTMLElement} element       element, which is going to have locked cursor
+ * @param  {Function} startPointerLock function to call on successful locking cursor
+ * @param  {Function} exitPointerLock  function to call when cursor has been unlocked
  */
 Utils.initPointerLock = function(element, startPointerLock, exitPointerLock) {
 	// Edge 13+, FF 41+, Chrome 37+, Opera 24+, Safari ne
@@ -1015,10 +1015,10 @@ Utils.Axis.init = function(gl) {
 /**
  * Draw axis, has to be called after initialization
  * @param  {WebGLRenderingContext} gl WebGL context
- * @param  {Float32Array} modelview   array of 16 items (originally 4x4 matrix)
+ * @param  {Float32Array} modelView   array of 16 items (originally 4x4 matrix)
  * @param  {Float32Array} projection  array of 16 items (originally 4x4 matrix)
  */
-Utils.Axis.draw = function(gl, modelview, projection) {
+Utils.Axis.draw = function(gl, modelView, projection) {
 	gl.useProgram(this.axisProgram);
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, this.dataBuffer);
@@ -1026,7 +1026,7 @@ Utils.Axis.draw = function(gl, modelview, projection) {
 	gl.vertexAttribPointer(this.axisProgram.axisColor, 3, gl.FLOAT, false, this.stride, this.step*3);
 
 	gl.uniformMatrix4fv(this.axisProgram.axisProjection, false, projection);
-	gl.uniformMatrix4fv(this.axisProgram.axisModelView, false, modelview);
+	gl.uniformMatrix4fv(this.axisProgram.axisModelView, false, modelView);
 
 	gl.drawArrays(gl.LINES, 0, 6);
 };
